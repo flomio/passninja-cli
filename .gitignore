@@ -1,0 +1,8 @@
+node_modules
+test/passes
+.idea
+.DS_Store
+
+
+*.pkpass
+dist/
