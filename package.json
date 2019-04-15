@@ -11,5 +11,7 @@
   "dependencies": {
     "pcsclite": "^0.6.0",
     "readdir-cluster": "^1.1.0"
+  },
+  "devDependencies": {
   }
 }

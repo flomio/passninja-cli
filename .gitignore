@@ -6,3 +6,7 @@ test/passes
 
 *.pkpass
 dist/
+
+.vscode
+.ipynb_checkpoints
+Untitled.ipynb
