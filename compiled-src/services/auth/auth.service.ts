@@ -132,6 +132,8 @@ var AuthService = /** @class */ (function () {
                             opts.aws = {
                                 session: normalized.sessionToken,
                                 sign_version: 4,
+                                service: 'execute-api',
+                                region: this.options.awsResources.region,
                                 key: normalized.accessKeyId,
                                 secret: normalized.secretAccessKey
                             };
@@ -147,8 +149,15 @@ var AuthService = /** @class */ (function () {
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        cogIdpForInitAuthOnly = new AWS.CognitoIdentityServiceProvider({ region: this.options.awsResources.region });
-                        logging_1.dbg('logging in', this.options.userCredentials);
+                        cogIdpForInitAuthOnly = new AWS.CognitoIdentityServiceProvider({
+                            // Need mock creds ...
+                            credentials: {
+                                secretAccessKey: '_',
+                                accessKeyId: '_'
+                            },
+                            region: this.options.awsResources.region
+                        });
+                        logging_1.dbg('Logging in', this.options.userCredentials);
                         // TODO: won't ever be null if a default is set
                         if (this.options.userCredentials == null) {
                             return [2 /*return*/];
@@ -190,7 +199,10 @@ var AuthService = /** @class */ (function () {
                     case 2:
                         // TODO: schedule refresh on all of this
                         _b.sent();
-                        iot = new AWS.Iot({ credentials: creds });
+                        iot = new AWS.Iot({
+                            region: this.options.awsResources.region,
+                            credentials: creds
+                        });
                         return [4 /*yield*/, iot.attachPrincipalPolicy({
                                 policyName: this.options.awsResources.iotOwnThingsPolicy,
                                 principal: creds.identityId
@@ -218,6 +230,10 @@ var AuthService = /** @class */ (function () {
             logging_1.dbg('Credentials OK');
             // console.log(JSON.stringify(JSON.parse(resp), null, 2))
         });
+    };
+    AuthService.prototype.noCredentials = function () {
+        return !this.options.userCredentials.user ||
+            !this.options.userCredentials.password;
     };
     AuthService = __decorate([
         injection_js_1.Injectable(),

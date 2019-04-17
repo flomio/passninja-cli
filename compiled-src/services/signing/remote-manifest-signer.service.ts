@@ -77,12 +77,13 @@ var RemoteManifestSigner = /** @class */ (function (_super) {
     }
     RemoteManifestSigner.prototype.sign = function (passTypeIdentifier, buffer) {
         return __awaiter(this, void 0, void 0, function () {
-            var resp, obj;
+            var url, resp, obj;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        logging_1.dbg('signing pass with', passTypeIdentifier);
-                        return [4 /*yield*/, request_promise_native_1.default(this.options.demoBackend.baseUrl + '/public/demo/sign-manifest', {
+                        logging_1.dbg('Signing pass with', passTypeIdentifier);
+                        url = this.options.demoBackend.baseUrl + '/public/demo/sign-manifest';
+                        return [4 /*yield*/, request_promise_native_1.default(url, {
                                 resolveWithFullResponse: false,
                                 headers: { 'Content-Type': 'application/json' },
                                 method: 'POST', body: JSON.stringify({

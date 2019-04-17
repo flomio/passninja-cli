@@ -20,7 +20,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, \"__esModule\", { value: true });
 var injection_js_1 = __webpack_require__(/*! injection-js */ \"./node_modules/injection-js/index.js\");
-var wallet_objects_1 = __webpack_require__(/*! wallet-objects */ \"../wallet-objects/dist/src/index.js\");
+var wallet_objects_1 = __webpack_require__(/*! @passninja/wallet-objects */ \"../passninja-wallet-objects/dist/src/index.js\");
 var injection_tokens_1 = __webpack_require__(/*! ../injection-tokens */ \"./src/injection-tokens.ts\");
 var aws_secrets_1 = __webpack_require__(/*! ../secrets/aws-secrets */ \"./src/secrets/aws-secrets.ts\");
 var googleapis_1 = __webpack_require__(/*! googleapis */ \"./node_modules/googleapis/build/src/index.js\");
@@ -42,6 +42,7 @@ function api(replace) {
 }
 var WalletObjectsRpc = /** @class */ (function () {
     function WalletObjectsRpc(options) {
+        /* TODO: */
         if (env.GOOGLE_APPLICATION_CREDENTIALS) {
             var creds = __webpack_require__(\"./src/services sync recursive\")(env.GOOGLE_APPLICATION_CREDENTIALS);
             var merchantId = creds.merchant_id || options.gpay.merchantId;

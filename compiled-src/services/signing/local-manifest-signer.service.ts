@@ -59,50 +59,34 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result[\"default\"] = mod;
-    return result;
-};
 Object.defineProperty(exports, \"__esModule\", { value: true });
 var injection_js_1 = __webpack_require__(/*! injection-js */ \"./node_modules/injection-js/index.js\");
 var injection_tokens_1 = __webpack_require__(/*! ../../injection-tokens */ \"./src/injection-tokens.ts\");
 var manifest_signer_service_1 = __webpack_require__(/*! ./manifest-signer.service */ \"./src/services/signing/manifest-signer.service.ts\");
 var sign_manifest_1 = __webpack_require__(/*! ./sign-manifest */ \"./src/services/signing/sign-manifest.ts\");
-var pathModule = __importStar(__webpack_require__(/*! path */ \"path\"));
+var local_certs_service_1 = __webpack_require__(/*! ../certs/local-certs.service */ \"./src/services/certs/local-certs.service.ts\");
 var LocalManifestSigner = /** @class */ (function (_super) {
     __extends(LocalManifestSigner, _super);
-    function LocalManifestSigner(options) {
+    function LocalManifestSigner(options, certs) {
         var _this = _super.call(this) || this;
         _this.options = options;
+        _this.certs = certs;
         return _this;
     }
     LocalManifestSigner.prototype.sign = function (passTypeIdentifier, buffer) {
         return __awaiter(this, void 0, void 0, function () {
-            var env, passPhrase, certPath, name;
-            var _this = this;
+            var conf;
             return __generator(this, function (_a) {
-                env = passTypeIdentifier.toUpperCase()
-                    .replace(/\\./g, '_') + '_PASSPHRASE';
-                passPhrase = process.env[env];
-                if (!passPhrase) {
-                    throw new Error(\"Need to set \" + env + \" value\");
-                }
-                certPath = function (name) {
-                    return pathModule.join(_this.options.args.certsPath, name);
-                };
-                name = passTypeIdentifier
-                    .replace(/^pass\\./, '') + '.pem';
-                return [2 /*return*/, sign_manifest_1.signManifest(buffer, passPhrase, certPath(name), certPath('wwdr.pem'))];
+                conf = this.certs
+                    .getPKPassCertSigningConfig(passTypeIdentifier);
+                return [2 /*return*/, sign_manifest_1.signManifest(buffer, conf.passPhrase, conf.certPath, this.certs.certPath('wwdr.pem'))];
             });
         });
     };
     LocalManifestSigner = __decorate([
         injection_js_1.Injectable(),
         __param(0, injection_js_1.Inject(injection_tokens_1.CONFIG_TOKEN)),
-        __metadata(\"design:paramtypes\", [Object])
+        __metadata(\"design:paramtypes\", [Object, local_certs_service_1.LocalCertsService])
     ], LocalManifestSigner);
     return LocalManifestSigner;
 }(manifest_signer_service_1.ManifestSignerService));

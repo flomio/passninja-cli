@@ -26,6 +26,11 @@ var create_pass_type_1 = __webpack_require__(/*! ./commands/create-pass-type */ 
 var abstract_session_handler_service_1 = __webpack_require__(/*! ./services/readers/sessions/abstract-session-handler.service */ \"./src/services/readers/sessions/abstract-session-handler.service.ts\");
 var remote_session_handler_service_1 = __webpack_require__(/*! ./services/readers/sessions/remote-session-handler.service */ \"./src/services/readers/sessions/remote-session-handler.service.ts\");
 var logging_1 = __webpack_require__(/*! ./logging */ \"./src/logging.ts\");
+var things_service_1 = __webpack_require__(/*! ./services/iot/things.service */ \"./src/services/iot/things.service.ts\");
+var environment_service_1 = __webpack_require__(/*! ./services/env/environment.service */ \"./src/services/env/environment.service.ts\");
+var routing_1 = __webpack_require__(/*! ./http-handlers/apple-passkit-service/routing */ \"./src/http-handlers/apple-passkit-service/routing.ts\");
+var local_certs_service_1 = __webpack_require__(/*! ./services/certs/local-certs.service */ \"./src/services/certs/local-certs.service.ts\");
+var http_reports_service_1 = __webpack_require__(/*! ./services/local-reports/http-reports.service */ \"./src/services/local-reports/http-reports.service.ts\");
 function makeModule(config, moduleConfig) {
     var base = [
         { useValue: config, provide: injection_tokens_1.CONFIG_TOKEN },
@@ -40,9 +45,13 @@ function makeModule(config, moduleConfig) {
         http_server_1.HttpServer,
         socket_server_service_1.SocketServerService,
         readers_service_1.ReadersService,
+        things_service_1.ThingsService,
         test_handler_1.TestHandler,
+        environment_service_1.EnvironmentService,
         auth_service_1.AuthService,
         iot_service_1.IotService,
+        http_reports_service_1.HttpReportsService,
+        local_certs_service_1.LocalCertsService,
         routing_and_configuration_1.RoutingAndConfiguration,
         application_1.Application,
         queue_service_1.QueueService,
@@ -53,7 +62,7 @@ function makeModule(config, moduleConfig) {
         sign_pass_1.SignPassCommand,
         sign_gpay_pass_1.SignGpayPassCommand,
         event_bus_1.EventBus
-    ];
+    ].concat(routing_1.applePasskitServiceProviders);
     var extraConf = moduleConfig.configure ?
         moduleConfig.configure(config) :
         {};

@@ -12,7 +12,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, \"__esModule\", { value: true });
 var commander_1 = __importDefault(__webpack_require__(/*! commander */ \"./node_modules/commander/index.js\"));
 var logging_1 = __webpack_require__(/*! ../logging */ \"./src/logging.ts\");
-var aws_resources_1 = __webpack_require__(/*! ./aws-resources */ \"./src/config/aws-resources.ts\");
+var aws_resources_dev_1 = __webpack_require__(/*! ./aws-resources-dev */ \"./src/config/aws-resources-dev.ts\");
+var aws_resources_test_1 = __webpack_require__(/*! ./aws-resources-test */ \"./src/config/aws-resources-test.ts\");
 var env = __importStar(__webpack_require__(/*! ../env */ \"./src/env.ts\"));
 var fs = __importStar(__webpack_require__(/*! fs */ \"fs\"));
 /**
@@ -57,22 +58,31 @@ function parseEnvAndCommandline(config) {
         });
         return cmd;
     }
+    if (config.includeSigning) {
+        commander_1.default
+            // TODO: collapse all these into one
+            // TODO: watch multiple paths yeah ...
+            // TODO: use organizationName for default pass name instead of pass.pkpass
+            // pn sign folder --watch
+            // TODO: do we really want this in a public application ?
+            .option('--sign-pass <folder>', 'Sign pkpass from <folder> and exit')
+            .option('--sign-batch <entry>', 'Sign pkpass batch from <entry> and exit')
+            .option('--sign-gpay-batch <entry>', 'Sign gpay batch from <entry> and exit')
+            .option('-o, --output-path [path]', 'Output pass files to output [path]', process.cwd())
+            .option('-w, --watch', 'Watch mode')
+            .option('-c, --certs-path <path>', '<path> to find certificates');
+    }
+    commander_1.default.option('-S, --stage <stage>', 'PassNinja [stage] backend to connect to', 'dev');
     commander_1.default
-        // TODO: collapse all these into one
-        // TODO: watch multiple paths yeah ...
-        // TODO: use organizationName for default pass name instead of pass.pkpass
-        // pn sign folder --watch
-        .option('--sign-pass <folder>', 'Sign pkpass from <folder> and exit')
-        .option('--sign-batch <entry>', 'Sign pkpass batch from <entry> and exit')
-        .option('--sign-gpay-batch <entry>', 'Sign gpay batch from <entry> and exit')
-        .option('-o, --output-path [path]', 'Output pass files to output [path]', process.cwd())
-        .option('-w, --watch', 'Watch mode')
-        .option('-c, --certs-path <path>', '<path> to find certificates')
-        // TODO: do we really want this in a public application ?
         .option('-p, --port [port]', '[port] to listen on', 3002)
         .option('-h, --host [host]', '[hostname] to listen for', '0.0.0.0')
-        .option('-U, --user [user]', 'Login as [user]', 'demo@user.com')
-        .option('-P, --password [password]', 'Login with [password]', 'Pass!@#$334--');
+        .option('-U, --user <user>', 'Login as <user>')
+        .option('-P, --password <password>', 'Login with <password>')
+        .option('-O, --offline', 'run in offline mode', false)
+        .option('-s, --passkit-service', 'Launch local PassKit web service and add webServiceURL to signed passes.\
+' +
+        'Set NGROK_URL env var')
+        .option('-r, --scan-report-end-point <endpoint>', 'http POST scan data to <endpoint>');
     if (config.includeAdmin) {
         commander_1.default.option('-a, --admin', 'Run in admin mode');
         makeCommand('create-pass-type', '<passTypeIdentifier>')
@@ -86,32 +96,28 @@ function parseEnvAndCommandline(config) {
     var nfcKeys = env.PN_NFC_KEYS && fs.existsSync(env.PN_NFC_KEYS) ?
         JSON.parse(fs.readFileSync(process.env.PN_NFC_KEYS).toString()) :
         undefined;
+    var stage = commander_1.default['stage'];
+    var awsResources = stage === 'test' ?
+        aws_resources_test_1.awsResourcesTest : aws_resources_dev_1.awsResourcesDev;
+    var offline = Boolean(commander_1.default['offline']);
     var options = {
         subCommand: subCommand,
         demoBackend: {
-            baseUrl: env.BACKEND_URL ||
-                'https://' +
-                    // TODO: rename this
-                    aws_resources_1.awsResources.ApiGatewayRestApi +
-                    '.execute-api.' +
-                    aws_resources_1.awsResources.region +
-                    '.amazonaws.com/' +
-                    aws_resources_1.awsResources.stackName.split('-').pop()
+            baseUrl: env.BACKEND_URL || \"https://\" + stage + \"-api.passninja.com\"
         },
         sessionServer: {
             baseUrl: env.CLOUD_SESSION_URL ||
-                'https://3kvoqeg1kg.execute-api.ap-southeast-1.amazonaws.com/dev/smart-tap'
+                'https://cloudsessionalpha.passninja.com/smart-tap'
         },
         awsResources: {
-            // TODO: why not use `typeof awsResources` somewhere?
-            userPool: aws_resources_1.awsResources.UserPool,
-            identityPool: aws_resources_1.awsResources.IdentityPool,
-            userPoolClient: aws_resources_1.awsResources.UserPoolClient,
-            // TODO: deploy.sh should write these
-            iotOwnThingsPolicy: aws_resources_1.awsResources.iotOwnThingsPolicy,
-            region: aws_resources_1.awsResources.region,
-            // TODO: add ability to choose a `stage` to attach to
-            stackName: aws_resources_1.awsResources.stackName
+            stage: commander_1.default['stage'],
+            userPool: awsResources.UserPool,
+            identityPool: awsResources.IdentityPool,
+            userPoolClient: awsResources.UserPoolClient,
+            iotOwnThingsPolicy: awsResources.iotOwnThingsPolicy,
+            iotThingsOwnPolicy: awsResources.iotThingsOwnPolicy,
+            region: awsResources.region,
+            stackName: awsResources.stackName
         },
         nfc: {
             // PassNinjaDemo
@@ -121,7 +127,10 @@ function parseEnvAndCommandline(config) {
         },
         gpay: {},
         args: {
+            offline: offline,
+            scanReportEndPoint: commander_1.default['scanReportEndPoint'],
             watch: Boolean(commander_1.default['watch']),
+            passkitService: Boolean(commander_1.default['passkitService']),
             signPass: commander_1.default['signPass'],
             signBatch: commander_1.default['signBatch'],
             signGpayBatch: commander_1.default['signGpayBatch'],
@@ -130,7 +139,7 @@ function parseEnvAndCommandline(config) {
         },
         server: {
             port: commander_1.default['port'],
-            hostname: commander_1.default['host']
+            hostname: offline ? 'localhost' : commander_1.default['host']
         },
         userCredentials: {
             password: commander_1.default['password'],
