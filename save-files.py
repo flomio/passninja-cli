@@ -1,6 +1,6 @@
 import os
 
-with open('pn-cloud.js', 'r') as bundled: 
+with open('pn.js', 'r') as bundled: 
     for line in bundled:
         if (line[0:8] == '/***/ \".'):
             filename = line[9:-3]

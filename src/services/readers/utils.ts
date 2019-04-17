@@ -37,7 +37,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, \"__esModule\", { value: true });
 var logging_1 = __webpack_require__(/*! ../../logging */ \"./src/logging.ts\");
 var flomio_js_sdk_1 = __webpack_require__(/*! flomio-js-sdk */ \"../flomio-js-sdk/dist/ts.js\");
-var FloBlePlus = flomio_js_sdk_1.readers.FloBlePlus;
 function pollVAS(reader) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
@@ -61,14 +60,17 @@ function pollVAS(reader) {
                     // Terminal mode = VAS only
                     return [4 /*yield*/, reader.escapeCommand(('E000003B03010302')).response
                         // include VAS types in polling
+                        // TODO: ...
                     ];
                 case 3:
                     // Terminal mode = VAS only
                     _a.sent();
                     // include VAS types in polling
+                    // TODO: ...
                     return [4 /*yield*/, reader.escapeCommand(('E00000200145')).response];
                 case 4:
                     // include VAS types in polling
+                    // TODO: ...
                     _a.sent();
                     return [2 /*return*/];
             }
@@ -85,7 +87,7 @@ function selectOSE(tag, tries) {
                 case 0: return [4 /*yield*/, tag.selectApplication(Buffer.from('OSE.VAS.01'))];
                 case 1:
                     select = _a.sent();
-                    logging_1.dbg('select VAS', select.SW);
+                    logging_1.dbg('Select VAS', select.SW);
                     tries--;
                     _a.label = 2;
                 case 2:
@@ -117,7 +119,7 @@ function initReaderAndGetSpec(reader) {
                     return [3 /*break*/, 5];
                 case 4:
                     e_1 = _a.sent();
-                    logging_1.dbg('error getting firmware');
+                    logging_1.dbg('Error getting firmware');
                     return [3 /*break*/, 5];
                 case 5:
                     _a.trys.push([5, 7, , 8]);
@@ -134,7 +136,7 @@ function initReaderAndGetSpec(reader) {
                     _a.label = 9;
                 case 9:
                     _a.trys.push([9, 11, , 12]);
-                    return [4 /*yield*/, FloBlePlus.prototype.getSerialNumber.call(reader)];
+                    return [4 /*yield*/, flomio_js_sdk_1.FloBlePlusBase.prototype.getSerialNumber.call(reader)];
                 case 10:
                     serialNumber = _a.sent();
                     return [3 /*break*/, 12];

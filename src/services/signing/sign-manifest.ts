@@ -43,7 +43,26 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, \"__esModule\", { value: true });
 var cp = __importStar(__webpack_require__(/*! child_process */ \"child_process\"));
+var crypto = __importStar(__webpack_require__(/*! crypto */ \"crypto\"));
 var logging_1 = __webpack_require__(/*! ../../logging */ \"./src/logging.ts\");
+var fs = __importStar(__webpack_require__(/*! fs */ \"fs\"));
+function signManifestNode(encodedManifest, passPhrase, privateKeyPemPath, wwdrPemPath) {
+    return __awaiter(this, void 0, void 0, function () {
+        var signer, chained, buffer;
+        return __generator(this, function (_a) {
+            signer = crypto.createSign('RSA-SHA256');
+            signer.update(encodedManifest);
+            chained = fs.readFileSync(privateKeyPemPath) + \"\
+\" + fs.readFileSync(wwdrPemPath);
+            buffer = signer.sign({
+                key: chained,
+                passphrase: passPhrase
+            });
+            return [2 /*return*/, buffer];
+        });
+    });
+}
+exports.signManifestNode = signManifestNode;
 function signManifest(encodedManifest, passPhrase, privateKeyPemPath, wwdrPemPath) {
     return __awaiter(this, void 0, void 0, function () {
         var passIn, args, redacted, ssl, stdout, stderr;
@@ -64,7 +83,7 @@ function signManifest(encodedManifest, passPhrase, privateKeyPemPath, wwdrPemPat
                 'DER'
             ];
             redacted = args.map(function (arg) { return arg === passIn ? '*********' : arg; });
-            logging_1.dbg('signing', { args: JSON.stringify(redacted) });
+            logging_1.dbg('Signing', { args: JSON.stringify(redacted) });
             ssl = cp.spawn('openssl', args);
             stdout = [];
             stderr = [];

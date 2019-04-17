@@ -50,18 +50,19 @@ var LatestPassHandler = /** @class */ (function () {
     function LatestPassHandler(store) {
         this.store = store;
     }
-    LatestPassHandler.prototype.handle = function (request, response) {
+    LatestPassHandler.prototype.handle = function (args) {
         return __awaiter(this, void 0, void 0, function () {
-            var pass;
+            var res, pass;
             return __generator(this, function (_a) {
+                res = args.res;
                 pass = this.store.latestPkPass.getValue();
                 if (pass == null) {
-                    response.status(404);
+                    res.status(404);
                     return [2 /*return*/, Buffer.alloc(0)];
                 }
                 else {
-                    response.header('Content-Type', 'application/vnd.pkpass');
-                    response.header('Last-Modified', new Date().toUTCString());
+                    res.header('Content-Type', 'application/vnd.pkpass');
+                    res.header('Last-Modified', new Date().toUTCString());
                     return [2 /*return*/, pass];
                 }
                 return [2 /*return*/];

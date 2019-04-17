@@ -85,8 +85,8 @@ var RemoteSessionHandlerService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        logging_1.dbg('sending rpc request');
-                        logging_1.trc('sending rpc request', body);
+                        logging_1.dbg('Sending rpc request');
+                        logging_1.trc('Sending rpc request', body);
                         return [4 /*yield*/, request.post({
                                 uri: this.options.sessionServer.baseUrl || 'http://localhost:4000/smart-tap',
                                 resolveWithFullResponse: true,
@@ -96,11 +96,14 @@ var RemoteSessionHandlerService = /** @class */ (function (_super) {
                             })];
                     case 1:
                         newVar = _a.sent();
-                        logging_1.dbg('got http response');
+                        logging_1.dbg('Got http response');
                         return [2 /*return*/, JSON.parse(newVar.body)];
                 }
             });
         });
+    };
+    RemoteSessionHandlerService.prototype.isLocal = function () {
+        return false;
     };
     RemoteSessionHandlerService = __decorate([
         injection_js_1.Injectable(),

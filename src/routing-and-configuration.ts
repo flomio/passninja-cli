@@ -34,6 +34,7 @@ var RoutingAndConfiguration = /** @class */ (function () {
         app.use(bodyParser.json());
         app.post('/test', express_app_holder_1.handlePost({ handler: testHandler }));
         app.get('/latestPass', express_app_holder_1.handleGet({ handler: latestPass, json: false }));
+        app.get('/latestPass.pkpass', express_app_holder_1.handleGet({ handler: latestPass, json: false }));
         // app.use((error: Error,
         //          request: express.Request,
         //          response: express.Response,

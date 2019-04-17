@@ -76,7 +76,7 @@ function getPNDemoSecrets(options) {
                 case 1:
                     cached = _a.sent();
                     return [3 /*break*/, 3];
-                case 2: throw new Error('Must set awsResources.ninjaKeysArn');
+                case 2: throw new Error('Must set awsResourcesTest.ninjaKeysArn');
                 case 3: return [2 /*return*/, cached];
             }
         });

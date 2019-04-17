@@ -67,7 +67,7 @@ function handleGet(parameters) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, handler.handle(req, res)];
+                    return [4 /*yield*/, handler.handle({ req: req, res: res, body: null })];
                 case 1:
                     responseBody = _a.sent();
                     if (!json) {
@@ -95,20 +95,30 @@ function handleGet(parameters) {
 exports.handleGet = handleGet;
 function handlePost(parameters) {
     var _this = this;
-    var handler = parameters.handler;
+    var handler = parameters.handler, _a = parameters.allowNoContentType, allowNoContentType = _a === void 0 ? false : _a;
     return function (req, res, next) { return __awaiter(_this, void 0, void 0, function () {
         var responseBody, e_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 2, , 3]);
-                    if (req.header('content-type') !== 'application/json') {
+                    if (!allowNoContentType &&
+                        req.header('content-type') !== 'application/json') {
                         return [2 /*return*/, next(new http_errors_1.default.BadRequest('Must set Content-Type to application/json'))];
                     }
-                    return [4 /*yield*/, handler.handle(req.body)];
+                    return [4 /*yield*/, handler.handle({
+                            body: req.body,
+                            req: req,
+                            res: res
+                        })];
                 case 1:
                     responseBody = _a.sent();
-                    res.json(responseBody);
+                    if (responseBody != null) {
+                        res.json(responseBody);
+                    }
+                    else {
+                        // res.status(200)
+                    }
                     return [3 /*break*/, 3];
                 case 2:
                     e_2 = _a.sent();
