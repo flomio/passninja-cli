@@ -1,0 +1,11 @@
+function webpackEmptyContext(req) {
+\tvar e = new Error(\"Cannot find module '\" + req + \"'\");
+\te.code = 'MODULE_NOT_FOUND';
+\tthrow e;
+}
+webpackEmptyContext.keys = function() { return []; };
+webpackEmptyContext.resolve = webpackEmptyContext;
+module.exports = webpackEmptyContext;
+webpackEmptyContext.id = \"./src/services sync recursive\";
+
+//# sourceURL=webpack://commonjs/./src/services_sync?"
