@@ -2,7 +2,7 @@
 // var AWS = __importStar(__webpack_require__(/*! aws-sdk */ \"./node_modules/aws-sdk/lib/aws.js\"));
 import * as AWS from './node_modules/aws-sdk'
 var injection_tokens_1 = __webpack_require__(/*! ../../injection-tokens */ \"./src/injection-tokens.ts\");
-import {} from '../../injection-tokens'
+import {} from '../../../../compiled-src/injection-tokens'
 var logging_1 = __webpack_require__(/*! ../../logging */ \"./src/logging.ts\");
 
 var util_1 = __webpack_require__(/*! util */ \"util\");
