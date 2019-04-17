@@ -11,4 +11,4 @@ exports.awsResources = { region: 'us-east-1',
     iotThingsOwnPolicy: 'pass-ninja-web-test-us-east-1-things-own' };
 
 
-//# sourceURL=webpack://commonjs/./src/config/aws-resources.ts?"
+//# sourceURL=webpack://commonjs/./src/config/aws-resources.ts?"‹
