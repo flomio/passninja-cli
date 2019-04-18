@@ -1,20 +1,13 @@
+import * as fs from 'fs';
+import * as program from 'commander';
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { \"default\": mod };
-};
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result[\"default\"] = mod;
-    return result;
-};
-Object.defineProperty(exports, \"__esModule\", { value: true });
-var commander_1 = __importDefault(__webpack_require__(/*! commander */ \"./node_modules/commander/index.js\"));
-var logging_1 = __webpack_require__(/*! ../logging */ \"./src/logging.ts\");
-var aws_resources_1 = __webpack_require__(/*! ./aws-resources */ \"./src/config/aws-resources.ts\");
-var env = __importStar(__webpack_require__(/*! ../env */ \"./src/env.ts\"));
-var fs = __importStar(__webpack_require__(/*! fs */ \"fs\"));
+import {awsResourcesDev} from './aws-resources-dev';
+import {awsResourcesTest} from './aws-resources-test';
+
+import {dbg} from '../logging';
+// TODO: looks like a dead? import
+// var env = __importStar(__webpack_require__(/*! ../env */ \"./src/env.ts\"));
+
 /**
  * @param config
  *
@@ -26,17 +19,25 @@ var fs = __importStar(__webpack_require__(/*! fs */ \"fs\"));
  *
  */
 function parseEnvAndCommandline(config) {
-    var subCommand = undefined;
+    let subCommand;
+
     function makeCommand(name, extra) {
-        var decl = (name + \" \" + extra).trim();
-        var cmd = commander_1.default.command(decl);
-        cmd.action(function () {
+
+      var decl = (name + \" \" + extra).trim();
+
+        var cmd = program.command(decl);
+
+        cmd.action(function (...fnArgs: any[]) {
             var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
+
+            for (var _i = 0; _i < fnArgs.length; _i++) {
+                args[_i] = fnArgs[_i];
             }
+
             var opts = cmd.opts();
+
             var options = cmd.options;
+
             var _loop_1 = function (opt) {
                 var optName = opt.attributeName();
                 if (opt.required && opts[optName] == null) {
@@ -49,69 +50,86 @@ function parseEnvAndCommandline(config) {
                 var opt = options_1[_a];
                 _loop_1(opt);
             }
+
             subCommand = {
-                positionalArgs: args.filter(function (a) { return typeof a === 'string'; }),
-                opts: opts,
-                name: name
+              opts,
+              name,
+              positionalArgs: args.filter(arg => typeof arg === 'string'),
             };
+
         });
+
         return cmd;
     }
-    commander_1.default
-        // TODO: collapse all these into one
-        // TODO: watch multiple paths yeah ...
-        // TODO: use organizationName for default pass name instead of pass.pkpass
-        // pn sign folder --watch
+
+    if (config.includeSigning) {
+      // TODO: collapse all these into one
+      // TODO: watch multiple paths yeah ...
+      // TODO: use organizationName for default pass name instead of pass.pkpass
+      // pn sign folder --watch
+      // TODO: do we really want this in a public application ?
+      program
         .option('--sign-pass <folder>', 'Sign pkpass from <folder> and exit')
         .option('--sign-batch <entry>', 'Sign pkpass batch from <entry> and exit')
         .option('--sign-gpay-batch <entry>', 'Sign gpay batch from <entry> and exit')
         .option('-o, --output-path [path]', 'Output pass files to output [path]', process.cwd())
         .option('-w, --watch', 'Watch mode')
-        .option('-c, --certs-path <path>', '<path> to find certificates')
-        // TODO: do we really want this in a public application ?
+        .option('-c, --certs-path <path>', '<path> to find certificates');
+    }
+
+    program
+        .option('-S, --stage <stage>', 'PassNinja [stage] backend to connect to', 'dev')
         .option('-p, --port [port]', '[port] to listen on', 3002)
         .option('-h, --host [host]', '[hostname] to listen for', '0.0.0.0')
-        .option('-U, --user [user]', 'Login as [user]', 'demo@user.com')
-        .option('-P, --password [password]', 'Login with [password]', 'Pass!@#$334--');
+        .option('-U, --user <user>', 'Login as <user>')
+        .option('-P, --password <password>', 'Login with <password>')
+        .option('-O, --offline', 'run in offline mode', false)
+        .option('-r, --scan-report-end-point <endpoint>', 'http POST scan data to <endpoint>')
+        .option('-s, --passkit-service',
+          'Launch local PassKit web service and add webServiceURL to signed passes.' + 'Set NGROK_URL env var')
+
     if (config.includeAdmin) {
-        commander_1.default.option('-a, --admin', 'Run in admin mode');
+        program.option('-a, --admin', 'Run in admin mode');
+
         makeCommand('create-pass-type', '<passTypeIdentifier>')
-            .description('Make a pass')
-            .option('-o, --output-path [folder]', '[folder] to output keys to', String, process.cwd())
-            .option('-p, --passphrase <phrase>', '<phrase> to encrypt private key with')
-            .option('-n, --cert-name <name>', '<name> of certificate');
+          .description('Make a pass')
+          .option('-o, --output-path [folder]', '[folder] to output keys to', String, process.cwd())
+          .option('-p, --passphrase <phrase>', '<phrase> to encrypt private key with')
+          .option('-n, --cert-name <name>', '<name> of certificate');
     }
-    commander_1.default.parse(process.argv);
+
+    program.parse(process.argv);
+
     // TODO: add to the secrets manager ?
     var nfcKeys = env.PN_NFC_KEYS && fs.existsSync(env.PN_NFC_KEYS) ?
         JSON.parse(fs.readFileSync(process.env.PN_NFC_KEYS).toString()) :
         undefined;
+
+        var stage = program['stage'];
+
+    var awsResources = stage === 'test' ?
+        awsResourcesTest : awsResourcesDev;
+
+    var offline = Boolean(program['offline']);
+
     var options = {
-        subCommand: subCommand,
+        subCommand,
         demoBackend: {
-            baseUrl: env.BACKEND_URL ||
-                'https://' +
-                    // TODO: rename this
-                    aws_resources_1.awsResources.ApiGatewayRestApi +
-                    '.execute-api.' +
-                    aws_resources_1.awsResources.region +
-                    '.amazonaws.com/' +
-                    aws_resources_1.awsResources.stackName.split('-').pop()
+            baseUrl: env.BACKEND_URL || \"https://\" + stage + \"-api.passninja.com\"
         },
         sessionServer: {
             baseUrl: env.CLOUD_SESSION_URL ||
-                'https://3kvoqeg1kg.execute-api.ap-southeast-1.amazonaws.com/dev/smart-tap'
+                'https://cloudsessionalpha.passninja.com/smart-tap'
         },
         awsResources: {
-            // TODO: why not use `typeof awsResources` somewhere?
-            userPool: aws_resources_1.awsResources.UserPool,
-            identityPool: aws_resources_1.awsResources.IdentityPool,
-            userPoolClient: aws_resources_1.awsResources.UserPoolClient,
-            // TODO: deploy.sh should write these
-            iotOwnThingsPolicy: aws_resources_1.awsResources.iotOwnThingsPolicy,
-            region: aws_resources_1.awsResources.region,
-            // TODO: add ability to choose a `stage` to attach to
-            stackName: aws_resources_1.awsResources.stackName
+            stage: program['stage'],
+            userPool: awsResources.UserPool,
+            identityPool: awsResources.IdentityPool,
+            userPoolClient: awsResources.UserPoolClient,
+            iotOwnThingsPolicy: awsResources.iotOwnThingsPolicy,
+            iotThingsOwnPolicy: awsResources.iotThingsOwnPolicy,
+            region: awsResources.region,
+            stackName: awsResources.stackName
         },
         nfc: {
             // PassNinjaDemo
@@ -121,29 +139,33 @@ function parseEnvAndCommandline(config) {
         },
         gpay: {},
         args: {
-            watch: Boolean(commander_1.default['watch']),
-            signPass: commander_1.default['signPass'],
-            signBatch: commander_1.default['signBatch'],
-            signGpayBatch: commander_1.default['signGpayBatch'],
-            outputPath: commander_1.default['outputPath'],
-            certsPath: commander_1.default['certsPath']
+            offline,
+            scanReportEndPoint: program['scanReportEndPoint'],
+            watch: Boolean(program['watch']),
+            passkitService: Boolean(program['passkitService']),
+            signPass: program['signPass'],
+            signBatch: program['signBatch'],
+            signGpayBatch: program['signGpayBatch'],
+            outputPath: program['outputPath'],
+            certsPath: program['certsPath']
         },
         server: {
-            port: commander_1.default['port'],
-            hostname: commander_1.default['host']
+            port: program['port'],
+            hostname: offline ? 'localhost' : program['host']
         },
         userCredentials: {
-            password: commander_1.default['password'],
-            user: commander_1.default['user']
+            password: program['password'],
+            user: program['user']
         }
     };
+
     if (config.includeAdmin) {
         options.appleServiceAccount = {
             password: env.PASSNINJA_APPLE_SERVICE_ACCOUNT_PASS_WORD,
             teamId: 'Q338UYGFZ8',
             user: 'passninja@flomio.com'
         };
-        options.args.admin = Boolean(commander_1.default['admin']);
+        options.args.admin = Boolean(program['admin']);
         options.awsResources.ninjaKeysArn =
             'arn:aws:secretsmanager:us-east-1:448311138761' +
                 ':secret:pass-ninja-web-server-e5HaT1';
@@ -153,9 +175,12 @@ function parseEnvAndCommandline(config) {
             options.gpay.client_email = 'admin-341@pass-ninja.iam.gserviceaccount.com';
         }
     }
-    logging_1.dbg({ options: options });
+
+    dbg({ options });
+
     return options;
 }
+
 exports.parseEnvAndCommandline = parseEnvAndCommandline;
 
 
