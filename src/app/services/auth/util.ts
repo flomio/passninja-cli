@@ -20,15 +20,11 @@ export function normalizedCredentials(
   // NOTE: these credentials could be in different shape depending upon
   // which session service is used. Why doesn't AWS wash over this with the
   // sdk ???
-  const {
-    SecretKey: secretAccessKey,
-    SessionToken: sessionToken,
-    AccessKeyId: accessKeyId
-  } = credentials.data.Credentials;
+  const { SecretKey, SessionToken, AccessKeyId } = credentials.data.Credentials;
 
   return {
-    secretAccessKey,
-    sessionToken,
-    accessKeyId
+    secretAccessKey: SecretKey,
+    sessionToken: SessionToken,
+    accessKeyId: AccessKeyId
   };
 }
