@@ -1,17 +1,4 @@
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    }
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === \"object\" && typeof Reflect.decorate === \"function\") r = Reflect.decorate(decorators, target, key, desc);
@@ -20,9 +7,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === \"object\" && typeof Reflect.metadata === \"function\") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
 };
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -61,36 +45,35 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, \"__esModule\", { value: true });
 var injection_js_1 = __webpack_require__(/*! injection-js */ \"./node_modules/injection-js/index.js\");
-var injection_tokens_1 = __webpack_require__(/*! ../../injection-tokens */ \"./src/injection-tokens.ts\");
-var manifest_signer_service_1 = __webpack_require__(/*! ./manifest-signer.service */ \"./src/services/signing/manifest-signer.service.ts\");
-var sign_manifest_1 = __webpack_require__(/*! ./sign-manifest */ \"./src/services/signing/sign-manifest.ts\");
-var local_certs_service_1 = __webpack_require__(/*! ../certs/local-certs.service */ \"./src/services/certs/local-certs.service.ts\");
-var LocalManifestSigner = /** @class */ (function (_super) {
-    __extends(LocalManifestSigner, _super);
-    function LocalManifestSigner(options, certs) {
-        var _this = _super.call(this) || this;
-        _this.options = options;
-        _this.certs = certs;
-        return _this;
+var passkit_web_protocol_service_1 = __webpack_require__(/*! ../db/passkit-web-protocol.service */ \"./src/http-handlers/apple-passkit-service/db/passkit-web-protocol.service.ts\");
+var logging_1 = __webpack_require__(/*! ../../../logging */ \"./src/logging.ts\");
+var LogHandler = /** @class */ (function () {
+    function LogHandler(service) {
+        this.service = service;
     }
-    LocalManifestSigner.prototype.sign = function (passTypeIdentifier, buffer) {
+    /**
+     * /{version}/log/
+     */
+    LogHandler.prototype.handle = function (args) {
         return __awaiter(this, void 0, void 0, function () {
-            var conf;
+            var body, req, res;
             return __generator(this, function (_a) {
-                conf = this.certs
-                    .getPKPassCertSigningConfig(passTypeIdentifier);
-                return [2 /*return*/, sign_manifest_1.signManifest(buffer, conf.passPhrase, conf.certPath, this.certs.certPath('wwdr.pem'))];
+                body = args.body, req = args.req, res = args.res;
+                body.logs.forEach(logging_1.dbg);
+                res.status(200);
+                res.send(null);
+                return [2 /*return*/];
             });
         });
     };
-    LocalManifestSigner = __decorate([
+    LogHandler.path = '/:version/log/';
+    LogHandler = __decorate([
         injection_js_1.Injectable(),
-        __param(0, injection_js_1.Inject(injection_tokens_1.CONFIG_TOKEN)),
-        __metadata(\"design:paramtypes\", [Object, local_certs_service_1.LocalCertsService])
-    ], LocalManifestSigner);
-    return LocalManifestSigner;
-}(manifest_signer_service_1.ManifestSignerService));
-exports.LocalManifestSigner = LocalManifestSigner;
+        __metadata(\"design:paramtypes\", [passkit_web_protocol_service_1.PasskitWebProtocolService])
+    ], LogHandler);
+    return LogHandler;
+}());
+exports.LogHandler = LogHandler;
 
 
-//# sourceURL=webpack://commonjs/./src/services/signing/local-manifest-signer.service.ts?"
+//# sourceURL=webpack://commonjs/./src/http-handlers/apple-passkit-service/handlers/log.ts?"

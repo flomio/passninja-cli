@@ -63,8 +63,11 @@ var logging_1 = __webpack_require__(/*! ../../logging */ \"./src/logging.ts\");
 var utils_1 = __webpack_require__(/*! ./utils */ \"./src/services/readers/utils.ts\");
 var events_1 = __webpack_require__(/*! ../../events */ \"./src/events.ts\");
 var abstract_session_handler_service_1 = __webpack_require__(/*! ./sessions/abstract-session-handler.service */ \"./src/services/readers/sessions/abstract-session-handler.service.ts\");
+var uuid = __importStar(__webpack_require__(/*! uuid */ \"./node_modules/uuid/index.js\"));
 var crypto = __importStar(__webpack_require__(/*! crypto */ \"crypto\"));
 var injection_tokens_1 = __webpack_require__(/*! ../../injection-tokens */ \"./src/injection-tokens.ts\");
+var utils_2 = __webpack_require__(/*! flomio-js-sdk-pcsc/dist/utils */ \"../flomio-js-sdk-pcsc/dist/utils.js\");
+var environment_service_1 = __webpack_require__(/*! ../env/environment.service */ \"./src/services/env/environment.service.ts\");
 function createSha256(data) {
     return crypto
         .createHash('sha256')
@@ -81,13 +84,19 @@ function generateGVD(passTypeIdentifier) {
 }
 exports.generateGVD = generateGVD;
 var ReadersService = /** @class */ (function () {
-    function ReadersService(config, events, readerSession) {
+    function ReadersService(config, events, env, readerSession) {
         this.config = config;
         this.events = events;
+        this.env = env;
         this.readerSession = readerSession;
     }
     ReadersService.prototype.start = function () {
-        var session = this.session = new pcsc.Session();
+        var connectionMode = this.env.platform() === 'win32' ?
+            'shared' : 'exclusive';
+        logging_1.dbg('Creating pcsc.Session with', { connectionMode: connectionMode });
+        var session = this.session = new pcsc.Session({
+            connectionMode: connectionMode
+        });
         session.on('reader', this.onReader.bind(this));
     };
     ReadersService.prototype.onTag = function (reader, tag) {
@@ -143,7 +152,7 @@ var ReadersService = /** @class */ (function () {
                     case 7:
                         e_1 = _a.sent();
                         logging_1.dbg('Scan error', e_1);
-                        reader.reader.disconnect('eject').then();
+                        this.eject(reader.reader);
                         return [3 /*break*/, 8];
                     case 8: return [2 /*return*/];
                 }
@@ -152,10 +161,17 @@ var ReadersService = /** @class */ (function () {
     };
     ReadersService.prototype.onSmartTap = function (selectResp, tag, readerWithSpec) {
         return __awaiter(this, void 0, void 0, function () {
-            var reader, selectOSEMsg, resp, responses, negotiateApdu, negotiateResp, tackyTag, apdu, apduResp, rem, serializedOrLiveSession;
+            var reader, selectOSEMsg, resp, responses, negotiateApdu, negotiateResp, tackyTag, apdu, apduResp, rem, serializedOrLiveSession, id;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(this.readerSession.isLocal() || this.readerSession.isLocal())) return [3 /*break*/, 2];
+                        logging_1.dbg('Double selecting to delay');
+                        return [4 /*yield*/, utils_1.selectOSE(tag)];
+                    case 1:
+                        selectResp = _a.sent();
+                        _a.label = 2;
+                    case 2:
                         reader = readerWithSpec.reader;
                         selectOSEMsg = {
                             cmd: messages_1.CommandKey.select_ose,
@@ -168,19 +184,19 @@ var ReadersService = /** @class */ (function () {
                             }
                         };
                         return [4 /*yield*/, this.readerSession.handleMessage(selectOSEMsg)];
-                    case 1:
+                    case 3:
                         resp = _a.sent();
-                        logging_1.trc('select', resp);
+                        logging_1.trc('Select', resp);
                         responses = [];
-                        if (!(resp.cmd == messages_1.CommandKey.get_smart_tap_data)) return [3 /*break*/, 8];
+                        if (!(resp.cmd == messages_1.CommandKey.get_smart_tap_data)) return [3 /*break*/, 10];
                         negotiateApdu = session_utils_1.fromBase64(resp.args.negotiate);
-                        logging_1.trc('negotiate apdu', negotiateApdu.length);
+                        logging_1.trc('Negotiate apdu', negotiateApdu.length);
                         return [4 /*yield*/, tag.sendAPDU(negotiateApdu)];
-                    case 2:
+                    case 4:
                         negotiateResp = _a.sent();
-                        logging_1.trc('negotiate resp', negotiateResp.SW);
+                        logging_1.trc('Negotiate resp', negotiateResp.SW);
                         if (!negotiateResp.OK) {
-                            logging_1.dbg('error with negotiate resp', negotiateResp.SW);
+                            logging_1.dbg('Error with negotiate resp', negotiateResp.SW);
                             tackyTag = tag;
                             if (!tackyTag['__retried']) {
                                 tackyTag['__retried'] = true;
@@ -188,38 +204,38 @@ var ReadersService = /** @class */ (function () {
                             }
                             else {
                                 // Don't try and auto scan it again, assume it's something weird
-                                return [2 /*return*/, reader.disconnect('eject')];
+                                this.eject(reader);
+                                return [2 /*return*/];
                             }
                         }
                         apdu = session_utils_1.fromBase64(resp.args.get);
                         // apdu[apdu.length - 1] = 255
-                        logging_1.trc('get apdu', apdu.length, 'LE=', apdu.slice(-1));
+                        logging_1.trc('Get apdu', apdu.length, 'LE=', apdu.slice(-1));
                         return [4 /*yield*/, tag.sendAPDU(apdu)];
-                    case 3:
+                    case 5:
                         apduResp = _a.sent();
                         rem = parseInt(apduResp.SW, 16) ^ 0x9100;
                         if (rem && rem != 0x100) {
                             // Don't try and auto scan it again, assume it's something weird
-                            return [2 /*return*/, reader.disconnect('eject')];
+                            this.eject(reader);
+                            return [2 /*return*/];
                         }
                         // TODO: handle non 91xx/90xx here
-                        logging_1.dbg('gstd resp', apduResp.SW);
+                        logging_1.dbg('GSTD resp', apduResp.SW);
                         responses.push(apduResp.full);
-                        _a.label = 4;
-                    case 4:
-                        if (!(apduResp.SW === '0x9100')) return [3 /*break*/, 6];
-                        logging_1.trc('sending get more apdu');
-                        return [4 /*yield*/, tag.sendAPDU('90-C0-00-00-00-00')];
-                    case 5:
-                        apduResp = _a.sent();
-                        logging_1.trc('get more SW', apduResp.SW);
-                        responses.push(apduResp.full);
-                        return [3 /*break*/, 4];
+                        _a.label = 6;
                     case 6:
-                        logging_1.trc('responses', responses.map(function (r) {
-                            return [r.slice(-2), r.length];
-                        }));
-                        reader.disconnect('unPower').then();
+                        if (!(apduResp.SW === '0x9100')) return [3 /*break*/, 8];
+                        logging_1.trc('Sending get more apdu');
+                        return [4 /*yield*/, tag.sendAPDU('90-C0-00-00-00-00')];
+                    case 7:
+                        apduResp = _a.sent();
+                        logging_1.trc('Get more SW', apduResp.SW);
+                        responses.push(apduResp.full);
+                        return [3 /*break*/, 6];
+                    case 8:
+                        logging_1.dbg('Responses', responses.map(function (r) { return [utils_2.hex(r.slice(-2)), r.length]; }));
+                        this.unpower(reader);
                         serializedOrLiveSession = resp.session;
                         return [4 /*yield*/, this.readerSession.handleMessage({
                                 session: serializedOrLiveSession,
@@ -228,25 +244,26 @@ var ReadersService = /** @class */ (function () {
                                     responses: responses.map(session_utils_1.toBase64)
                                 }
                             })];
-                    case 7:
+                    case 9:
                         resp = (_a.sent());
-                        // TODO: should use typed events ..
+                        id = uuid.v4();
                         this.events.emit(events_1.Events.smartTapData, {
+                            uuid: id,
                             // TODO: should use smartTap likely
                             type: 'smart-tap',
                             reader: readerWithSpec.spec,
                             data: resp.args.data,
                             collectorId: selectOSEMsg.args.collectorId
                         });
-                        _a.label = 8;
-                    case 8: return [2 /*return*/];
+                        _a.label = 10;
+                    case 10: return [2 /*return*/];
                 }
             });
         });
     };
     ReadersService.prototype.onApplePay = function (tag, readerWithSpec) {
         return __awaiter(this, void 0, void 0, function () {
-            var reader, selectPassTypeIdentifier, gvd, resp;
+            var reader, selectPassTypeIdentifier, gvd, resp, id;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -260,13 +277,19 @@ var ReadersService = /** @class */ (function () {
                         return [4 /*yield*/, tag.sendAPDU(generateGVD(selectPassTypeIdentifier))];
                     case 2:
                         gvd = _a.sent();
-                        logging_1.dbg('gvd', gvd.SW);
+                        logging_1.dbg('GVD', gvd.SW);
                         if (!(gvd.SW == '0x6287')) return [3 /*break*/, 3];
-                        reader.disconnect('reset').then();
+                        this.reset(reader);
                         return [3 /*break*/, 6];
                     case 3:
                         if (!gvd.OK) return [3 /*break*/, 5];
-                        reader.disconnect('eject').then();
+                        if (this.env.isLinux() || this.env.isOSX()) {
+                            // This works on rpi0w
+                            this.unpower(reader);
+                        }
+                        else {
+                            this.eject(reader);
+                        }
                         return [4 /*yield*/, this.readerSession.handleMessage({
                                 cmd: messages_1.CommandKey.decrypt_vas_data,
                                 args: {
@@ -276,26 +299,41 @@ var ReadersService = /** @class */ (function () {
                             })];
                     case 4:
                         resp = _a.sent();
+                        id = uuid.v4();
                         this.events.emit(events_1.Events.vasData, {
                             type: 'apple-pay',
+                            uuid: id,
                             data: resp.args.data,
                             reader: readerWithSpec.spec,
                             passTypeIdentifier: selectPassTypeIdentifier
                         });
                         return [3 /*break*/, 6];
                     case 5:
-                        logging_1.trc('gvd resp', gvd.SW);
-                        reader.disconnect('reset').then();
+                        logging_1.trc('GVD resp', gvd.SW);
+                        this.reset(reader);
                         _a.label = 6;
                     case 6: return [2 /*return*/];
                 }
             });
         });
     };
+    ReadersService.prototype.reset = function (reader) {
+        logging_1.dbg('Resetting tag');
+        reader.disconnect('reset').then();
+    };
+    ReadersService.prototype.unpower = function (reader) {
+        logging_1.dbg('Un-powering tag');
+        reader.disconnect('unPower').then();
+    };
+    ReadersService.prototype.eject = function (reader) {
+        logging_1.dbg('Ejecting tag');
+        reader.disconnect('eject').then();
+    };
     ReadersService = __decorate([
         injection_js_1.Injectable(),
         __param(0, injection_js_1.Inject(injection_tokens_1.CONFIG_TOKEN)),
         __metadata(\"design:paramtypes\", [Object, event_bus_1.EventBus,
+            environment_service_1.EnvironmentService,
             abstract_session_handler_service_1.SessionHandlerService])
     ], ReadersService);
     return ReadersService;

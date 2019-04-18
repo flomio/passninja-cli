@@ -54,13 +54,13 @@ var TestHandler = /** @class */ (function () {
     function TestHandler(sockets) {
         this.sockets = sockets;
     }
-    TestHandler.prototype.handle = function (body) {
+    TestHandler.prototype.handle = function (args) {
         return __awaiter(this, void 0, void 0, function () {
             var subscribers;
             return __generator(this, function (_a) {
-                logging_1.dbg('body', body);
+                logging_1.dbg('Body', args);
                 subscribers = this.sockets.sendAll({ ok: true });
-                logging_1.dbg('sent to', subscribers, 'subscribers');
+                logging_1.dbg('Sent to', subscribers, 'subscribers');
                 return [2 /*return*/, { ok: true }];
             });
         });
