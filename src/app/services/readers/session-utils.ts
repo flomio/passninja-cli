@@ -1,17 +1,13 @@
-
-Object.defineProperty(exports, \"__esModule\", { value: true });
-function fromBase64(buffer) {
-    return Buffer.from(buffer, 'base64');
+export const fromBase64 = (str: string) => {
+  return Buffer.from(str, "base64")
 }
-exports.fromBase64 = fromBase64;
-function toBase64(buf) {
-    return buf.toString('base64');
-}
-exports.toBase64 = toBase64;
-function apduRespB64(resp) {
-    return resp.full.toString('base64');
-}
-exports.apduRespB64 = apduRespB64;
 
+export const toBase64 = (buffer: Buffer) => {
+  return buffer.toString("base64")
+}
 
-//# sourceURL=webpack://commonjs/./src/services/readers/session-utils.ts?"
+// Matt: can't find refrences to use of this function.
+// cannot strongly type
+// export const apduRespB64 = resp => {
+//   return resp.full.toString("base64")
+// }
