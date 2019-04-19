@@ -28,6 +28,8 @@
     "forge": "^2.3.0",
     "pcsclite": "^0.6.0",
     "readdir-cluster": "^1.1.0",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.7",
     "rxjs": "~6.3.3",
     "tslib": "^1.9.0",
     "zone.js": "~0.8.26"
@@ -41,6 +43,7 @@
     "@types/jasmine": "~2.8.8",
     "@types/jasminewd2": "~2.0.3",
     "@types/node": "^8.9.5",
+    "@types/request-promise-native": "^1.0.15",
     "codelyzer": "~4.5.0",
     "jasmine-core": "~2.99.1",
     "jasmine-spec-reporter": "~4.2.1",
