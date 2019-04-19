@@ -1,22 +1,7 @@
-// var __importStar = (this && this.__importStar) || function (mod) {
-//     if (mod && mod.__esModule) return mod;
-//     var result = {};
-//     if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-//     result[\"default\"] = mod;
-//     return result;
-// };
-// var __importDefault = (this && this.__importDefault) || function (mod) {
-//     return (mod && mod.__esModule) ? mod : { \"default\": mod };
-// };
-// Object.defineProperty(exports, \"__esModule\", { value: true });
-// var os = __importStar(__webpack_require__(/*! os */ \"os\"));
-// var crypto = __importStar(__webpack_require__(/*! crypto */ \"crypto\"));
-// var forge = __importStar(__webpack_require__(/*! node-forge */ \"./node_modules/node-forge/lib/index.js\"));
-// var base_x_1 = __importDefault(__webpack_require__(/*! base-x */ \"./node_modules/base-x/index.js\"));
-
 import * as os from "os"
-import * as baseX from "base-x"
 import * as crypto from "crypto"
+import * as forge from "forge"
+import * as baseX from "base-x"
 
 export const generateCSR = identityId => {
   //   \"\
@@ -33,20 +18,23 @@ export const generateCSR = identityId => {
   // cat cert.pem > bundle.pem\
   // cat encrypted-key >> bundle.pem \";
   //
-  var keypair = forge.pki.rsa.generateKeyPair({ bits: 2048 })
-  var csr = forge.pki.createCertificationRequest()
-  csr.publicKey = keypair.publicKey
+  const keyPair = forge.pki.rsa.generateKeyPair({ bits: 2048 })
+  const csr = forge.pki.createCertificationRequest()
+
+  csr.publicKey = keyPair.publicKey
+
   csr.setSubject([
     {
       name: "organizationName",
       value: identityId
     }
   ])
-  csr.sign(keypair.privateKey, forge.md.sha256.create())
+
+  csr.sign(keyPair.privateKey, forge.md.sha256.create())
+
   return {
     csr: forge.pki.certificationRequestToPem(csr),
-    // @ts-ignore
-    key: forge.pki.privateKeyToPem(keypair.privateKey)
+    key: forge.pki.privateKeyToPem(keyPair.privateKey)
   }
 }
 
@@ -66,34 +54,17 @@ function hash(val: string | Buffer) {
  *
  */
 export const machineId = extraMaterial => {
-  let machineIdString = ""
   // mac addresses
   const interfaces = os.networkInterfaces()
-  const interfaceNames = Object.keys(interfaces)
   const macAddresses = new Set()
 
   for (const name in interfaces) {
-    if (interfaces[name]) {
-      const info = interfaces[name];
+    if (name) {
+      interfaces[name].map(iface => macAddresses.add(iface.mac))
     }
-
-    // for (var _a = 0, _b = interfaces[interfaceName]; _a < _b.length; _a++) {
-    //   var iface = _b[_a]
-    //   macAddresses.add(iface.mac)
-    // }
   }
 
-  // for (
-  //   var _i = 0, interfaceNames_1 = interfaceNames;
-  //   _i < interfaceNames_1.length;
-  //   _i++
-  // ) {
-  //   var interfaceName = interfaceNames_1[_i]
-  //   for (var _a = 0, _b = interfaces[interfaceName]; _a < _b.length; _a++) {
-  //     var iface = _b[_a]
-  //     macAddresses.add(iface.mac)
-  //   }
-  }
+  let machineIdString = ""
 
   machineIdString += new Array(macAddresses.values()).sort().join("/") + "|"
   // memory
