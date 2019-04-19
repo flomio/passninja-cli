@@ -17,8 +17,8 @@ import {
 
 export class AuthService {
   credentialsSubject: BehaviorSubject<
-    CognitoIdentityCredentials | false
-  > = new BehaviorSubject(false)
+    CognitoIdentityCredentials
+  > = new BehaviorSubject(false as any)
 
   signedRequest: (
     url: string,

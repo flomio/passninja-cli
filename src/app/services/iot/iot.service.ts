@@ -54,12 +54,12 @@ export class IotService {
     }
   }
 
-  setupClient() {
+  async setupClient() {
     if (this.auth.noCredentials()) {
       return this.thingService.loadLatestThingClient()
     }
 
-    const creds = this.auth.waitCredentials()
+    const creds = await this.auth.waitCredentials()
 
     const name = machineId(
       this.options.awsResources.stackName + "/" + creds.identityId
