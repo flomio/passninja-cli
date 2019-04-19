@@ -21,30 +21,29 @@ export class IotService {
   ) {
     const scanEvents = [smartTapData, vasData]
 
-    // scanEvents.forEach(function (ev) {
-
-    //     events.on(ev, function (data) {
-
-    //         dbg(ev, JSON.stringify(data, null, 2));
-
-    //         if (_this.mqtt == null) {
-    //             return;
-    //         }
-
-    //         else {
-    //             _this.mqtt.then(function (client) {
-    //                 var cognitoId = client
-    //                     .options
-    //                     .clientId
-    //                     .split(':')
-    //                     .slice(1, 3)
-    //                     .join(':');
-    //                 var topic = options.awsResources.stackName + \"/\" + cognitoId + \"/\" + client.options.clientId + \"/scan\";
-    //                 client.publish(topic, JSON.stringify(data));
-    //             });
-    //         }
-    //     });
-    // });
+    scanEvents.forEach(event => {
+      this.events.on(event, data => {
+        // dbg(event, JSON.stringify(data, null, 2));
+        if (this.mqtt == null) {
+          return
+        } else {
+          this.mqtt.then(client => {
+            const cognitoId = client.options.clientId
+              .split(":")
+              .slice(1, 3)
+              .join(":")
+            const topic =
+              options.awsResources.stackName +
+              "/" +
+              cognitoId +
+              "/" +
+              client.options.clientId +
+              "/scan"
+            client.publish(topic, JSON.stringify(data))
+          })
+        }
+      })
+    })
   }
 
   lazyInit() {

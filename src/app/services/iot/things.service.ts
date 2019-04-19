@@ -7,7 +7,6 @@ import { AuthService } from "../auth/auth.service"
 export class ThingsService {
   constructor(
     @Inject(CONFIG_TOKEN) private options: any,
-    private thingService: ThingsService,
     private events: EventBus,
     private auth: AuthService
   ) {}
