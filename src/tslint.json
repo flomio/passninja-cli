@@ -4,6 +4,8 @@
     "quotemark": false,
     "directive-selector": [true, "attribute", "app", "camelCase"],
     "component-selector": [true, "element", "app", "kebab-case"],
-    "semicolon": [true, "never"]
+    "semicolon": [true, "never"],
+    "no-output-on-prefix": false,
+    "no-bitwise": false
   }
 }
