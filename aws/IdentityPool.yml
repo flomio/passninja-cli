@@ -9,16 +9,16 @@ Resources:
       CognitoIdentityProviders:
         - ClientId: ""
           ProviderName: String
-
-      SupportedLoginProviders:
-        String: String
-      SamlProviderARNs:
-        - String
-      OpenIdConnectProviderARNs:
-        - String
-      CognitoStreams:
-        - CognitoStreams
-      PushSync:
-        - PushSync
-      CognitoEvents:
-        String: String
+Outputs:
+  SupportedLoginProviders:
+    String: String
+  SamlProviderARNs:
+    - String
+  OpenIdConnectProviderARNs:
+    - String
+  CognitoStreams:
+    - CognitoStreams
+  PushSync:
+    - PushSync
+  CognitoEvents:
+    String: String

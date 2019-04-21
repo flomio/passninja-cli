@@ -18,13 +18,17 @@ Resources:
         - "email"
       AutoVerifiedAttributes:
         - "email"
-      PasswordPolicy:
-        MinimumLength: 10
-        RequireLowercase: true
-        RequireSymbols: true
-        RequireUppercase: true
-        RequireNumbers: true
       UserPoolName: "passninja-production-user-pool"
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 10
+          RequireLowercase: true
+          RequireSymbols: true
+          RequireUppercase: true
+          RequireNumbers: true
 Outputs:
   UserPoolClientId:
+    Description:
+      Fn::Join:
+      -
   UserPoolProviderName:
