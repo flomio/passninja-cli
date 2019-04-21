@@ -45,6 +45,7 @@
     "@types/jasminewd2": "~2.0.3",
     "@types/node": "^8.9.5",
     "@types/request-promise-native": "^1.0.15",
+    "cloudform": "^4.0.0-alpha.0",
     "codelyzer": "~4.5.0",
     "jasmine-core": "~2.99.1",
     "jasmine-spec-reporter": "~4.2.1",

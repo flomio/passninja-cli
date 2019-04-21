@@ -4,6 +4,7 @@
 test/passes
 .ipynb_checkpoints
 Untitled.ipynb
+*tempCodeRunnerFile*
 
 #
 #
@@ -35,6 +36,7 @@ speed-measure-plugin.json
 *.sublime-workspace
 
 # IDE - VSCode
+*tempCodeRunnerFile*
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
