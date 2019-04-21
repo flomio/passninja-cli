@@ -26,6 +26,7 @@
     "debug": "^4.1.1",
     "flomio-js-sdk": "file:../flomio-js-sdk",
     "forge": "^2.3.0",
+    "mqtt": "^2.18.8",
     "pcsclite": "^0.6.0",
     "readdir-cluster": "^1.1.0",
     "request": "^2.88.0",

@@ -1,7 +1,7 @@
-import { Inject, Injectable } from "@angular/core"
-import { CONFIG_TOKEN } from "src/app/injection-tokens"
-import { EventBus } from "../event-bus"
-import { AuthService } from "../auth/auth.service"
+import { Inject, Injectable } from '@angular/core'
+import { CONFIG_TOKEN } from 'src/app/injection-tokens'
+import { EventBus } from '../event-bus'
+import { AuthService } from '../auth/auth.service'
 
 @Injectable()
 export class ThingsService {
@@ -19,26 +19,28 @@ export class ThingsService {
    */
   tryRegisterThing = async (name: string) => {
     const creds = await this.auth.waitCredentials()
+
     const iot = new AWS.Iot({
       region: this.options.awsResources.region,
       credentials: creds
     })
+
     const thingName = this.getThingName(creds, name)
 
     try {
       await iot.describeThing({ thingName }).promise()
 
       if (!process.env.FORCE_THING_CONF_RECREATE) {
-        logging_1.dbg("Already have thing with", name)
+        logging_1.dbg('Already have thing with', name)
         return
       }
 
       logging_1.dbg(
-        "Warning, already have thing with this name," +
-          " creating new cert/conf"
+        'Warning, already have thing with this name,' +
+          ' creating new cert/conf'
       )
     } catch (err) {
-      logging_1.dbg("could not describe thing", thingName)
+      logging_1.dbg('could not describe thing', thingName)
     }
 
     const thing = await iot
@@ -65,8 +67,8 @@ export class ThingsService {
       })
       .promise()
 
-    logging_1.dbg("Cert", cert.certificateArn)
-    logging_1.dbg("Attached", attached)
+    logging_1.dbg('Cert', cert.certificateArn)
+    logging_1.dbg('Attached', attached)
 
     const thingPrincipal = await iot
       .attachThingPrincipal({
@@ -75,7 +77,7 @@ export class ThingsService {
       })
       .promise()
 
-    logging_1.dbg("thingPrincipal", thingPrincipal)
+    logging_1.dbg('thingPrincipal', thingPrincipal)
 
     const certificatePem = cert.certificatePem
 
@@ -95,9 +97,9 @@ export class ThingsService {
 
   getClient = async conf => {
     const region = this.options.awsResources.region
-    const accountPrefix = "a17hetn6gw8xzh"
+    const accountPrefix = 'a17hetn6gw8xzh'
     const brokerUrl =
-      "mqtts://" + accountPrefix + "-ats.iot." + region + ".amazonaws.com"
+      'mqtts://' + accountPrefix + '-ats.iot.' + region + '.amazonaws.com'
     const ca = `-----BEGIN CERTIFICATE-----
     MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
     ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6
@@ -124,16 +126,16 @@ export class ThingsService {
       ca: [ca]
     })
 
-    client.on("connect", () => {
-      logging_1.dbg("MQTT connected!")
+    client.on('connect', () => {
+      logging_1.dbg('MQTT connected!')
     })
 
-    client.on("error", err => {
-      logging_1.dbg("MQTT error", err)
+    client.on('error', err => {
+      logging_1.dbg('MQTT error', err)
     })
 
-    client.on("close", () => {
-      logging_1.dbg("MQTT close")
+    client.on('close', () => {
+      logging_1.dbg('MQTT close')
     })
 
     return client
@@ -154,7 +156,7 @@ export class ThingsService {
 
     const filePaths = files
       .filter(function(fn) {
-        return fn.startsWith("thing-") && fn.endsWith(".json")
+        return fn.startsWith('thing-') && fn.endsWith('.json')
       })
       .map(function(fn) {
         return path.join(folder, fn)
@@ -177,7 +179,7 @@ export class ThingsService {
     const basename = path.basename(fn)
 
     return this.loadThingClient(
-      basename.slice("thing-".length, basename.length - ".json".length)
+      basename.slice('thing-'.length, basename.length - '.json'.length)
     )
   }
 
@@ -202,10 +204,10 @@ export class ThingsService {
   }
 
   getThingConfigPath = async (configDir, name) =>
-    path.join(configDir, "thing-" + name + ".json")
+    path.join(configDir, 'thing-' + name + '.json')
 
   getConfigDir = async () => {
-    const configDir = path.join(os.homedir(), ".pn")
+    const configDir = path.join(os.homedir(), '.pn')
 
     if (!fs.existsSync(configDir)) {
       await util.promisify(fs.mkdir)(configDir)
