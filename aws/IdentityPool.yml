@@ -1,0 +1,24 @@
+---
+Resources:
+  IdentityPool:
+    Type: "AWS::Cognito::IdentityPool"
+    Properties:
+      IdentityPoolName: "passninja-production-identity-pool"
+      AllowUnauthenticatedIdentities: true
+      DeveloperProviderName: "passninja.com"
+      CognitoIdentityProviders:
+        - ClientId: ""
+          ProviderName: String
+
+      SupportedLoginProviders:
+        String: String
+      SamlProviderARNs:
+        - String
+      OpenIdConnectProviderARNs:
+        - String
+      CognitoStreams:
+        - CognitoStreams
+      PushSync:
+        - PushSync
+      CognitoEvents:
+        String: String

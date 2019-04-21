@@ -1,0 +1,30 @@
+---
+Resources:
+  UserPool:
+    Type: "AWS::Cognito::UserPool"
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+        InviteMessageTemplate:
+          EmailMessage: "replace me as the body of the invite message"
+          EmailSubject: "PassNinja Administrator Account Invitation"
+        UnusedAccountValidityDays: 7
+      EmailConfiguration:
+        ReplyToEmailAddress: "info@flomio.com"
+      DeviceConfiguration:
+        ChallengeRequiredOnNewDevice: false
+        DeviceOnlyRememberedOnUserPrompt: false
+      UsernameAttributes:
+        - "email"
+      AutoVerifiedAttributes:
+        - "email"
+      PasswordPolicy:
+        MinimumLength: 10
+        RequireLowercase: true
+        RequireSymbols: true
+        RequireUppercase: true
+        RequireNumbers: true
+      UserPoolName: "passninja-production-user-pool"
+Outputs:
+  UserPoolClientId:
+  UserPoolProviderName:

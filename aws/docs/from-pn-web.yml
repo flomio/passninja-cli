@@ -1,0 +1,266 @@
+UserPool:
+  Type: "AWS::Cognito::UserPool"
+  Properties:
+    AdminCreateUserConfig:
+      AllowAdminCreateUserOnly: false
+      UnusedAccountValidityDays: 180
+    EmailConfiguration:
+      ReplyToEmailAddress: "info@flomio.com"
+    UsernameAttributes:
+      - "email"
+    AutoVerifiedAttributes:
+      - "email"
+    UserPoolName:
+      Fn::Join:
+        - ""
+        -
+          -
+            Ref: "AWS::StackName"
+          - "-"
+          -
+            Ref: "AWS::Region"
+          - "-"
+          - "cognito-user-pool"
+    Policies:
+      PasswordPolicy:
+        MinimumLength: 10
+        RequireLowercase: true
+        RequireSymbols: true
+        RequireUppercase: true
+        RequireNumbers: true
+UserPoolClient:
+  Type: "AWS::Cognito::UserPoolClient"
+  Properties:
+    ClientName:
+      Fn::Join:
+        - ""
+        -
+          -
+            Ref: "AWS::StackName"
+          - "-"
+          -
+            Ref: "AWS::Region"
+          - "-"
+          - "cognito-user-pool-client"
+    UserPoolId:
+      Ref: "UserPool"
+    ExplicitAuthFlows:
+      - "USER_PASSWORD_AUTH"
+    GenerateSecret: false
+IdentityPool:
+  Type: "AWS::Cognito::IdentityPool"
+  Properties:
+    IdentityPoolName: "PassNinjaWebTestUsEast1Identities"
+    AllowUnauthenticatedIdentities: true
+    DeveloperProviderName: "passninja.com"
+    CognitoIdentityProviders:
+      -
+        ProviderName:
+          Fn::Join:
+            - ""
+            -
+              - "cognito-idp."
+              -
+                Ref: "AWS::Region"
+              - ".amazonaws.com/"
+              -
+                Ref: "UserPool"
+        ClientId:
+          Ref: "UserPoolClient"
+AuthenticatedUserRole:
+  Type: "AWS::IAM::Role"
+  Properties:
+    RoleName:
+      Fn::Join:
+        - ""
+        -
+          -
+            Ref: "AWS::StackName"
+          - "-"
+          -
+            Ref: "AWS::Region"
+          - "-"
+          - "authenticated-user-role"
+    AssumeRolePolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        -
+          Effect: "Allow"
+          Principal:
+            Federated: "cognito-identity.amazonaws.com"
+          Action: "sts:AssumeRoleWithWebIdentity"
+          Condition:
+            StringEquals:
+              cognito-identity.amazonaws.com:aud:
+                Ref: "IdentityPool"
+            ForAnyValue:StringLike:
+              cognito-identity.amazonaws.com:amr: "authenticated"
+AuthenticatedUserPolicy:
+  Type: "AWS::IAM::Policy"
+  Properties:
+    PolicyName:
+      Fn::Join:
+        - ""
+        -
+          -
+            Ref: "AWS::StackName"
+          - "-"
+          -
+            Ref: "AWS::Region"
+          - "-"
+          - "cognito-authenticated-user-policy"
+    Roles:
+      -
+        Ref: "AuthenticatedUserRole"
+    PolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        -
+          Action:
+            - "s3:ListBucket"
+          Effect: "Allow"
+          Resource:
+            Fn::GetAtt:
+              - "PassesBucket"
+              - "Arn"
+          Condition:
+            StringLike:
+              s3:prefix:
+                - "${cognito-identity.amazonaws.com:sub}/*"
+        -
+          Effect: "Allow"
+          Action:
+            - "s3:GetObject"
+            - "s3:PutObject"
+            - "s3:DeleteObject"
+          Resource:
+            Fn::Join:
+              - ""
+              -
+                -
+                  Fn::GetAtt:
+                    - "PassesBucket"
+                    - "Arn"
+                - "/${cognito-identity.amazonaws.com:sub}/*"
+        -
+          Action:
+            - "iot:Connect"
+            - "iot:Publish"
+            - "iot:Subscribe"
+            - "iot:Receive"
+            - "iot:GetThingShadow"
+            - "iot:UpdateThingShadow"
+            - "iot:DeleteThingShadow"
+          Resource: "*"
+          Effect: "Allow"
+        -
+          Action: "iot:DescribeEndpoint"
+          Resource: "*"
+          Effect: "Allow"
+        -
+          Condition:
+            ArnEquals:
+              iot:PolicyArn:
+                Fn::Join:
+                  - ""
+                  -
+                    - "arn:aws:iot:*:448311138761:policy/"
+                    -
+                      Fn::Join:
+                        - ""
+                        -
+                          -
+                            Ref: "AWS::StackName"
+                          - "-"
+                          -
+                            Ref: "AWS::Region"
+                          - "-"
+                          - "cognitos-own"
+          Action: "iot:AttachPrincipalPolicy"
+          Resource: "*"
+          Effect: "Allow"
+        -
+          Condition:
+            ArnEquals:
+              iot:PolicyArn:
+                Fn::Join:
+                  - ""
+                  -
+                    - "arn:aws:iot:*:448311138761:policy/"
+                    -
+                      Fn::Join:
+                        - ""
+                        -
+                          -
+                            Ref: "AWS::StackName"
+                          - "-"
+                          -
+                            Ref: "AWS::Region"
+                          - "-"
+                          - "things-own"
+          Action: "iot:AttachPrincipalPolicy"
+          Resource: "*"
+          Effect: "Allow"
+        -
+          Effect: "Allow"
+          Action:
+            - "iot:AttachThingPrincipal"
+            - "iot:DetachThingPrincipal"
+          Condition:
+            ArnEquals:
+              iot:ThingArn:
+                Fn::Sub:
+                  - "arn:aws:iot:*:448311138761:thing/${AWS::StackName}:${!cognito-identity.amazonaws.com:sub}:*"
+                  - {}
+          Resource:
+            - "*"
+        -
+          Effect: "Allow"
+          Action:
+            - "iot:ListPrincipalThings"
+            - "iot:CreateKeysAndCertificate"
+            - "iot:CreateCertificateFromCsr"
+          Resource:
+            - "*"
+        -
+          Action:
+            - "iot:UpdateThing"
+            - "iot:CreateThing"
+            - "iot:DescribeThing"
+            - "iot:DeleteThing"
+          Resource:
+            Fn::Sub:
+              - "arn:aws:iot:*:448311138761:thing/${AWS::StackName}:${!cognito-identity.amazonaws.com:sub}:*"
+              - {}
+          Effect: "Allow"
+        -
+          Action: "execute-api:invoke"
+          Effect: "Allow"
+          Resource:
+            Fn::Join:
+              - ""
+              -
+                - "arn:aws:execute-api:"
+                -
+                  Fn::Sub:
+                    - "${AWS::Region}"
+                    - {}
+                - ":"
+                -
+                  Fn::Sub:
+                    - "${AWS::AccountId}"
+                    - {}
+                - ":"
+                -
+                  Ref: "ApiGatewayRestApi"
+                - "/*/*/*"
+IdentityPoolAuthenticatedRoleAttachment:
+  Type: "AWS::Cognito::IdentityPoolRoleAttachment"
+  Properties:
+    IdentityPoolId:
+      Ref: "IdentityPool"
+    Roles:
+      authenticated:
+        Fn::GetAtt:
+          - "AuthenticatedUserRole"
+          - "Arn"
