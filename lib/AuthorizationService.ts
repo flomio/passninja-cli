@@ -4,7 +4,9 @@ import {
   CognitoIdentityCredentials
 } from 'aws-sdk'
 import { BehaviorSubject } from 'rxjs'
+
 import { PassNinjaCliOptions } from './options'
+import { CleanUpService } from './CleanUp'
 
 export class AuthorizationService {
   get credentials() {
@@ -25,8 +27,15 @@ export class AuthorizationService {
     {} as any
   )
 
-  constructor(private options: PassNinjaCliOptions) {
+  constructor(
+    private options: PassNinjaCliOptions,
+    private _cleanUp: CleanUpService
+  ) {
     this.setup().then(() => console.log('logged in'))
+
+    this._cleanUp.register(() => {
+      this._$credentials.complete()
+    })
   }
 
   update = async () => {

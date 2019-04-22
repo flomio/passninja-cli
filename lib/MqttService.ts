@@ -1,11 +1,20 @@
 import { connect, MqttClient } from 'mqtt'
-import { fromEvent, throwError, BehaviorSubject } from 'rxjs'
-import { tap, flatMap, merge } from 'rxjs/operators'
+import {
+  fromEvent,
+  throwError,
+  BehaviorSubject,
+  merge,
+  Subscription
+} from 'rxjs'
+import { tap, flatMap } from 'rxjs/operators'
 import { PassNinjaCliOptions } from './options'
+import { CleanUpService } from './CleanUp'
 
 declare type MqttStatus = 'online' | 'offline'
 
-declare type Connack = any
+declare interface Connack {
+  sessionPresent: boolean
+}
 
 export class MqttService {
   private _ca = `-----BEGIN CERTIFICATE-----
@@ -36,14 +45,27 @@ export class MqttService {
 
   $status = new BehaviorSubject<MqttStatus>('offline')
 
-  constructor(private _options: PassNinjaCliOptions) {
+  constructor(
+    private _options: PassNinjaCliOptions,
+    private _cleanUp: CleanUpService
+  ) {
     this._client = connect(
       this._brokerUrl,
       { ca: this._ca }
     )
+
+    const subscription = this.buildListeners().subscribe()
+
+    this._cleanUp.register(() => {
+      if (!subscription.closed) {
+        subscription.unsubscribe()
+      }
+
+      this._client.end(true)
+    })
   }
 
-  getListeners() {
+  buildListeners() {
     const $connect = fromEvent<Connack>(this._client, 'connect').pipe(
       tap(con => {
         console.log(con)
