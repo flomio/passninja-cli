@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@angular/core'
 import { CONFIG_TOKEN } from 'src/app/injection-tokens'
 import { EventBus } from '../event-bus'
 import { AuthService } from '../auth/auth.service'
+import * as AWS from 'aws-sdk'
 
 @Injectable()
 export class ThingsService {
@@ -203,7 +204,7 @@ export class ThingsService {
     return
   }
 
-  getThingConfigPath = async (configDir, name) =>
+  getThingConfigPath = (configDir, name) =>
     path.join(configDir, 'thing-' + name + '.json')
 
   getConfigDir = async () => {
