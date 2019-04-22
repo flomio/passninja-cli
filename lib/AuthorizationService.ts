@@ -1,7 +1,7 @@
 import {
   CognitoIdentityServiceProvider,
-  CognitoIdentity,
-  CognitoIdentityCredentials
+  CognitoIdentityCredentials,
+  Credentials
 } from 'aws-sdk'
 import { BehaviorSubject } from 'rxjs'
 
@@ -23,9 +23,7 @@ export class AuthorizationService {
 
   private _credentials: CognitoIdentityCredentials
 
-  private _$credentials = new BehaviorSubject<CognitoIdentity.Credentials>(
-    {} as any
-  )
+  private _$credentials = new BehaviorSubject<Credentials>({} as any)
 
   constructor(
     private options: PassNinjaCliOptions,
