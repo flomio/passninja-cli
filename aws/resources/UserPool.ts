@@ -1,14 +1,14 @@
-import { Cognito } from 'cloudform'
+import { Cognito, Fn } from 'cloudform'
 
 export const UserPool = new Cognito.UserPool({
-  UserPoolName: 'passninja-production-user-pool',
+  UserPoolName: Fn.Join('-', ['pass-ninja', Fn.Ref('Stage'), 'user-pool']),
   AdminCreateUserConfig: {
     AllowAdminCreateUserOnly: true,
-    UnusedAccountValidityDays: 7,
-    InviteMessageTemplate: {
-      EmailMessage: 'replace me as the body of the invite message',
-      EmailSubject: 'PassNinja Administrator Account Invitation'
-    }
+    UnusedAccountValidityDays: 7
+    // InviteMessageTemplate: {
+    //   EmailMessage: 'replace me as the body of the invite message',
+    //   EmailSubject: 'PassNinja Administrator Account Invitation'
+    // }
   },
   EmailConfiguration: {
     ReplyToEmailAddress: 'info@flomio.com'
@@ -21,7 +21,7 @@ export const UserPool = new Cognito.UserPool({
   AutoVerifiedAttributes: ['email'],
   Policies: {
     PasswordPolicy: {
-      MinimumLength: 10,
+      MinimumLength: 8,
       RequireLowercase: true,
       RequireSymbols: true,
       RequireUppercase: true,

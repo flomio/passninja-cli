@@ -7,8 +7,10 @@ import {
   Subscription
 } from 'rxjs'
 import { tap, flatMap } from 'rxjs/operators'
-import { PassNinjaCliOptions } from './options'
+
 import { CleanUpService } from './CleanUp'
+
+import { Config } from '../lib/ConfigurationService'
 
 declare type MqttStatus = 'online' | 'offline'
 
@@ -18,16 +20,14 @@ declare interface Connack {
 
 export class MqttService {
   private _client: MqttClient
+  private _brokerUrl: string
 
   $status = new BehaviorSubject<MqttStatus>('offline')
 
-  constructor(
-    private _options: PassNinjaCliOptions,
-    private _cleanUp: CleanUpService
-  ) {
+  constructor(private _config: Config, private _cleanUp: CleanUpService) {
     this._client = connect(
       this._brokerUrl,
-      { ca: this._ca }
+      { ca: this._config.ca }
     )
 
     const subscription = this.buildListeners().subscribe()

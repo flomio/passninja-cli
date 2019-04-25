@@ -1,27 +1,27 @@
-import {
-  default as CF,
-  Fn,
-  Refs,
-  EC2,
-  StringParameter,
-  ResourceTag
-} from 'cloudform'
+import { default as CF, StringParameter } from 'cloudform'
 
-import { UserPool } from './UserPool'
-import { IdentityPool } from './IdentityPool'
-import { UserPoolClientPnCli } from './UserPoolClient.pn-cli'
+import { UserPool } from './resources/UserPool'
+import { IdentityPool } from './resources/IdentityPool'
+import { AuthenticatedRoleAttachment } from './resources/IdentityPoolRoleAttachment'
+import { AuthenticatedUserRole } from './resources/AuthenticatedUserRole'
+import { AuthenticatedUserPolicy } from './resources/AuthenticatedUserPolicy'
+import { UserPoolClient } from './resources/UserPoolClient'
 
-export const cloudform = CF({
-  Description: 'PassNinja',
+export default CF({
+  Description: 'pass-ninja-cli',
   Parameters: {
     Stage: new StringParameter({
       Description: 'Deployment environment name',
-      AllowedValues: ['dev', 'stage', 'prod']
+      AllowedValues: ['development', 'staging', 'production'],
+      Default: 'production'
     })
   },
   Resources: {
     UserPool,
+    UserPoolClient,
+    AuthenticatedUserRole,
+    AuthenticatedUserPolicy,
     IdentityPool,
-    UserPoolClientPnCli
+    AuthenticatedRoleAttachment
   }
 })
