@@ -1,6 +1,6 @@
 # Configuring 
 
-## Prerequists
+## Prerequisits
 ```
 $ node -v
 v11.3.0
