@@ -54,13 +54,13 @@ const getBaseConfig = () => {
 };
 
 declare type SerializedConfig = ReturnType<typeof getBaseConfig> & {
-  username: string;
-  password: string;
+  username?: string;
+  password?: string;
 };
 
 export class Configuration {
   static get directory() {
-    return path.join(os.homedir(), '.pn');
+    return path.join(os.homedir(), '.passninja');
   }
 
   static get file() {
@@ -68,45 +68,55 @@ export class Configuration {
   }
 
   static get saved(): SerializedConfig {
+    // block main thread to pull config file first time. only done on startup to make
+    // sure config will be defined elsewhere
     if (!fs.existsSync(Configuration.file)) {
-      return {} as SerializedConfig;
+      return getBaseConfig();
     }
 
     return JSON.parse(fs.readFileSync(Configuration.file).toString());
   }
 
   static set saved(config: SerializedConfig) {
-    if (!config) {
-      if (fs.existsSync(Configuration.file)) {
-        fs.unlinkSync(Configuration.file);
-      }
-
-      return;
-    }
-
-    const write = () =>
+    // async save off main thread. state stored in this._config
+    const write = () => {
       fs.writeFile(Configuration.file, JSON.stringify(config), writeErr => {
+        console.error(writeErr);
         throw writeErr;
-        // console.error(writeErr);
       });
+    };
 
-    fs.stat(Configuration.directory, err => {
+    fs.stat(Configuration.directory, (err, stats) => {
       if (err) {
-        // if err is thrown means directory doesnt exist.
-        // so make it and write file
-        fs.mkdir(Configuration.directory, dirError => {
-          if (dirError) throw dirError;
-          write();
-        });
-      } else {
-        // use else to prevent async write before end of async creating
-        // directory if doesn't exist
-        write();
+        throw err;
       }
+
+      stats.isDirectory()
+        ? write()
+        : fs.mkdir(Configuration.directory, dirErr => {
+            if (dirErr) console.error(dirErr);
+            write();
+          });
+
+      // if (stats.isDirectory()) {
+      // if no stats means directory doesn't exist.
+      // so make it and write file
+      //   fs.mkdir(Configuration.directory, dirErr => {
+      //     if (dirErr) {
+      //       console.error(dirErr);
+      //       throw dirErr;
+      //     }
+      //     write();
+      //   });
+      // } else {
+      //   // use else to prevent async write before end of async creating
+      //   // directory if doesn't exist
+      // write();
+      // }
     });
   }
 
-  static promptUsername() {
+  static getUsername() {
     /**
      *
      * add inquirer module to prompt user
@@ -115,7 +125,7 @@ export class Configuration {
     return 'demo@user.com';
   }
 
-  static promptPassword() {
+  static getPassword() {
     /**
      *
      * add inquirer module to prompt user
@@ -170,18 +180,19 @@ export class Configuration {
     return this._config.password;
   }
 
-  constructor(user: string, pass: string) {
-    if (!this._config) {
-      /**
-       *
-       * setup for the first time
-       *
-       */
-      const serialized = getBaseConfig() as SerializedConfig;
-      serialized.username = user;
-      serialized.password = pass;
-      Configuration.saved = serialized;
+  constructor({
+    username = Configuration.getUsername(),
+    password = Configuration.getPassword()
+  }) {
+    if (this._config.username !== username) {
+      this._config.username = username;
     }
+
+    if (this._config.password !== password) {
+      this._config.password = password;
+    }
+
+    Configuration.saved = this._config;
   }
 }
 
