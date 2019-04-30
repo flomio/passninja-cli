@@ -1,5 +1,13 @@
 # Configuring 
 
+## Prerequisites
+
+```
+$ node -v
+v11.3.0
+$ npm -v
+6.4.1
+```
 ## Install Dependencies
 
 Even though the cli is bundled into a single JavaScript file, there are some
