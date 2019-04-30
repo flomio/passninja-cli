@@ -68,8 +68,8 @@ export class Configuration {
   }
 
   static get saved(): SerializedConfig {
-    // block main thread to pull config file first time. only done on startup to make
-    // sure config will be defined elsewhere
+    // block main thread to pull config file first time. Only done on startup to make
+    // sure config will be defined everywhere
     if (!fs.existsSync(Configuration.file)) {
       return getBaseConfig();
     }
@@ -80,39 +80,23 @@ export class Configuration {
   static set saved(config: SerializedConfig) {
     // async save off main thread. state stored in this._config
     const write = () => {
-      fs.writeFile(Configuration.file, JSON.stringify(config), writeErr => {
-        console.error(writeErr);
-        throw writeErr;
+      fs.writeFile(Configuration.file, JSON.stringify(config), err => {
+        if (!!err) throw err;
+        console.log(`Saved configuration file to ${Configuration.file}`)
       });
     };
 
     fs.stat(Configuration.directory, (err, stats) => {
-      if (err) {
-        throw err;
+      if (!!stats) return write();
+
+      if (err && err.code === 'ENOENT') {
+        return fs.mkdir(Configuration.directory, dirErr => {
+          if (dirErr) console.error(dirErr);
+          write();
+        });
       }
 
-      stats.isDirectory()
-        ? write()
-        : fs.mkdir(Configuration.directory, dirErr => {
-            if (dirErr) console.error(dirErr);
-            write();
-          });
-
-      // if (stats.isDirectory()) {
-      // if no stats means directory doesn't exist.
-      // so make it and write file
-      //   fs.mkdir(Configuration.directory, dirErr => {
-      //     if (dirErr) {
-      //       console.error(dirErr);
-      //       throw dirErr;
-      //     }
-      //     write();
-      //   });
-      // } else {
-      //   // use else to prevent async write before end of async creating
-      //   // directory if doesn't exist
-      // write();
-      // }
+      throw err;
     });
   }
 

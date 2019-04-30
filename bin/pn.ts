@@ -26,6 +26,6 @@ program
 
 program.parse(process.argv);
 
-if (!process.argv.slice(3).length) {
-  program.outputHelp();
-}
+// if (!process.argv.slice(3).length) {
+//   program.outputHelp();
+// }
