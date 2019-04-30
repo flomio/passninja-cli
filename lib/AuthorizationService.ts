@@ -8,6 +8,11 @@ import { BehaviorSubject } from 'rxjs';
 import { cleanUpService } from './CleanUp';
 import { Configuration } from './Configuration';
 
+declare interface ConfigurationOptions {
+  username?: string;
+  password?: string;
+}
+
 export class AuthorizationService {
   get credentials() {
     return this._$credentials.getValue();
@@ -27,7 +32,39 @@ export class AuthorizationService {
 
   private _$credentials = new BehaviorSubject<Credentials>({} as any);
 
-  constructor(private _config: Configuration) {
+  constructor(options?: ConfigurationOptions) {
+    let username: string;
+    if (!!options && options.username) username = options.username;
+    else username = Configuration.getUsername();
+
+    let password!: string;
+    if (!!options && options.password) password = options.password;
+    else password = Configuration.getPassword();
+
+    let dirty = false;
+
+    if (this._config.username !== username) {
+      this._config.username = username;
+      dirty = true;
+    }
+
+    if (this._config.password !== password) {
+      this._config.password = password;
+      dirty = true;
+    }
+
+    for (let key in this._config) {
+      const value = this._config[key];
+
+      if (!(value && value.length)) {
+        throw new Error(`config.${key} must be defined in .env at build time`);
+      }
+    }
+
+    if (dirty) {
+      Configuration.saved = this._config;
+    }
+
     console.log(_config);
     // this.setup().then(() => console.log(this.credentials));
     this._cleanUp.register(() => {

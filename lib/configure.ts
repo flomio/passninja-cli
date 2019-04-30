@@ -4,5 +4,6 @@ import { config } from './Configuration';
 import { AuthorizationService } from './AuthorizationService';
 
 export const configure = (program: Program) => {
-  const auth = new AuthorizationService(config);
+  console.log(config);
+  // const auth = new AuthorizationService(config);
 };

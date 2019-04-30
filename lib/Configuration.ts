@@ -2,17 +2,17 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
-require('dotenv').config({path: path.resolve(__dirname, '..', '.env')});
+require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
 const getBaseConfig = () => {
+  const region = process.env.REGION || '';
+  const userPoolClientId = process.env.USER_POOL_CLIENT_ID || '';
+  const identityPoolId = process.env.IDENTITY_POOL_ID || '';
+  const userPoolId = process.env.USER_POOL_ID || '';
+  const iotEndpoint = process.env.IOT_ENDPOINT || '';
   const env = process.env.NODE_ENV || 'development';
   const stack = `passninja-${env}`;
-  const region = process.env.REGION;
-  const userPoolClientId = `${process.env.USER_POOL_CLIENT_ID}`;
-  const identityPoolId = `${process.env.IDENTITY_POOL_ID}`;
-  const userPoolId = `${process.env.USER_POOL_ID}`;
-  const federation = 'cognito-idp.' + region + '.amazonaws.com/' + userPoolId;
-  const iotEndpoint = `${process.env.IOT_ENDPOINT}`;
+  const federation = `cognito-idp.${region}.amazonaws.com/${userPoolId}`;
   const brokerUrl = `wss://${iotEndpoint}.iot.${region}.amazonaws.com/mqtt`;
 
   const BASE_CONFIG = {
@@ -51,14 +51,8 @@ const getBaseConfig = () => {
 
 declare type SerializedConfig = ReturnType<typeof getBaseConfig> & {
   [key: string]: string;
-  username: string;
-  password: string;
 };
 
-declare interface ConfigurationOptions {
-  username?: string;
-  password?: string;
-}
 export class Configuration {
   static get directory() {
     return path.join(os.homedir(), '.passninja');
@@ -72,7 +66,7 @@ export class Configuration {
     // block main thread to pull config file first time. Only done on startup to make
     // sure config will be defined everywhere
     if (!fs.existsSync(Configuration.file)) {
-      return getBaseConfig() as SerializedConfig;
+      return getBaseConfig();
     }
 
     return JSON.parse(fs.readFileSync(Configuration.file).toString());
@@ -119,7 +113,7 @@ export class Configuration {
     return 'Pass!@#$334--';
   }
 
-  private _config: SerializedConfig = Configuration.saved;
+  private _config: SerializedConfig = getBaseConfig();
 
   get stack() {
     return this._config.stack;
@@ -165,37 +159,13 @@ export class Configuration {
     return this._config.password;
   }
 
-  constructor(options?: ConfigurationOptions) {
-    let username: string;
-    if (!!options && options.username) username = options.username;
-    else username = Configuration.getUsername();
-
-    let password!: string;
-    if (!!options && options.password) password = options.password;
-    else password = Configuration.getPassword();
-
-    let dirty = false;
-
-    if (this._config.username !== username) {
-      this._config.username = username;
-      dirty = true;
-    }
-
-    if (this._config.password !== password) {
-      this._config.password = password;
-      dirty = true;
-    }
-
+  constructor() {
     for (let key in this._config) {
       const value = this._config[key];
 
       if (!(value && value.length)) {
         throw new Error(`config.${key} must be defined in .env at build time`);
       }
-    }
-
-    if (dirty) {
-      Configuration.saved = this._config;
     }
   }
 }
