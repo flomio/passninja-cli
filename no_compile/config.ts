@@ -1,15 +1,19 @@
-const region = process.env.REGION || 'us-east-1'
+require('dotenv').config()
+
 const env = process.env.NODE_ENV || 'development'
 const stack = `passninja-${env}`
-const userPoolId = `${process.env.USER_POOL_ID}`
-const identityPoolId = `${process.env.IDENTITY_POOL_ID}`
-const userPoolClientId = `${process.env.USER_POOL_CLIENT_ID}`
-const federation = 'cognito-idp.' + region + '.amazonaws.com/' + userPoolId
-const iotEndpoint = `${process.env.IOT_ENDPOINT}`
 
+const region = process.env.REGION || 'us-east-1'
+
+const userPoolClientId = `${process.env.USER_POOL_CLIENT_ID}`
+const identityPoolId = `${process.env.IDENTITY_POOL_ID}`
+const userPoolId = `${process.env.USER_POOL_ID}`
+const federation = 'cognito-idp.' + region + '.amazonaws.com/' + userPoolId
+
+const iotEndpoint = `${process.env.IOT_ENDPOINT}`
 const brokerUrl = `wss://${iotEndpoint}.iot.${region}.amazonaws.com/mqtt`
 
-export const config = {
+const BASE_CONFIG = {
   username: process.env.USERNAME,
   password: process.env.PASSWORD,
   stack,
@@ -42,4 +46,10 @@ export const config = {
   -----END CERTIFICATE-----`
 }
 
-export declare type Config = typeof config
+for (let key in BASE_CONFIG) {
+  if (typeof BASE_CONFIG[key] === 'string' && !BASE_CONFIG[key].length) {
+    throw new Error(`config.${key} must be defined. check your .env`)
+  }
+}
+
+export { BASE_CONFIG }

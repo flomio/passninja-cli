@@ -7,44 +7,12 @@ import { Iot } from 'aws-sdk'
 // import { Config } from './config'
 // import { generateCSR } from 'src/app/services/iot/utils'
 
-import { cleanUpService } from '../lib/CleanUp'
+import { cleanUpService } from './CleanUp'
 
-export class ConfigurationService {
+export class ThingService {
   get name() {
     // return `${this.options.awsResources.stackName}:${creds.identityId}:${name}`
     return 'PassNinja'
-  }
-
-  get configFile() {
-    return path.join(os.homedir(), '.pn', `pn-scanner.json`)
-  }
-
-  get config(): Config {
-    if (this._config) {
-      return this._config
-    }
-
-    if (!fs.existsSync(this.configFile)) {
-      return null
-    }
-
-    this._config = JSON.parse(fs.readFileSync(this.configFile).toString())
-
-    return this._config
-  }
-
-  set config(config: Config) {
-    if (!!this._config) {
-      const configDir = path.join(os.homedir(), '.pn')
-
-      if (!fs.existsSync(configDir)) {
-        fs.mkdirSync(configDir)
-      }
-    }
-
-    fs.writeFileSync(this.configFile, JSON.stringify(config))
-
-    this._config = config
   }
 
   private _config: Config

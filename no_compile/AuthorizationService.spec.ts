@@ -1,4 +1,4 @@
-import { AuthorizationService } from './AuthorizationService'
+import { AuthorizationService } from '../no_compile/AuthorizationService'
 import { config } from './config'
 
 describe('AuthorizationService', () => {

@@ -1,8 +1,8 @@
-import { Commander } from 'bin/pn'
+import { Commander } from 'bin/pn';
 
-import { AuthorizationService } from './AuthorizationService'
+import { AuthorizationService } from '../lib/AuthorizationService';
 
-import { config } from './config'
+import { config } from './config';
 
 export const setupScanner = async (program: Commander) => {
   // if (!program.user) {
@@ -15,12 +15,12 @@ export const setupScanner = async (program: Commander) => {
   //   process.exit(1)
   // }
 
-  console.log('attempting to login')
+  console.log('attempting to login');
 
-  const authService = new AuthorizationService(config)
+  const authService = new AuthorizationService(config);
 
   authService.$credentials.subscribe(
     creds => console.log(creds),
     err => console.error(err)
-  )
-}
+  );
+};

@@ -4,7 +4,7 @@ import * as program from 'commander'
 
 import * as pkg from '../package.json'
 
-import { setupScanner } from '../lib/setupScanner'
+import { setupScanner } from '../no_compile/setupScanner'
 
 if (pkg.version) {
   program.version(pkg.version)
