@@ -24,7 +24,7 @@ export class AuthorizationService {
     region: this._config.region
   });
 
-  private _credentials: CognitoIdentityCredentials;
+  private _credentials!: CognitoIdentityCredentials;
 
   private _$credentials = new BehaviorSubject<Credentials>({} as any);
 
@@ -57,9 +57,11 @@ export class AuthorizationService {
         .promise();
 
       if (!response.AuthenticationResult) {
-        throw new Error(
-          'could not login to authentication provider. check username and password'
-        );
+        throw new Error('could not login to authentication provider');
+      }
+
+      if (!response.AuthenticationResult.IdToken) {
+        throw new Error('authentication IdToken not present');
       }
 
       this._credentials = new CognitoIdentityCredentials({
@@ -70,7 +72,9 @@ export class AuthorizationService {
       });
     } catch (err) {
       console.error(err);
+      throw err;
     }
+
     // not sure why this was in the original code or if it was dewebpacked correctly
     // await this.credentials.refreshPromise()
 
