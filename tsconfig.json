@@ -6,7 +6,7 @@
     "aws/deploy.ts",
     "no_compile/compiled-src/pn.js",
     "no_compile/setupScanner.ts",
-    "no_compile/CleanUp.ts",
+    "lib/CleanUp.ts",
     "no_compile/AuthorizationService.spec.ts",
     "lib/AuthorizationService.ts",
     "no_compile/config.ts",

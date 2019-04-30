@@ -2,10 +2,12 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
+require('dotenv').config({path: path.resolve(__dirname, '..', '.env')});
+
 const getBaseConfig = () => {
   const env = process.env.NODE_ENV || 'development';
   const stack = `passninja-${env}`;
-  const region = process.env.REGION || 'us-east-1';
+  const region = process.env.REGION;
   const userPoolClientId = `${process.env.USER_POOL_CLIENT_ID}`;
   const identityPoolId = `${process.env.IDENTITY_POOL_ID}`;
   const userPoolId = `${process.env.USER_POOL_ID}`;
@@ -44,20 +46,19 @@ const getBaseConfig = () => {
       -----END CERTIFICATE-----`
   };
 
-  for (let key in BASE_CONFIG) {
-    if (!(BASE_CONFIG as any)[key].length) {
-      throw new Error(`config.${key} must be defined in .env at build time`);
-    }
-  }
-
   return BASE_CONFIG;
 };
 
 declare type SerializedConfig = ReturnType<typeof getBaseConfig> & {
-  username?: string;
-  password?: string;
+  [key: string]: string;
+  username: string;
+  password: string;
 };
 
+declare interface ConfigurationOptions {
+  username?: string;
+  password?: string;
+}
 export class Configuration {
   static get directory() {
     return path.join(os.homedir(), '.passninja');
@@ -67,11 +68,11 @@ export class Configuration {
     return path.join(Configuration.directory, `pn-scanner.json`);
   }
 
-  static get saved(): SerializedConfig {
+  static get saved() {
     // block main thread to pull config file first time. Only done on startup to make
     // sure config will be defined everywhere
     if (!fs.existsSync(Configuration.file)) {
-      return getBaseConfig();
+      return getBaseConfig() as SerializedConfig;
     }
 
     return JSON.parse(fs.readFileSync(Configuration.file).toString());
@@ -82,7 +83,7 @@ export class Configuration {
     const write = () => {
       fs.writeFile(Configuration.file, JSON.stringify(config), err => {
         if (!!err) throw err;
-        console.log(`Saved configuration file to ${Configuration.file}`)
+        console.log(`Saved configuration file to ${Configuration.file}`);
       });
     };
 
@@ -118,7 +119,7 @@ export class Configuration {
     return 'Pass!@#$334--';
   }
 
-  private _config = Configuration.saved;
+  private _config: SerializedConfig = Configuration.saved;
 
   get stack() {
     return this._config.stack;
@@ -164,22 +165,44 @@ export class Configuration {
     return this._config.password;
   }
 
-  constructor({
-    username = Configuration.getUsername(),
-    password = Configuration.getPassword()
-  }) {
+  constructor(options?: ConfigurationOptions) {
+    let username: string;
+    if (!!options && options.username) username = options.username;
+    else username = Configuration.getUsername();
+
+    let password!: string;
+    if (!!options && options.password) password = options.password;
+    else password = Configuration.getPassword();
+
+    let dirty = false;
+
     if (this._config.username !== username) {
       this._config.username = username;
+      dirty = true;
     }
 
     if (this._config.password !== password) {
       this._config.password = password;
+      dirty = true;
     }
 
-    Configuration.saved = this._config;
+    for (let key in this._config) {
+      const value = this._config[key];
+
+      if (!(value && value.length)) {
+        throw new Error(`config.${key} must be defined in .env at build time`);
+      }
+    }
+
+    if (dirty) {
+      Configuration.saved = this._config;
+    }
   }
 }
 
+const config = new Configuration();
+
+export { config };
 // get name() {
 //   // return `${this.options.awsResources.stackName}:${creds.identityId}:${name}`
 //   return 'PassNinja'

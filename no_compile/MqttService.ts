@@ -8,7 +8,7 @@ import {
 } from 'rxjs';
 import { tap, flatMap } from 'rxjs/operators';
 
-import { CleanUpService } from './CleanUp';
+import { CleanUpService } from '../lib/CleanUp';
 
 import { Config } from '../lib/ConfigurationService';
 

@@ -1,9 +1,8 @@
 import { Program } from 'bin/pn';
 
-import { Configuration } from './Configuration';
+import { config } from './Configuration';
+import { AuthorizationService } from './AuthorizationService';
 
 export const configure = (program: Program) => {
-  const { username, password } = program;
-
-  const config = new Configuration({ username, password });
+  const auth = new AuthorizationService(config);
 };

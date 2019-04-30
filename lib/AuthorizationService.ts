@@ -5,9 +5,8 @@ import {
 } from 'aws-sdk';
 import { BehaviorSubject } from 'rxjs';
 
-import { Config } from '../no_compile/config';
-
-import { cleanUpService } from '../no_compile/CleanUp';
+import { cleanUpService } from './CleanUp';
+import { Configuration } from './Configuration';
 
 export class AuthorizationService {
   get credentials() {
@@ -28,9 +27,9 @@ export class AuthorizationService {
 
   private _$credentials = new BehaviorSubject<Credentials>({} as any);
 
-  constructor(private _config: Config) {
-    this.setup().then(() => console.log('logged in'));
-
+  constructor(private _config: Configuration) {
+    console.log(_config);
+    // this.setup().then(() => console.log(this.credentials));
     this._cleanUp.register(() => {
       this._$credentials.complete();
     });
@@ -46,15 +45,16 @@ export class AuthorizationService {
     try {
       const response = await this._provider
         .initiateAuth({
-          // UserPoolId: this._config.userPoolId,
-          ClientId: this._config.userPoolClientId,
           AuthFlow: 'USER_PASSWORD_AUTH',
+          ClientId: this._config.userPoolClientId,
           AuthParameters: {
             USERNAME: this._config.username,
             PASSWORD: this._config.password
           }
         })
         .promise();
+
+      console.log(response);
 
       if (!response.AuthenticationResult) {
         throw new Error('could not login to authentication provider');
@@ -71,7 +71,7 @@ export class AuthorizationService {
         }
       });
     } catch (err) {
-      console.error(err);
+      // console.error(err);
       throw err;
     }
 
