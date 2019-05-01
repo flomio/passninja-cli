@@ -6,14 +6,33 @@ import {
 import { BehaviorSubject } from 'rxjs';
 
 import { cleanUpService } from './CleanUp';
-import { Configuration } from './Configuration';
+import { config as CONFIG, Configuration } from './Configuration';
 
-declare interface ConfigurationOptions {
+declare interface AuthorizationServiceOptions {
   username?: string;
   password?: string;
+  config: Configuration;
 }
 
 export class AuthorizationService {
+  static getUsername() {
+    /**
+     *
+     * add inquirer module to prompt user
+     *
+     */
+    return 'demo@user.com';
+  }
+
+  static getPassword() {
+    /**
+     *
+     * add inquirer module to prompt user
+     *
+     */
+    return 'Pass!@#$334--';
+  }
+
   get credentials() {
     return this._$credentials.getValue();
   }
@@ -22,76 +41,52 @@ export class AuthorizationService {
     return this._$credentials.asObservable();
   }
 
-  private _cleanUp = cleanUpService;
+  private cleanUp = cleanUpService;
 
-  private _provider = new CognitoIdentityServiceProvider({
-    region: this._config.region
-  });
+  private config: Configuration;
 
-  private _credentials!: CognitoIdentityCredentials;
+  private provider: CognitoIdentityServiceProvider;
 
-  private _$credentials = new BehaviorSubject<Credentials>({} as any);
+  private _$credentials = new BehaviorSubject<CognitoIdentityCredentials>(
+    {} as any
+  );
 
-  constructor(options?: ConfigurationOptions) {
-    let username: string;
-    if (!!options && options.username) username = options.username;
-    else username = Configuration.getUsername();
+  constructor({
+    config = CONFIG,
+    username = AuthorizationService.getUsername(),
+    password = AuthorizationService.getPassword()
+  }: AuthorizationServiceOptions) {
+    this.config = config;
 
-    let password!: string;
-    if (!!options && options.password) password = options.password;
-    else password = Configuration.getPassword();
+    this.provider = new CognitoIdentityServiceProvider({
+      region: this.config.region
+    });
 
-    let dirty = false;
+    this.login(username, password).then(() => console.log(this.credentials));
 
-    if (this._config.username !== username) {
-      this._config.username = username;
-      dirty = true;
-    }
-
-    if (this._config.password !== password) {
-      this._config.password = password;
-      dirty = true;
-    }
-
-    for (let key in this._config) {
-      const value = this._config[key];
-
-      if (!(value && value.length)) {
-        throw new Error(`config.${key} must be defined in .env at build time`);
-      }
-    }
-
-    if (dirty) {
-      Configuration.saved = this._config;
-    }
-
-    console.log(_config);
-    // this.setup().then(() => console.log(this.credentials));
-    this._cleanUp.register(() => {
+    this.cleanUp.register(() => {
       this._$credentials.complete();
     });
   }
 
   update = async () => {
-    await this._credentials.refreshPromise();
-    this._$credentials.next(this._credentials);
-    return this.credentials;
+    const creds = this.credentials;
+    await creds.refreshPromise();
+    return void this._$credentials.next(creds);
   };
 
-  private setup = async () => {
+  private login = async (USERNAME: string, PASSWORD: string) => {
     try {
-      const response = await this._provider
+      const response = await this.provider
         .initiateAuth({
           AuthFlow: 'USER_PASSWORD_AUTH',
-          ClientId: this._config.userPoolClientId,
+          ClientId: this.config.userPoolClientId,
           AuthParameters: {
-            USERNAME: this._config.username,
-            PASSWORD: this._config.password
+            USERNAME,
+            PASSWORD
           }
         })
         .promise();
-
-      console.log(response);
 
       if (!response.AuthenticationResult) {
         throw new Error('could not login to authentication provider');
@@ -101,20 +96,17 @@ export class AuthorizationService {
         throw new Error('authentication IdToken not present');
       }
 
-      this._credentials = new CognitoIdentityCredentials({
-        IdentityPoolId: this._config.identityPoolId,
-        Logins: {
-          [this._config.federation]: response.AuthenticationResult.IdToken
-        }
-      });
+      this._$credentials.next(
+        new CognitoIdentityCredentials({
+          IdentityPoolId: this.config.identityPoolId,
+          Logins: {
+            [this.config.federation]: response.AuthenticationResult.IdToken
+          }
+        })
+      );
     } catch (err) {
-      // console.error(err);
+      console.error(err);
       throw err;
     }
-
-    // not sure why this was in the original code or if it was dewebpacked correctly
-    // await this.credentials.refreshPromise()
-
-    this._$credentials.next(this._credentials);
   };
 }

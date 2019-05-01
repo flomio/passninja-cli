@@ -95,24 +95,6 @@ export class Configuration {
     });
   }
 
-  static getUsername() {
-    /**
-     *
-     * add inquirer module to prompt user
-     *
-     */
-    return 'demo@user.com';
-  }
-
-  static getPassword() {
-    /**
-     *
-     * add inquirer module to prompt user
-     *
-     */
-    return 'Pass!@#$334--';
-  }
-
   private _config: SerializedConfig = getBaseConfig();
 
   get stack() {
