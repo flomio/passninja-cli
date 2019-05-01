@@ -6,6 +6,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
 const getBaseConfig = () => {
   const region = process.env.REGION || '';
+  const iotThingsOwnPolicy = process.env.IOT_THINGS_OWN_POLICY || '';
   const userPoolClientId = process.env.USER_POOL_CLIENT_ID || '';
   const identityPoolId = process.env.IDENTITY_POOL_ID || '';
   const userPoolId = process.env.USER_POOL_ID || '';
@@ -23,6 +24,7 @@ const getBaseConfig = () => {
     identityPoolId,
     federation,
     iotEndpoint,
+    iotThingsOwnPolicy,
     brokerUrl,
     ca: `-----BEGIN CERTIFICATE-----
       MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
@@ -125,6 +127,14 @@ export class Configuration {
     return this._config.iotEndpoint;
   }
 
+  // get iotOwnThingsPolicy() {
+  //   return this._config.iotOwnThingsPolicy;
+  // }
+
+  get iotThingsOwnPolicy() {
+    return this._config.iotThingsOwnPolicy;
+  }
+
   get brokerUrl() {
     return this._config.brokerUrl;
   }
@@ -152,9 +162,9 @@ export class Configuration {
   }
 }
 
-const config = new Configuration();
+const CONFIG = new Configuration();
 
-export { config };
+export { CONFIG };
 // get name() {
 //   // return `${this.options.awsResources.stackName}:${creds.identityId}:${name}`
 //   return 'PassNinja'

@@ -10,7 +10,7 @@
     "no_compile/AuthorizationService.spec.ts",
     "lib/AuthorizationService.ts",
     "no_compile/config.ts",
-    "no_compile/MqttService.ts",
+    "lib/MqttService.ts",
     "no_compile/ThingService.ts"
   ],
   "exclude": ["./no_compile/**/*"],
