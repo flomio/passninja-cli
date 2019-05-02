@@ -165,7 +165,3 @@ export class Configuration {
 const CONFIG = new Configuration();
 
 export { CONFIG };
-// get name() {
-//   // return `${this.options.awsResources.stackName}:${creds.identityId}:${name}`
-//   return 'PassNinja'
-// }

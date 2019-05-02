@@ -6,7 +6,7 @@ export const UnAuthenticatedUserRole = new IAM.Role({
     Version: '2012-10-17',
     Statement: [
       {
-        Action: [],
+        Action: ['*'],
         Effect: 'Deny',
         Resource: '*'
       }

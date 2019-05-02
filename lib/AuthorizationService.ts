@@ -1,8 +1,11 @@
+import { config as awsConfig, CognitoIdentityCredentials, Iot } from 'aws-sdk';
+
 import {
-  CognitoIdentityServiceProvider,
-  CognitoIdentityCredentials,
-  Iot
-} from 'aws-sdk';
+  CognitoUserPool,
+  CognitoUser,
+  AuthenticationDetails
+} from 'amazon-cognito-identity-js';
+
 import { BehaviorSubject } from 'rxjs';
 
 import { cleanUpService } from './CleanUp';
@@ -15,6 +18,8 @@ declare interface AuthorizationServiceOptions {
   config: Configuration;
 }
 
+(global as any).fetch = require('node-fetch');
+
 export class AuthorizationService {
   static getUsername() {
     /**
@@ -22,7 +27,7 @@ export class AuthorizationService {
      * add inquirer module to prompt user
      *
      */
-    return 'demo@user.com';
+    return 'matt@flomio.com'; // 'demo@user.com';
   }
 
   static getPassword() {
@@ -31,7 +36,7 @@ export class AuthorizationService {
      * add inquirer module to prompt user
      *
      */
-    return 'Pass!@#$334--';
+    return 'Password123!'; // 'Pass!@#$334--';
   }
 
   get thingName() {
@@ -52,8 +57,6 @@ export class AuthorizationService {
 
   private iot!: Iot;
 
-  private provider: CognitoIdentityServiceProvider;
-
   private _$credentials = new BehaviorSubject<CognitoIdentityCredentials>(
     {} as any
   );
@@ -67,13 +70,10 @@ export class AuthorizationService {
 
     this.config = config;
 
-    this.provider = new CognitoIdentityServiceProvider({
-      region: this.config.region
-    });
+    awsConfig.region = this.config.region;
 
-    this.login(username, password)
-      .then(this.setupIot)
-      .then(this.setupSsl);
+    this.login(username, password).then(this.setupIot);
+    // .then(this.setupSsl);
 
     this.cleanUp.register(() => {
       this._$credentials.complete();
@@ -86,48 +86,57 @@ export class AuthorizationService {
     return void this._$credentials.next(creds);
   };
 
-  private login = async (USERNAME: string, PASSWORD: string) => {
-    try {
-      const response = await this.provider
-        .initiateAuth({
-          AuthFlow: 'USER_PASSWORD_AUTH',
-          ClientId: this.config.userPoolClientId,
-          AuthParameters: {
-            USERNAME,
-            PASSWORD
-          }
-        })
-        .promise();
+  private login = async (Username: string, Password: string) => {
+    const self = this;
+    return new Promise<CognitoIdentityCredentials>((resolve, reject) => {
+      const userPool = new CognitoUserPool({
+        UserPoolId: this.config.userPoolId,
+        ClientId: this.config.userPoolClientId
+      });
 
-      if (!response.AuthenticationResult) {
-        throw new Error('could not login to authentication provider');
-      }
+      const user = new CognitoUser({
+        Pool: userPool,
+        Username
+      });
 
-      if (!response.AuthenticationResult.IdToken) {
-        throw new Error('authentication IdToken not present');
-      }
+      const authData = new AuthenticationDetails({
+        Username,
+        Password
+      });
 
-      this._$credentials.next(
-        new CognitoIdentityCredentials({
-          IdentityPoolId: this.config.identityPoolId,
-          Logins: {
-            [this.config.federation]: response.AuthenticationResult.IdToken
-          }
-        })
-      );
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
+      user.authenticateUser(authData, {
+        onSuccess: result => {
+          awsConfig.region = CONFIG.region;
+
+          let creds = new CognitoIdentityCredentials({
+            IdentityPoolId: CONFIG.identityPoolId,
+            Logins: {
+              [CONFIG.federation]: result.getIdToken().getJwtToken()
+            }
+          });
+
+          creds.refreshPromise().then(
+            () => {
+              self._$credentials.next(creds);
+              resolve(creds);
+            },
+            err => reject(err)
+          );
+        },
+        onFailure: err => {
+          console.log(err);
+        }
+      });
+    });
   };
 
   private setupIot = async () => {
-    this.iot = new Iot({
-      region: this.config.region,
-      credentials: this.credentials
-    });
-
     try {
+      this.iot = new Iot({
+        region: this.config.region,
+        credentials: this.credentials
+      });
+
       let response = await this.iot
         .describeThing({ thingName: this.thingName })
         .promise();
@@ -136,11 +145,11 @@ export class AuthorizationService {
     } catch (err) {
       console.log(`creating a new device named ${this.thingName}`);
 
-      await this.iot
-        .createThing({
-          thingName: this.thingName
-        })
-        .promise();
+      // await this.iot
+      //   .createThing({
+      //     thingName: this.thingName
+      //   })
+      //   .promise();
     }
   };
 
@@ -164,9 +173,53 @@ export class AuthorizationService {
 
     await this.iot
       .attachPrincipalPolicy({
-        principal: cert.certificateArn!,
-        policyName: this.config.iotThingsOwnPolicy
+        policyName: this.config.iotThingsOwnPolicy,
+        principal: cert.certificateArn!
       })
       .promise();
   };
 }
+
+// private login = async (USERNAME: string, PASSWORD: string) => {
+//   try {
+//     const response = await this.provider
+//       .initiateAuth({
+//         AuthFlow: 'USER_PASSWORD_AUTH',
+//         ClientId: this.config.userPoolClientId,
+//         AuthParameters: {
+//           USERNAME,
+//           PASSWORD
+//         }
+//       })
+//       .promise();
+
+//     if (!response.AuthenticationResult) {
+//       throw new Error('could not login to authentication provider');
+//     }
+
+//     if (!response.AuthenticationResult.IdToken) {
+//       throw new Error('authentication IdToken not present');
+//     }
+
+//     console.log(
+//       new CognitoIdentityCredentials({
+//         IdentityPoolId: this.config.identityPoolId,
+//         Logins: {
+//           [this.config.federation]: response.AuthenticationResult.IdToken
+//         }
+//       })
+//     );
+
+//     this._$credentials.next(
+//       new CognitoIdentityCredentials({
+//         IdentityPoolId: this.config.identityPoolId,
+//         Logins: {
+//           [this.config.federation]: response.AuthenticationResult.IdToken
+//         }
+//       })
+//     );
+//   } catch (err) {
+//     console.error(err);
+//     throw err;
+//   }
+// };
