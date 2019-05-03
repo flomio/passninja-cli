@@ -8,6 +8,7 @@ v11.3.0
 $ npm -v
 6.4.1
 ```
+
 ## Install Dependencies
 
 Even though the cli is bundled into a single JavaScript file, there are some
@@ -24,11 +25,11 @@ Go to ACS 1255U reader [download page](https://www.acs.com.hk/en/products/403/ac
 
 Download the [pcsc drivers](https://www.acs.com.hk/download-driver-unified/9184/ACS-Unified-Driver-Lnx-Mac-115-P.zip)
 
-
 ## Enable escape commands 
 
 After installing, to enable escape commands you must edit a configuration file
-using admin privileges.
+using admin privileges. Once completed the modifications you may need to reboot your
+machine for charnges to take effect. 
 
 On OSX:
 
@@ -52,3 +53,12 @@ eg.
 <key>ifdDriverOptions</key>
 <string>0x0001</string>
 ```
+
+## Run the headless client
+
+From the root directory of the repo run:
+```
+./bin/start-pn.sh
+```
+
+You can setup a background daemon with autostart actions by [following tese instructions.](https://github.com/flomio/flomio_apps_server/wiki/faq15%3A-How-do-I-setup-RPi3-or-PiZero%3F#setup-the-pi-to-autostart) 
