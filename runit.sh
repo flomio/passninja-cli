@@ -9,11 +9,12 @@ set -ex
 #export PASS_COM_VOLVO_NFC_PASSPHRASE='8976DDAF-D9E2-4130-8167-7046AD0AE64D'
 #export PASS_COM_JETBRAINS_NFC_PASSPHRASE='dd64c6b7-3b16-462f-867f-e6b3fabb8a11'
 export PASS_COM_NDUDFIELD_NFC_PASSPHRASE='zxccxz'
-export DEBUG=true
+
 # the reltive paths below will need be replaced with absolute paths for init.rc service to run properly
 PN_NFC_KEYS=./pn-nfc-keys.json node ./no_compile/compiled-src/pn.js\
     --user=demo@user.com \
     --password="Pass!@#\$334--" \
+    --stage 'test'
 #    --scan-report-end-point=http://localhost:8080 \
 #    --offline \
 #    --certs-path=$PWD/keys \

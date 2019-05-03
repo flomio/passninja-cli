@@ -10,8 +10,8 @@ set -ex
 #export PASS_COM_JETBRAINS_NFC_PASSPHRASE='dd64c6b7-3b16-462f-867f-e6b3fabb8a11'
 export PASS_COM_NDUDFIELD_NFC_PASSPHRASE='zxccxz'
 
-PN_NFC_KEYS=/Users/matthewkeil/Documents/development/clients/flomio/pn-cli-cloud/pn-nfc-keys.json \
-  node /Users/matthewkeil/Documents/development/clients/flomio/pn-cli-cloud/no_compile/compiled-src/pn.js \
+PN_NFC_KEYS=/Users/scottcondron/Developer/pn-cli-cloud/pn-nfc-keys.json \
+  node /Users/scottcondron/Developer/pn-cli-cloud/no_compile/compiled-src/pn.js \
   --user=demo@user.com \
   --password="Pass!@#\$334--" \
 #    --scan-report-end-point=http://localhost:8080 \
