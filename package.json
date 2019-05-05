@@ -22,8 +22,10 @@
     "base-x": "^3.0.5",
     "commander": "^2.20.0",
     "debug": "^4.1.1",
+    "express": "^4.16.4",
     "flomio-js-sdk": "file:../flomio-js-sdk",
     "flomio-js-sdk-pcsc": "file:../flomio-js-sdk-pcsc",
+    "http-errors": "^1.7.2",
     "mqtt": "^2.18.8",
     "node-fetch": "^2.5.0",
     "node-forge": "^0.8.2",
@@ -32,12 +34,15 @@
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7",
     "rxjs": "~6.3.3",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "ws": "^7.0.0"
   },
   "devDependencies": {
     "@types/base-x": "^3.0.0",
     "@types/chai": "^4.1.7",
     "@types/commander": "^2.12.2",
+    "@types/express": "^4.16.1",
+    "@types/http-errors": "^1.6.1",
     "@types/jasmine": "^2.8.16",
     "@types/node": "^8.9.5",
     "@types/request-promise-native": "^1.0.15",
