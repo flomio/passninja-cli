@@ -1,4 +1,4 @@
-export const enum CommandKey {
+export enum CommandKey {
   select_ose,
   negotiate_session,
   get_smart_tap_data,
