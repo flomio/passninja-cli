@@ -1,19 +1,7 @@
 {
   "compileOnSave": false,
-  "include": [
-    "./lib/**/*",
-    "./bin/**.*",
-    "aws/deploy.ts",
-    "no_compile/compiled-src/pn.js",
-    "no_compile/setupScanner.ts",
-    "lib/CleanUp.ts",
-    "no_compile/AuthorizationService.spec.ts",
-    "lib/AuthorizationService.ts",
-    "no_compile/config.ts",
-    "lib/MqttService.ts",
-    "no_compile/ThingService.ts"
-  ],
-  "exclude": ["./no_compile/**/*"],
+  "include": ["./lib/**/*", "./bin/**/*", "./no_compile/de-webpacked/**/*"],
+  "exclude": ["./node_modules/**/*"],
   "compilerOptions": {
     "baseUrl": "./",
     "allowSyntheticDefaultImports": true,
