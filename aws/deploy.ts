@@ -1,23 +1,23 @@
-require('dotenv').config()
-
-import * as AWS from 'aws-sdk'
-
-import template from './cloudform'
+require('dotenv').config();
+import * as fs from 'fs';
+import * as path from 'path';
+import * as AWS from 'aws-sdk';
+import template from './cloudform';
 
 const deploy = async () => {
-  const NAME = JSON.parse(template).Description
+  const NAME = JSON.parse(template).Description;
 
-  const STAGE = process.argv[2] || 'production'
+  const STAGE = process.argv[2] || 'development';
 
-  const StackName = `${NAME}-${STAGE}`
+  const StackName = `${NAME}-${STAGE}`;
 
-  console.log(`deploying ${StackName} cloudformation`)
+  console.log(`deploying ${StackName} cloudformation`);
 
   const CF = new AWS.CloudFormation({
     region: process.env.REGION,
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-  })
+  });
 
   const params = {
     StackName,
@@ -29,14 +29,29 @@ const deploy = async () => {
       }
     ],
     TemplateBody: template
-  }
+  };
+
+  const date = new Date();
+  const year = date.getFullYear();
+  const m = date.getMonth() + 1;
+  const month = m < 10 ? '0' + m : m;
+  const d = date.getDate();
+  const day = d < 10 ? '0' + d : d;
+  const time = date.getTime();
+  const now = `${year}-${month}-${day}-${time}`;
 
   try {
-    let response: any
+    const location = path.resolve(__dirname, 'deployments', `${now}.json`);
+    fs.writeFileSync(location, template);
+
+    let response: any;
 
     // response = await CF.validateTemplate({
     //   TemplateBody: template
-    // }).promise()
+    // }).promise();
+
+    // response = await CF.updateStack(params).promise();
+    // response = await CF.createStack(params).promise();
 
     // response = await CF.listStackResources({
     //   StackName
@@ -57,16 +72,14 @@ const deploy = async () => {
     //   process.exit(1)
     // } else if (updating) {
     //   console.log('updating')
-    response = await CF.updateStack(params).promise()
     // } else {
     //   console.log('deploying')
-    //   // response = await CF.createStack(params).promise()
     // }
 
-    console.log(response)
+    console.log(response);
   } catch (err) {
-    console.error(err)
+    console.error(`>>> ERROR >>> ${err}`);
   }
-}
+};
 
-deploy()
+deploy();

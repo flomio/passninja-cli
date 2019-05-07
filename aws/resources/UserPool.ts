@@ -1,4 +1,4 @@
-import { Cognito, Fn } from 'cloudform'
+import { Cognito, Fn } from 'cloudform';
 
 export const UserPool = new Cognito.UserPool({
   UserPoolName: Fn.Join('-', ['pass-ninja', Fn.Ref('Stage'), 'user-pool']),
@@ -28,4 +28,4 @@ export const UserPool = new Cognito.UserPool({
       RequireNumbers: true
     }
   }
-})
+});

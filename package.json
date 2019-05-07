@@ -6,7 +6,7 @@
   },
   "scripts": {
     "build:cf": "node_modules/.bin/cloudform aws/cloudform > aws/template.json",
-    "deploy:cf:prod": "node_modules/.bin/ts-node aws/deploy production",
+    "deploy:cf": "node_modules/.bin/ts-node aws/deploy",
     "build": "node_modules/.bin/webpack",
     "tsc": "node_modules/.bin/tsc",
     "tsc:watch": "node_modules/.bin/tsc --watch",
