@@ -27,7 +27,7 @@ export class AuthorizationService {
      * add inquirer module to prompt user
      *
      */
-    return 'matt@flomio.com'; // 'demo@user.com';
+    return 'demo@user.com'; // 'demo@user.com';
   }
 
   static getPassword() {
@@ -145,11 +145,11 @@ export class AuthorizationService {
     } catch (err) {
       console.log(`creating a new device named ${this.thingName}`);
 
-      // await this.iot
-      //   .createThing({
-      //     thingName: this.thingName
-      //   })
-      //   .promise();
+      await this.iot
+        .createThing({
+          thingName: this.thingName
+        })
+        .promise();
     }
   };
 
