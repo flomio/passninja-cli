@@ -11,6 +11,7 @@ import { BehaviorSubject } from 'rxjs';
 import { cleanUpService } from './CleanUp';
 import { CONFIG, Configuration } from './Configuration';
 import { generateCSR } from './generateCSR';
+import { CognitoIdentityProvider } from 'cloudform-types/types/cognito/identityPool';
 
 declare interface AuthorizationServiceOptions {
   username?: string;
@@ -54,7 +55,7 @@ export class AuthorizationService {
   private cleanUp = cleanUpService;
 
   private config: Configuration;
-
+  private provider!: CognitoIdentityProvider;
   private iot!: Iot;
 
   private _$credentials = new BehaviorSubject<CognitoIdentityCredentials>(
@@ -86,48 +87,48 @@ export class AuthorizationService {
     return void this._$credentials.next(creds);
   };
 
-  private login = async (Username: string, Password: string) => {
-    const self = this;
-    return new Promise<CognitoIdentityCredentials>((resolve, reject) => {
-      const userPool = new CognitoUserPool({
-        UserPoolId: this.config.userPoolId,
-        ClientId: this.config.userPoolClientId
-      });
+  private login = async (USERNAME: string, PASSWORD: string) => {
+    try {
+      const response = await this.provider
+        .initiateAuth({
+          AuthFlow: 'USER_PASSWORD_AUTH',
+          ClientId: this.config.userPoolClientId,
+          AuthParameters: {
+            USERNAME,
+            PASSWORD
+          }
+        })
+        .promise();
 
-      const user = new CognitoUser({
-        Pool: userPool,
-        Username
-      });
+      if (!response.AuthenticationResult) {
+        throw new Error('could not login to authentication provider');
+      }
 
-      const authData = new AuthenticationDetails({
-        Username,
-        Password
-      });
+      if (!response.AuthenticationResult.IdToken) {
+        throw new Error('authentication IdToken not present');
+      }
 
-      user.authenticateUser(authData, {
-        onSuccess: result => {
-          awsConfig.region = CONFIG.region;
+      console.log(
+        new CognitoIdentityCredentials({
+          IdentityPoolId: this.config.identityPoolId,
+          Logins: {
+            [this.config.federation]: response.AuthenticationResult.IdToken
+          }
+        })
+      );
 
-          let creds = new CognitoIdentityCredentials({
-            IdentityPoolId: CONFIG.identityPoolId,
-            Logins: {
-              [CONFIG.federation]: result.getIdToken().getJwtToken()
-            }
-          });
-
-          creds.refreshPromise().then(
-            () => {
-              self._$credentials.next(creds);
-              resolve(creds);
-            },
-            err => reject(err)
-          );
-        },
-        onFailure: err => {
-          console.log(err);
-        }
-      });
-    });
+      this._$credentials.next(
+        new CognitoIdentityCredentials({
+          IdentityPoolId: this.config.identityPoolId,
+          Logins: {
+            [this.config.federation]: response.AuthenticationResult.IdToken
+          }
+        })
+      );
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
   };
 
   private setupIot = async () => {
@@ -180,46 +181,46 @@ export class AuthorizationService {
   };
 }
 
-// private login = async (USERNAME: string, PASSWORD: string) => {
-//   try {
-//     const response = await this.provider
-//       .initiateAuth({
-//         AuthFlow: 'USER_PASSWORD_AUTH',
-//         ClientId: this.config.userPoolClientId,
-//         AuthParameters: {
-//           USERNAME,
-//           PASSWORD
-//         }
-//       })
-//       .promise();
+// private login = async (Username: string, Password: string) => {
+//   const self = this;
+//   return new Promise<CognitoIdentityCredentials>((resolve, reject) => {
+//     const userPool = new CognitoUserPool({
+//       UserPoolId: this.config.userPoolId,
+//       ClientId: this.config.userPoolClientId
+//     });
 
-//     if (!response.AuthenticationResult) {
-//       throw new Error('could not login to authentication provider');
-//     }
+//     const user = new CognitoUser({
+//       Pool: userPool,
+//       Username
+//     });
 
-//     if (!response.AuthenticationResult.IdToken) {
-//       throw new Error('authentication IdToken not present');
-//     }
+//     const authData = new AuthenticationDetails({
+//       Username,
+//       Password
+//     });
 
-//     console.log(
-//       new CognitoIdentityCredentials({
-//         IdentityPoolId: this.config.identityPoolId,
-//         Logins: {
-//           [this.config.federation]: response.AuthenticationResult.IdToken
-//         }
-//       })
-//     );
+//     user.authenticateUser(authData, {
+//       onSuccess: result => {
+//         awsConfig.region = CONFIG.region;
 
-//     this._$credentials.next(
-//       new CognitoIdentityCredentials({
-//         IdentityPoolId: this.config.identityPoolId,
-//         Logins: {
-//           [this.config.federation]: response.AuthenticationResult.IdToken
-//         }
-//       })
-//     );
-//   } catch (err) {
-//     console.error(err);
-//     throw err;
-//   }
+//         let creds = new CognitoIdentityCredentials({
+//           IdentityPoolId: CONFIG.identityPoolId,
+//           Logins: {
+//             [CONFIG.federation]: result.getIdToken().getJwtToken()
+//           }
+//         });
+
+//         creds.refreshPromise().then(
+//           () => {
+//             self._$credentials.next(creds);
+//             resolve(creds);
+//           },
+//           err => reject(err)
+//         );
+//       },
+//       onFailure: err => {
+//         console.log(err);
+//       }
+//     });
+//   });
 // };
