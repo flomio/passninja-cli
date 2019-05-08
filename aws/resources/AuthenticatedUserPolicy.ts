@@ -58,7 +58,8 @@ export const AuthenticatedUserPolicy = new IAM.Policy({
           'iot:CreateThing',
           'iot:DescribeThing',
           'iot:DeleteThing'
-        ]
+        ],
+        Resource: '*'
         // Resource: {
         //   'Fn::Sub':
         //     'arn:aws:iot:*:{AWS::AccountId}:thing/${AWS::StackName}/${!cognito-identity.amazonaws.com:sub}/*'

@@ -1,7 +1,11 @@
-import { IAM, Fn } from 'cloudform'
+import { IAM, Fn } from 'cloudform';
 
 export const AuthenticatedUserRole = new IAM.Role({
-  RoleName: 'pass-ninja-authenticated-user-role',
+  RoleName: Fn.Join('-', [
+    'pass-ninja',
+    Fn.Ref('Stage'),
+    'authenticated-user-role'
+  ]),
   AssumeRolePolicyDocument: {
     Version: '2012-10-17',
     Statement: [
@@ -22,4 +26,4 @@ export const AuthenticatedUserRole = new IAM.Role({
       }
     ]
   }
-})
+});

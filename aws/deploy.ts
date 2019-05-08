@@ -11,7 +11,7 @@ const deploy = async () => {
 
   const StackName = `${NAME}-${STAGE}`;
 
-  console.log(`deploying ${StackName} cloudformation`);
+  console.log(`deploying ${StackName} through cloud formation`);
 
   const CF = new AWS.CloudFormation({
     region: process.env.REGION,
@@ -50,7 +50,8 @@ const deploy = async () => {
     //   TemplateBody: template
     // }).promise();
 
-    // response = await CF.updateStack(params).promise();
+    response = await CF.updateStack(params).promise();
+
     // response = await CF.createStack(params).promise();
 
     // response = await CF.listStackResources({

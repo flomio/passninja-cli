@@ -1,11 +1,7 @@
 import { Cognito, Fn, Refs } from 'cloudform';
 
 export const IdentityPool = new Cognito.IdentityPool({
-  IdentityPoolName: Fn.Join('-', [
-    'pass-ninja',
-    Fn.Ref('Stage'),
-    'identity-pool'
-  ]),
+  IdentityPoolName: Fn.Join('', ['PassNinja', 'IdentityPool', Fn.Ref('Stage')]),
   AllowUnauthenticatedIdentities: false,
   DeveloperProviderName: 'passninja.com',
   CognitoIdentityProviders: [

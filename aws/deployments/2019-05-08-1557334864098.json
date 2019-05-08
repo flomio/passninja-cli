@@ -1,0 +1,226 @@
+{
+  "Description": "pass-ninja-iam",
+  "Parameters": {
+    "Stage": {
+      "Type": "String",
+      "Description": "Deployment environment name",
+      "AllowedValues": [
+        "development",
+        "staging",
+        "production"
+      ],
+      "Default": "development"
+    }
+  },
+  "Resources": {
+    "UserPool": {
+      "Type": "AWS::Cognito::UserPool",
+      "Properties": {
+        "UserPoolName": {
+          "Fn::Join": [
+            "-",
+            [
+              "pass-ninja",
+              {
+                "Ref": "Stage"
+              },
+              "user-pool"
+            ]
+          ]
+        },
+        "AdminCreateUserConfig": {
+          "AllowAdminCreateUserOnly": true,
+          "UnusedAccountValidityDays": 7
+        },
+        "EmailConfiguration": {
+          "ReplyToEmailAddress": "info@flomio.com"
+        },
+        "DeviceConfiguration": {
+          "ChallengeRequiredOnNewDevice": false,
+          "DeviceOnlyRememberedOnUserPrompt": false
+        },
+        "UsernameAttributes": [
+          "email"
+        ],
+        "AutoVerifiedAttributes": [
+          "email"
+        ],
+        "Policies": {
+          "PasswordPolicy": {
+            "MinimumLength": 8,
+            "RequireLowercase": true,
+            "RequireSymbols": true,
+            "RequireUppercase": true,
+            "RequireNumbers": true
+          }
+        }
+      }
+    },
+    "UserPoolClient": {
+      "Type": "AWS::Cognito::UserPoolClient",
+      "Properties": {
+        "ClientName": {
+          "Fn::Join": [
+            "-",
+            [
+              "pass-ninja",
+              {
+                "Ref": "Stage"
+              },
+              "user-pool-client"
+            ]
+          ]
+        },
+        "UserPoolId": {
+          "Ref": "UserPool"
+        },
+        "ExplicitAuthFlows": [
+          "USER_PASSWORD_AUTH"
+        ],
+        "GenerateSecret": false
+      }
+    },
+    "IdentityPool": {
+      "Type": "AWS::Cognito::IdentityPool",
+      "Properties": {
+        "IdentityPoolName": {
+          "Fn::Join": [
+            "",
+            [
+              "PassNinja",
+              "IdentityPool",
+              {
+                "Ref": "Stage"
+              }
+            ]
+          ]
+        },
+        "AllowUnauthenticatedIdentities": false,
+        "DeveloperProviderName": "passninja.com",
+        "CognitoIdentityProviders": [
+          {
+            "ClientId": {
+              "Ref": "UserPoolClient"
+            },
+            "ServerSideTokenCheck": false,
+            "ProviderName": {
+              "Fn::Join": [
+                "",
+                [
+                  "cognito-idp.",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ".amazonaws.com/",
+                  {
+                    "Ref": "UserPool"
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "IdentityPoolRoleAttachment": {
+      "Type": "AWS::Cognito::IdentityPoolRoleAttachment",
+      "Properties": {
+        "IdentityPoolId": {
+          "Ref": "IdentityPool"
+        },
+        "Roles": {
+          "authenticated": {
+            "Fn::GetAtt": [
+              "AuthenticatedUserRole",
+              "Arn"
+            ]
+          }
+        }
+      }
+    },
+    "AuthenticatedUserRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "pass-ninja-authenticated-user-role",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "cognito-identity.amazonaws.com:aud": {
+                    "Ref": "IdentityPool"
+                  }
+                },
+                "ForAnyValue:StringLike": {
+                  "cognito-identity.amazonaws.com:amr": "authenticated"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "AuthenticatedUserPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "pass-ninja-authenticated-user-policy",
+        "Roles": [
+          {
+            "Ref": "AuthenticatedUserRole"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "iot:DescribeEndpoint",
+                "iot:Connect",
+                "iot:Publish",
+                "iot:Subscribe",
+                "iot:Receive",
+                "iot:GetThingShadow",
+                "iot:UpdateThingShadow",
+                "iot:DeleteThingShadow",
+                "iot:ListPrincipalThings",
+                "iot:CreateKeysAndCertificate",
+                "iot:CreateCertificateFromCsr"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": "iot:AttachPrincipalPolicy",
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "iot:AttachThingPrincipal",
+                "iot:DetachThingPrincipal"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "iot:UpdateThing",
+                "iot:CreateThing",
+                "iot:DescribeThing",
+                "iot:DeleteThing"
+              ],
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -4,7 +4,6 @@ import { UserPool } from './resources/UserPool';
 import { UserPoolClient } from './resources/UserPoolClient';
 import { IdentityPool } from './resources/IdentityPool';
 import { IdentityPoolRoleAttachment } from './resources/IdentityPoolRoleAttachment';
-import { UnAuthenticatedUserRole } from './resources/UnAuthenticatedUserRole';
 import { AuthenticatedUserRole } from './resources/AuthenticatedUserRole';
 import { AuthenticatedUserPolicy } from './resources/AuthenticatedUserPolicy';
 
@@ -22,7 +21,6 @@ export default CF({
     UserPoolClient,
     IdentityPool,
     IdentityPoolRoleAttachment,
-    UnAuthenticatedUserRole,
     AuthenticatedUserRole,
     AuthenticatedUserPolicy
   }
