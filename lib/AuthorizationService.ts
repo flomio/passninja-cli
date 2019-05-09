@@ -1,11 +1,9 @@
-import { config as awsConfig, CognitoIdentityCredentials, Iot } from 'aws-sdk';
-
 import {
-  CognitoUserPool,
-  CognitoUser,
-  AuthenticationDetails
-} from 'amazon-cognito-identity-js';
-
+  config as awsConfig,
+  CognitoIdentityCredentials,
+  Iot,
+  CognitoIdentityServiceProvider
+} from 'aws-sdk';
 import { BehaviorSubject } from 'rxjs';
 
 import { cleanUpService } from './CleanUp';
@@ -55,7 +53,7 @@ export class AuthorizationService {
   private cleanUp = cleanUpService;
 
   private config: Configuration;
-  private provider!: CognitoIdentityProvider;
+  private provider: CognitoIdentityServiceProvider;
   private iot!: Iot;
 
   private _$credentials = new BehaviorSubject<CognitoIdentityCredentials>(
@@ -73,8 +71,13 @@ export class AuthorizationService {
 
     awsConfig.region = this.config.region;
 
-    this.login(username, password).then(this.setupIot);
-    // .then(this.setupSsl);
+    this.provider = new CognitoIdentityServiceProvider({
+      region: this.config.region
+    });
+
+    this.login(username, password)
+      .then(this.setupIot)
+      .then(this.setupSsl);
 
     this.cleanUp.register(() => {
       this._$credentials.complete();
@@ -108,23 +111,16 @@ export class AuthorizationService {
         throw new Error('authentication IdToken not present');
       }
 
-      console.log(
-        new CognitoIdentityCredentials({
-          IdentityPoolId: this.config.identityPoolId,
-          Logins: {
-            [this.config.federation]: response.AuthenticationResult.IdToken
-          }
-        })
-      );
+      const creds = new CognitoIdentityCredentials({
+        IdentityPoolId: this.config.identityPoolId,
+        Logins: {
+          [this.config.federation]: response.AuthenticationResult.IdToken
+        }
+      });
 
-      this._$credentials.next(
-        new CognitoIdentityCredentials({
-          IdentityPoolId: this.config.identityPoolId,
-          Logins: {
-            [this.config.federation]: response.AuthenticationResult.IdToken
-          }
-        })
-      );
+      await creds.refreshPromise();
+
+      this._$credentials.next(creds);
     } catch (err) {
       console.error(err);
       throw err;
@@ -138,89 +134,60 @@ export class AuthorizationService {
         credentials: this.credentials
       });
 
-      let response = await this.iot
-        .describeThing({ thingName: this.thingName })
-        .promise();
-
-      console.log(response);
-    } catch (err) {
-      console.log(`creating a new device named ${this.thingName}`);
-
       await this.iot
         .createThing({
           thingName: this.thingName
         })
         .promise();
+    } catch (err) {
+      console.error(`>>> setupIot ERROR >>> ${err}`);
     }
   };
 
+  // private createThing = async () => {
+  //   const response = await this.iot
+  //     .createThing({
+  //       thingName: this.thingName
+  //       // attributePayload: {
+  //       //   attributes: {
+  //       //     valid: 'true'
+  //       //   }
+  //       // }
+  //     })
+  //     .promise();
+
+  //   console.log(response);
+  // };
+
   private setupSsl = async () => {
-    // TODO: double check what type of ID should be used as a parameter
-    const certRequest = generateCSR(this.credentials.accessKeyId);
+    try {
+      // TODO: double check what type of ID should be used as a parameter
+      const { csr } = generateCSR(this.credentials.accessKeyId);
 
-    const cert = await this.iot
-      .createCertificateFromCsr({
-        setAsActive: true,
-        certificateSigningRequest: certRequest.csr
-      })
-      .promise();
+      const { certificateArn } = await this.iot
+        .createCertificateFromCsr({
+          setAsActive: true,
+          certificateSigningRequest: csr
+        })
+        .promise();
 
-    await this.iot
-      .attachThingPrincipal({
-        thingName: this.thingName,
-        principal: cert.certificateArn!
-      })
-      .promise();
+      await this.iot
+        .attachThingPrincipal({
+          thingName: this.thingName,
+          principal: certificateArn!
+        })
+        .promise();
 
-    await this.iot
-      .attachPrincipalPolicy({
-        policyName: this.config.iotThingsOwnPolicy,
-        principal: cert.certificateArn!
-      })
-      .promise();
+      let result = await this.iot
+        .attachPrincipalPolicy({
+          policyName: this.config.scannerPolicy,
+          principal: certificateArn!
+        })
+        .promise();
+
+      console.log(result);
+    } catch (err) {
+      console.error(`>>> setupSsl ERROR >>> ${err}`);
+    }
   };
 }
-
-// private login = async (Username: string, Password: string) => {
-//   const self = this;
-//   return new Promise<CognitoIdentityCredentials>((resolve, reject) => {
-//     const userPool = new CognitoUserPool({
-//       UserPoolId: this.config.userPoolId,
-//       ClientId: this.config.userPoolClientId
-//     });
-
-//     const user = new CognitoUser({
-//       Pool: userPool,
-//       Username
-//     });
-
-//     const authData = new AuthenticationDetails({
-//       Username,
-//       Password
-//     });
-
-//     user.authenticateUser(authData, {
-//       onSuccess: result => {
-//         awsConfig.region = CONFIG.region;
-
-//         let creds = new CognitoIdentityCredentials({
-//           IdentityPoolId: CONFIG.identityPoolId,
-//           Logins: {
-//             [CONFIG.federation]: result.getIdToken().getJwtToken()
-//           }
-//         });
-
-//         creds.refreshPromise().then(
-//           () => {
-//             self._$credentials.next(creds);
-//             resolve(creds);
-//           },
-//           err => reject(err)
-//         );
-//       },
-//       onFailure: err => {
-//         console.log(err);
-//       }
-//     });
-//   });
-// };

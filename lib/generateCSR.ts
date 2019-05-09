@@ -30,7 +30,7 @@ export const generateCSR = (identityId: string) => {
   csr.sign(keyPair.privateKey, forge.md.sha256.create());
 
   return {
-    csr: forge.pki.certificationRequestToPem(csr),
-    key: forge.pki.privateKeyToPem(keyPair.privateKey)
+    csr: forge.pki.certificationRequestToPem(csr)
+    // key: forge.pki.privateKeyToPem(keyPair.privateKey)
   };
 };
