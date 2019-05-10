@@ -2,7 +2,7 @@
   "compileOnSave": false,
   "include": [
     "./lib/**/*",
-    "./bin/**.*",
+    "./bin/*",
     "aws/deploy.ts",
     "no_compile/compiled-src/pn.js",
     "no_compile/setupScanner.ts",

@@ -1,11 +1,11 @@
-import { CognitoIdentityServiceProvider } from 'aws-sdk';
+import { CognitoIdentityServiceProvider } from 'aws-sdk'
 
 const provider = new CognitoIdentityServiceProvider({
   region: 'us-east-1'
-});
+})
 
 const change = async () => {
-  const ClientId = '31rageklk93ge7k82e4it9jmp4';
+  const ClientId = '31rageklk93ge7k82e4it9jmp4'
 
   try {
     let response: any = await provider
@@ -17,11 +17,11 @@ const change = async () => {
           PASSWORD: 'PassWord123!'
         }
       })
-      .promise();
+      .promise()
 
-    console.log(response);
+    console.log(response)
 
-    const { Session } = response;
+    const { Session } = response
 
     response = await provider
       .respondToAuthChallenge({
@@ -33,12 +33,12 @@ const change = async () => {
           NEW_PASSWORD: 'Password123!'
         }
       })
-      .promise();
+      .promise()
 
-    console.log(response);
+    console.log(response)
   } catch (err) {
-    console.error(`>>>ERROR>>> ${err}`);
+    console.error(`>>>ERROR>>> ${err}`)
   }
-};
+}
 
-change();
+change()

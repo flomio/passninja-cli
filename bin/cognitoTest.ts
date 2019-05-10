@@ -2,46 +2,46 @@ import {
   CognitoUserPool,
   CognitoUser,
   AuthenticationDetails
-} from 'amazon-cognito-identity-js';
+} from 'amazon-cognito-identity-js'
 
-import { CONFIG } from '../lib/Configuration';
-import * as AWS from 'aws-sdk';
+import { CONFIG } from '../lib/Configuration'
+import * as AWS from 'aws-sdk'
 
-(global as any).fetch = require('node-fetch');
+(global as any).fetch = require('node-fetch')
 
-const { userPoolId, userPoolClientId } = CONFIG;
-const Username = 'matt@flomio.com';
-const Password = 'Password123!';
+const { userPoolId, userPoolClientId } = CONFIG
+const Username = 'matt@flomio.com'
+const Password = 'Password123!'
 
 const userPool = new CognitoUserPool({
   UserPoolId: userPoolId,
   ClientId: userPoolClientId
-});
+})
 
 const user = new CognitoUser({
   Pool: userPool,
   Username
-});
+})
 
 const authData = new AuthenticationDetails({
   Username,
   Password
-});
+})
 
 user.authenticateUser(authData, {
   onSuccess: result => {
-    AWS.config.region = CONFIG.region;
+    AWS.config.region = CONFIG.region
 
-    let creds = new AWS.CognitoIdentityCredentials({
+    const creds = new AWS.CognitoIdentityCredentials({
       IdentityPoolId: CONFIG.identityPoolId,
       Logins: {
         [CONFIG.federation]: result.getIdToken().getJwtToken()
       }
-    });
+    })
 
     creds
       .refreshPromise()
-      .then(res => console.log(creds), err => console.log(err));
+      .then(res => console.log(creds), err => console.log(err))
     // const creds = new CognitoIdentityCredentials({
     // IdentityPoolId: CONFIG.identityPoolId,
     // Logins: {
@@ -69,10 +69,10 @@ user.authenticateUser(authData, {
     // });
   },
   onFailure: err => {
-    console.log(err);
+    console.log(err)
   }
   // newPasswordRequired: (userAttributes: any, requiredAttributes: any) => {}
-});
+})
 
 // const user = userPool.getCurrentUser();
 
