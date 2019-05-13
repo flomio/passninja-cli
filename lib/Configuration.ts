@@ -6,15 +6,15 @@ require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
 const getBaseConfig = () => {
   const region = process.env.REGION || '';
-  const scannerPolicy = process.env.SCANNER_POLICY || '';
+  const userPoolId = process.env.USER_POOL_ID || '';
   const userPoolClientId = process.env.USER_POOL_CLIENT_ID || '';
   const identityPoolId = process.env.IDENTITY_POOL_ID || '';
-  const userPoolId = process.env.USER_POOL_ID || '';
-  const iotEndpoint = process.env.IOT_ENDPOINT || '';
-  const env = process.env.NODE_ENV || 'development';
-  const stack = `passninja-${env}`;
   const federation = `cognito-idp.${region}.amazonaws.com/${userPoolId}`;
-  const brokerUrl = `wss://${iotEndpoint}.iot.${region}.amazonaws.com/mqtt`;
+  const iotEndpoint = process.env.IOT_ENDPOINT || '';
+  const iotPolicy = process.env.IOT_POLICY || '';
+  const env = process.env.NODE_ENV || 'development';
+  const stack = `pass-ninja-${env}`;
+  const brokerUrl = `${iotEndpoint}.iot.${region}.amazonaws.com`;
 
   const BASE_CONFIG = {
     stack,
@@ -24,7 +24,7 @@ const getBaseConfig = () => {
     identityPoolId,
     federation,
     iotEndpoint,
-    scannerPolicy,
+    iotPolicy,
     brokerUrl,
     ca: `-----BEGIN CERTIFICATE-----
       MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
@@ -51,9 +51,14 @@ const getBaseConfig = () => {
   return BASE_CONFIG;
 };
 
-declare type SerializedConfig = ReturnType<typeof getBaseConfig> & {
+export declare type SerializedConfig = ReturnType<typeof getBaseConfig> & {
   [key: string]: string;
 };
+
+export interface PassNinjaConfigurationOptions {
+  username?: string;
+  password?: string;
+}
 
 export class Configuration {
   static get directory() {
@@ -98,6 +103,8 @@ export class Configuration {
   }
 
   private _config: SerializedConfig = getBaseConfig();
+  private _username: string = '';
+  private _password: string = '';
 
   get stack() {
     return this._config.stack;
@@ -127,12 +134,8 @@ export class Configuration {
     return this._config.iotEndpoint;
   }
 
-  // get iotOwnThingsPolicy() {
-  //   return this._config.iotOwnThingsPolicy;
-  // }
-
-  get scannerPolicy() {
-    return this._config.scannerPolicy;
+  get iotPolicy() {
+    return this._config.iotPolicy;
   }
 
   get brokerUrl() {
@@ -144,14 +147,26 @@ export class Configuration {
   }
 
   get username() {
-    return this._config.username;
+    if (!!this._username.length) return this._username;
+    /**
+     *
+     * add inquirer module to prompt user for entry
+     *
+     */
+    return 'demo@user.com';
   }
 
   get password() {
-    return this._config.password;
+    if (!!this._password.length) return this._password;
+    /**
+     *
+     * add inquirer module to prompt user for entry
+     *
+     */
+    return 'Password123!';
   }
 
-  constructor() {
+  constructor(options?: PassNinjaConfigurationOptions) {
     for (let key in this._config) {
       const value = this._config[key];
 
@@ -159,9 +174,17 @@ export class Configuration {
         throw new Error(`config.${key} must be defined in .env at build time`);
       }
     }
+
+    if (options) {
+      const { username, password } = options;
+
+      if (!!username && username.length) {
+        this._username = username;
+      }
+
+      if (!!password && password.length) {
+        this._password = password;
+      }
+    }
   }
 }
-
-const CONFIG = new Configuration();
-
-export { CONFIG };

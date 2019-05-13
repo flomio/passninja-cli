@@ -3,8 +3,8 @@
 import * as pkg from '../package.json';
 import * as program from 'commander';
 export declare interface Program extends program.CommanderStatic {
-  user: string;
-  pass: string;
+  username?: string;
+  password?: string;
 }
 
 import { configure } from '../lib/configure';

@@ -7,13 +7,14 @@
   "scripts": {
     "build:cf": "node_modules/.bin/cloudform aws/cloudform > aws/template.json",
     "deploy:cf:prod": "node_modules/.bin/ts-node aws/deploy production",
-    "start": "node_modules/.bin/ts-node bin/pn",
+    "start": "node_modules/.bin/ts-node bin/pn configure",
     "test": "node node_modules/jasmine/bin/jasmine --config=jasmine.json"
   },
   "private": true,
   "dependencies": {
     "@types/node-forge": "^0.8.2",
     "amazon-cognito-identity-js": "^3.0.11",
+    "aws-iot-device-sdk": "^2.2.1",
     "aws-sdk": "^2.439.0",
     "base-x": "^3.0.5",
     "commander": "^2.20.0",
@@ -30,6 +31,7 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
+    "@types/aws-iot-device-sdk": "^2.2.0",
     "@types/base-x": "^3.0.0",
     "@types/chai": "^4.1.7",
     "@types/commander": "^2.12.2",
