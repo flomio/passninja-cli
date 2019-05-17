@@ -4,7 +4,9 @@
     "no-trailing-whitespace": false,
     "no-default-export": true,
     "prefer-const": true,
-    "semicolon": true
+    "semicolon": false,
+    "space-before-function-paren": false,
+    "no-extra-boolean-cast": false
   },
   "linterOptions": {
     "exclude": ["./no_compile/**/*", "./no_compile/*"]

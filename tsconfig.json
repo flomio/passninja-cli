@@ -1,6 +1,6 @@
 {
   "compileOnSave": false,
-  "include": ["./lib/**/*", "./bin/**/*"],
+  "include": ["./lib/**/*", "./bin/**/*", "no_compile/generateCSR.ts"],
   "exclude": ["./no_compile/**/*"],
   "compilerOptions": {
     "baseUrl": "./",

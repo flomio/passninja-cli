@@ -6,11 +6,11 @@
 
 import * as fs from 'fs';
 
-import { Program } from '../bin/pn';
-import { Reader } from './reader/Reader';
-import { LocalSessionHandler } from './reader/sessions/LocalSessionHandler';
-import { Configuration } from './Configuration';
-import { AuthorizationService } from './AuthorizationService';
+import { Program } from './pn';
+import { Reader } from '../lib/reader/Reader';
+import { LocalSessionHandler } from '../lib/reader/sessions/LocalSessionHandler';
+import { Configuration } from '../lib/Configuration';
+import { AuthorizationService } from '../lib/AuthorizationService';
 
 export const startScanner = (program: Program) => {
   const { username, password } = program;

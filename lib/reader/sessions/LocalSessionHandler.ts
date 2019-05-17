@@ -1,39 +1,36 @@
-import { SessionHandler } from './AbstractSessionHandler'
-import { CommandKey } from '../Messages'
-import * as appleVAS from 'apple-vas-data-decrypt'
-import { fromBase64, toBase64, generateGVD } from '../SessionUtils'
-import { dbg } from '../../Logging'
-import { SecureSmartTapSession, getRedemptionValues } from 'smart-tap'
-import { utils } from 'flomio-js-sdk'
+import { SessionHandler } from './AbstractSessionHandler';
+import { CommandKey } from '../Messages';
+import * as appleVAS from 'apple-vas-data-decrypt';
+import { fromBase64, toBase64, generateGVD } from '../SessionUtils';
+import { dbg } from '../../Logging';
+import { SecureSmartTapSession, getRedemptionValues } from 'smart-tap';
+import { utils } from 'flomio-js-sdk';
 
 export class LocalSessionHandler implements SessionHandler {
- 
-  constructor (
-    private config: any
-  ) {}
+  constructor(private config: any) {}
 
   getDecrypter = () => {
-    const key1 = this.config.nfc.keys.appleVAS.keys[0]
+    const key1 = this.config.nfc.keys.appleVAS.keys[0];
     const decrypter = appleVAS.makeDecrypter(
       this.config.nfc.selectPassTypeIdentifier,
       key1.privateKeyPem
-    )
-    return decrypter
+    );
+    return decrypter;
+  };
+
+  get isLocal() {
+    return true;
   }
 
-  get isLocal () {
-    return true
+  nfcConf() {
+    return this.config.nfc.keys;
   }
 
-  nfcConf () {
-    return this.config.nfc.keys
-  }  
+  async handleMessage(message: { cmd: CommandKey; args: any; session?: any }) {
+    dbg('handling message', message);
 
-  async handleMessage (message: {cmd: CommandKey, args: any, session?: any}) {
-    dbg('handling message', message)
-    
     if (message.cmd === CommandKey.select_ose) {
-      const key = this.nfcConf().googleSmartTap.keys[0]
+      const key = this.nfcConf().googleSmartTap.keys[0];
 
       const session = new SecureSmartTapSession({
         type: 'privateKey',
@@ -41,25 +38,24 @@ export class LocalSessionHandler implements SessionHandler {
         privateKey: {
           version: key.version,
           pem: key.privateKeyPem
-        }}
-      )
-      await session.selectOSECommand()
+        }
+      });
+      await session.selectOSECommand();
       // assume this has already been sorted
-      
+
       const parsed = session.parseSelectOSEResponse(
         fromBase64(message.args.response)
-      )
-  
-      dbg('found smart tap', JSON.stringify(parsed))
+      );
+
+      dbg('found smart tap', JSON.stringify(parsed));
 
       if (parsed.isSmartTap) {
-        
-        const negotiateCommand = await session.negotiateSecureSessionCommand()
-        
-        session.preEmptParse()
-        
-        const getCommand = session.getSmartTapDataCommand()
-        
+        const negotiateCommand = await session.negotiateSecureSessionCommand();
+
+        session.preEmptParse();
+
+        const getCommand = session.getSmartTapDataCommand();
+
         return {
           session: session,
           cmd: CommandKey.get_smart_tap_data,
@@ -67,54 +63,55 @@ export class LocalSessionHandler implements SessionHandler {
             negotiate: toBase64(negotiateCommand),
             get: toBase64(getCommand)
           }
-        }
+        };
         // TODO: this was commented in the original source on aws. why?
         // return sendApdu(session, CommandKey.negotiate_session, session.negotiateSecureSessionCommand())
       } else {
         return {
           cmd: CommandKey.get_vas_data,
           args: {
-            get: utils.unhex(generateGVD(this.config.nfc.selectPassTypeIdentifier)).toString('base64')
+            get: utils
+              .unhex(generateGVD(this.config.nfc.selectPassTypeIdentifier))
+              .toString('base64')
           }
-        }
+        };
       }
     } else if (message.cmd === CommandKey.decrypt_smart_tap_data) {
-      dbg('decrypt_smart_tap_data')
-      const session = message.session
-      dbg(JSON.stringify(session))
+      dbg('decrypt_smart_tap_data');
+      const session = message.session;
+      dbg(JSON.stringify(session));
       message.args.responses.map(async (response: string) => {
-        const apdu = fromBase64(response)
-        dbg('parsed get st data resp apdu', apdu.slice(-2), apdu.length)
-        return session.parseGetSmartTapDataResponse(apdu)
-      })
-      dbg('parseFullPayload')
-      const fullPayload = await session.parseFullPayload()
+        const apdu = fromBase64(response);
+        dbg('parsed get st data resp apdu', apdu.slice(-2), apdu.length);
+        return session.parseGetSmartTapDataResponse(apdu);
+      });
+      dbg('parseFullPayload');
+      const fullPayload = await session.parseFullPayload();
 
-      const values = !!fullPayload ? getRedemptionValues(fullPayload) : []
-      dbg('values')
-      dbg(values)
+      const values = !!fullPayload ? getRedemptionValues(fullPayload) : [];
+      dbg('values');
+      dbg(values);
 
       return {
         cmd: CommandKey.decrypted_smart_tap_data,
         args: {
           data: values
         }
-      }
+      };
     } else if (message.cmd === CommandKey.decrypt_vas_data) {
-      const decrypter = this.getDecrypter()
-      const decrypted = decrypter(fromBase64(message.args.response))
+      const decrypter = this.getDecrypter();
+      const decrypted = decrypter(fromBase64(message.args.response));
 
       if (!decrypted.success) {
-        dbg(decrypted.error)
+        dbg(decrypted.error);
       }
 
       return {
         cmd: CommandKey.decrypted_vas_data,
         args: { data: decrypted.data }
-      }
+      };
     }
-  
-    return null
-  }
 
+    return null;
+  }
 }

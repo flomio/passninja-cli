@@ -10,7 +10,7 @@ export declare interface Program extends program.CommanderStatic {
   password?: string;
 }
 
-import { startScanner } from '../lib/startScanner';
+import { startScanner } from './startScanner';
 
 if (pkg.version) {
   program.version(pkg.version);

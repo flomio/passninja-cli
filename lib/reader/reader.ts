@@ -1,95 +1,95 @@
-
-import * as pcsc from 'flomio-js-sdk-pcsc'
-import { SessionHandler } from './sessions/AbstractSessionHandler'
-import * as os from 'os'
-import * as flomio from 'flomio-js-sdk'
-import { CommandKey } from './Messages'
-import { generateGVD, toBase64, fromBase64 } from './SessionUtils'
-import { dbg, trc } from '../Logging'
+import * as pcsc from 'flomio-js-sdk-pcsc';
+import { SessionHandler } from './sessions/AbstractSessionHandler';
+import * as os from 'os';
+import * as flomio from 'flomio-js-sdk';
+import { CommandKey } from './Messages';
+import { generateGVD, toBase64, fromBase64 } from './SessionUtils';
+import { dbg, trc } from '../Logging';
+import { Configuration } from 'lib/Configuration';
 
 export class Reader {
-  private session?: pcsc.Session
-  
-  constructor (
+  private session?: pcsc.Session;
+
+  constructor(
     private readerSession: SessionHandler,
-    private config: any
+    private config: Configuration
   ) {}
 
   start = () => {
-    const connectionMode = os.platform() === 'win32' ? 'shared' : 'exclusive'
-    dbg('Creating pcsc.Session with', { connectionMode })
+    const connectionMode = os.platform() === 'win32' ? 'shared' : 'exclusive';
+    dbg('Creating pcsc.Session with', { connectionMode });
     this.session = new pcsc.Session({
       connectionMode
-    })
+    });
 
-    this.session.on('reader', this.onReader.bind(this))
-  }
+    this.session.on('reader', this.onReader.bind(this));
+  };
 
   onReader = async (reader: pcsc.PCSCReader) => {
-    const spec = await this.initReaderAndGetSpec(reader)
- 
-    dbg('Found reader', spec)
+    const spec = await this.initReaderAndGetSpec(reader);
 
-    const withSpec = { reader, spec }
+    dbg('Found reader', spec);
 
-    reader.on('tagScanned', this.onTag.bind(this, withSpec))
-  }
+    const withSpec = { reader, spec };
+
+    reader.on('tagScanned', this.onTag.bind(this, withSpec));
+  };
 
   onTag = (reader: any, tag: flomio.tags.HCEDevice) => {
     // TODO: handle unknown tags and pray
     if (tag.type === 'hceDevice') {
-      return this.onHceDevice(reader, tag)
+      return this.onHceDevice(reader, tag);
     }
-  }
+  };
 
   onHceDevice = async (reader: pcsc.PCSCReader, tag: flomio.tags.HCEDevice) => {
-    const selected = await this.selectOSE(tag)
+    const selected = await this.selectOSE(tag);
 
     if (!selected || !selected.OK) {
       // TODO: more info! typed events!
       // this.events.emit(errorSelectOse, {
       //   SW: selected.SW
       // })
-      return
+      return;
     }
 
     try {
       if (selected.data.toString().includes('ApplePay')) {
-        await this.onApplePay(tag, reader)
+        await this.onApplePay(tag, reader);
       } else {
-        await this.onSmartTap(selected, tag, reader)
+        await this.onSmartTap(selected, tag, reader);
       }
     } catch (err) {
-      dbg('Scan error', err)
-      this.eject(reader)
-      return
+      dbg('Scan error', err);
+      this.eject(reader);
+      return;
     }
-  }
+  };
 
   onApplePay = async (tag: flomio.tags.HCEDevice, readerWithSpec: any) => {
-    const reader = readerWithSpec.reader
+    const reader = readerWithSpec.reader;
 
     // TODO: make this double selecting optional
-    await this.selectOSE(tag)
+    await this.selectOSE(tag);
 
-    const selectPassTypeIdentifier = this.config.nfc.selectPassTypeIdentifier
-    const gvd = await tag.sendAPDU(generateGVD(selectPassTypeIdentifier))
+    const selectPassTypeIdentifier = this.config.nfc.selectPassTypeIdentifier;
+    const gvd = await tag.sendAPDU(generateGVD(selectPassTypeIdentifier));
 
-    dbg('GVD', gvd.SW)
+    dbg('GVD', gvd.SW);
 
     if (gvd.SW === '0x6287') {
-      return
+      return;
     }
 
-    this.reset(reader)
+    this.reset(reader);
 
     if (!gvd.OK) {
-      return
+      return;
     }
 
     // if (process.env.isLinux() || this.env.isOSX()) {
-      // This works on rpi0w
-    this.unpower(reader)
+    // This works on rpi0w
+    this.unpower(reader);
     // } else {
     //   this.eject(reader)
     // }
@@ -100,9 +100,9 @@ export class Reader {
         passTypeIdentifier: selectPassTypeIdentifier,
         response: toBase64(gvd.full)
       }
-    })
+    });
 
-    dbg('Apple Decrypted Payload: ', resp)
+    dbg('Apple Decrypted Payload: ', resp);
 
     // this.events.emit(vasData, {
     //   type: "apple-pay",
@@ -112,21 +112,21 @@ export class Reader {
     //   passTypeIdentifier: selectPassTypeIdentifier
     // })
 
-    trc('GVD resp', gvd.SW)
-    this.reset(reader)
-  }
+    trc('GVD resp', gvd.SW);
+    this.reset(reader);
+  };
 
   onSmartTap = async (
-    selectResp: flomio.IAPDUResponse, 
-    tag: flomio.tags.HCEDevice, 
-    readerWithSpec: any) => {
-
-    dbg('Double selecting to delay')
-    const selectResp2 = await this.selectOSE(tag)
+    selectResp: flomio.IAPDUResponse,
+    tag: flomio.tags.HCEDevice,
+    readerWithSpec: any
+  ) => {
+    dbg('Double selecting to delay');
+    const selectResp2 = await this.selectOSE(tag);
     if (!selectResp2 || !selectResp2.OK) {
-      return
+      return;
     }
-    const reader = readerWithSpec.reader
+    const reader = readerWithSpec.reader;
 
     const selectOSEMsg = {
       cmd: CommandKey.select_ose,
@@ -137,79 +137,82 @@ export class Reader {
         passTypeIdentifier: this.config.nfc.selectPassTypeIdentifier,
         collectorId: this.config.nfc.selectCollectorId
       }
-    }
-    
-    let resp = await this.readerSession.handleMessage(selectOSEMsg)
-    trc('Select', resp)
+    };
 
-    const responses = []
+    let resp = await this.readerSession.handleMessage(selectOSEMsg);
+    trc('Select', resp);
+
+    const responses = [];
 
     if (!(resp.cmd === CommandKey.get_smart_tap_data)) {
-      return
+      return;
     }
 
-    const negotiateApdu = fromBase64(resp.args.negotiate + '33333')
+    const negotiateApdu = fromBase64(resp.args.negotiate + '33333');
 
-    trc('Negotiate apdu', negotiateApdu.toString('hex'))
+    trc('Negotiate apdu', negotiateApdu.toString('hex'));
 
-    const negotiateResp = await tag.sendAPDU(negotiateApdu)
+    const negotiateResp = await tag.sendAPDU(negotiateApdu);
 
-    trc('Negotiate resp', negotiateResp.SW)
+    trc('Negotiate resp', negotiateResp.SW);
 
     if (!negotiateResp.OK) {
-      dbg('Error with negotiate resp', negotiateResp.SW)
-      
-      const tackyTag = tag as any
+      dbg('Error with negotiate resp', negotiateResp.SW);
+
+      const tackyTag = tag as any;
       if (!('__retried' in tackyTag)) {
-        dbg('__retried')
-        tackyTag.__retried = true
-        return this.onHceDevice(readerWithSpec, tag)
+        dbg('__retried');
+        tackyTag.__retried = true;
+        return this.onHceDevice(readerWithSpec, tag);
       } else {
-        dbg('not __retried')
+        dbg('not __retried');
         // Don't try and auto scan it again, assume it's something weird
-        this.eject(reader)
-        return
+        this.eject(reader);
+        return;
       }
     }
 
-    const apdu = fromBase64(resp.args.get)
+    const apdu = fromBase64(resp.args.get);
     // apdu[apdu.length - 1] = 255
-    trc('Get apdu', apdu.length, 'LE=', apdu.slice(-1))
+    trc('Get apdu', apdu.length, 'LE=', apdu.slice(-1));
 
-    let apduResp = await tag.sendAPDU(apdu)
-    dbg('apduResp resp', apduResp.SW)
+    let apduResp = await tag.sendAPDU(apdu);
+    dbg('apduResp resp', apduResp.SW);
 
-    const rem = parseInt(apduResp.SW, 16) ^ 0x9100
+    const rem = parseInt(apduResp.SW, 16) ^ 0x9100;
 
     if (rem && rem !== 0x100) {
       // Don't try and auto scan it again, assume it's something weird
-      this.eject(reader)
-      return
+      this.eject(reader);
+      return;
     }
     // TODO: handle non 91xx/90xx here
 
-    dbg('GSTD resp', apduResp.SW)
+    dbg('GSTD resp', apduResp.SW);
 
-    responses.push(apduResp.full)
+    responses.push(apduResp.full);
 
     if (!(apduResp.SW === '0x9100')) {
-      dbg('9100', apduResp)
-      return
+      dbg('9100', apduResp);
+      return;
     }
 
-    trc('Sending get more apdu')
+    trc('Sending get more apdu');
 
-    apduResp = await tag.sendAPDU('90-C0-00-00-00-00')
+    apduResp = await tag.sendAPDU('90-C0-00-00-00-00');
 
-    trc('Get more SW', apduResp.SW)
+    trc('Get more SW', apduResp.SW);
 
-    responses.push(apduResp.full)
+    responses.push(apduResp.full);
 
-    dbg('Responses', responses.map(r => [flomio.utils.hex(r.slice(-2)), r.length]))
+    dbg(
+      'Responses',
+      responses.map(r => [flomio.utils.hex(r.slice(-2)), r.length])
+    );
 
-    this.unpower(reader)
+    this.unpower(reader);
 
-    const serializedOrLiveSession = resp.session
+    const serializedOrLiveSession = resp.session;
 
     resp = await this.readerSession.handleMessage({
       session: serializedOrLiveSession,
@@ -217,7 +220,7 @@ export class Reader {
       args: {
         responses: responses.map(toBase64)
       }
-    })
+    });
 
     // this.events.emit(smartTapData, {
     //   uuid: v4(),
@@ -227,55 +230,60 @@ export class Reader {
     //   data: resp.args.data,
     //   collectorId: selectOSEMsg.args.collectorId
     // })
-  }    
+  };
 
   eject = (reader: pcsc.PCSCReader) => {
-    dbg('Ejecting tag')
-    reader.disconnect('eject').then().catch()
-  }
+    dbg('Ejecting tag');
+    reader
+      .disconnect('eject')
+      .then()
+      .catch();
+  };
 
   reset = (reader: any) => {
-    dbg('resetting tag')
-    reader.disconnect('reset').then()
-  }
+    dbg('resetting tag');
+    reader.disconnect('reset').then();
+  };
 
   unpower = (reader: any) => {
-    dbg('unpowering tag')
-    reader.disconnect('unPower').then()
-  }
-  
+    dbg('unpowering tag');
+    reader.disconnect('unPower').then();
+  };
+
   initReaderAndGetSpec = async (reader: pcsc.PCSCReader) => {
-    await reader.connect('direct')
-  
-    let firmware: string
-  
+    await reader.connect('direct');
+
+    let firmware: string;
+
     try {
       firmware = (await reader.escapeCommand('E0 00 00 18 00').response).data
         .slice(5)
-        .toString('ascii')
+        .toString('ascii');
     } catch (err) {
-      dbg('Error getting firmware')
-      return
+      dbg('Error getting firmware');
+      return;
     }
-  
+
     try {
-      await this.pollVAS(reader)
+      await this.pollVAS(reader);
     } catch (err) {
-      dbg('Error while polling for vas', { firmware })
-      return
+      dbg('Error while polling for vas', { firmware });
+      return;
     }
-  
-    let serialNumber: string
-  
+
+    let serialNumber: string;
+
     try {
-      serialNumber = await flomio.FloBlePlusBase.prototype.getSerialNumber.call(reader)
+      serialNumber = await flomio.FloBlePlusBase.prototype.getSerialNumber.call(
+        reader
+      );
     } catch (err) {
-      dbg('Error while polling for vas', { firmware })
-      return
+      dbg('Error while polling for vas', { firmware });
+      return;
     }
-  
-    await reader.disconnect('leave')
-  
+
+    await reader.disconnect('leave');
+
     return {
       type: reader.name.includes('1255')
         ? 'FloBLE-Plus'
@@ -284,31 +292,31 @@ export class Reader {
         : 'unknown',
       serial_number: serialNumber,
       firmware
-    }
-  }
+    };
+  };
 
   pollVAS = async (reader: pcsc.PCSCReader) => {
-    dbg('Polling for vas targets')
+    dbg('Polling for vas targets');
     // ECP version = 1
-    await reader.escapeCommand('E000003B03010101').response
+    await reader.escapeCommand('E000003B03010101').response;
     // Terminal type = 0
-    await reader.escapeCommand('E000003B03010200').response
+    await reader.escapeCommand('E000003B03010200').response;
     // Terminal mode = VAS only
-    await reader.escapeCommand('E000003B03010302').response
+    await reader.escapeCommand('E000003B03010302').response;
     // include VAS types in polling
     // TODO: ...
-    await reader.escapeCommand('E00000200145').response
+    await reader.escapeCommand('E00000200145').response;
     // include VAS types in polling
-  }
+  };
 
   selectOSE = async (tag: flomio.IType4Tag, tries = 2) => {
-    const select = await tag.selectApplication(Buffer.from('OSE.VAS.01'))
-    dbg('Select VAS', select.SW)
-    tries--
+    const select = await tag.selectApplication(Buffer.from('OSE.VAS.01'));
+    dbg('Select VAS', select.SW);
+    tries--;
     if (tries && !select.OK) {
-      return
+      return;
     }
-  
-    return select
-  }
+
+    return select;
+  };
 }
