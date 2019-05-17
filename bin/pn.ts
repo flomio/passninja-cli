@@ -1,28 +1,29 @@
 #! /usr/bin/env node
 
-import * as pkg from "../package.json";
-import * as program from "commander";
+import * as pkg from '../package.json';
+import * as program from 'commander';
+
+// Program export must be before import from  startScanner or will cause
+// circular dependency
 export declare interface Program extends program.CommanderStatic {
   username?: string;
   password?: string;
 }
 
-import { configure } from "../lib/configure";
+import { startScanner } from '../lib/startScanner';
 
 if (pkg.version) {
   program.version(pkg.version);
 }
 
 program
-  .option("-u, --username <username>", "Login as <username>")
-  .option("-p, --password <password>", "Login with <password>");
+  .option('-u, --username <username>', 'Login as <username>')
+  .option('-p, --password <password>', 'Login with <password>')
+  .description('Run PassNinja Cli and scan some passes!')
+  .parse(process.argv);
 
-program.description("setup your scanner for the first time").action(() => {
-  configure(program as Program);
-});
+startScanner(program as Program);
 
-program.parse(process.argv);
-
-if (!process.argv.slice(3).length) {
-  program.outputHelp();
-}
+// if (!process.argv.slice(2).length) {
+//   program.outputHelp();
+// }

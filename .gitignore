@@ -1,6 +1,6 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 *.env*
-
+# *pn-nfc-keys.json
 *.pkpass
 test/passes
 .ipynb_checkpoints

@@ -4,6 +4,16 @@ import * as path from 'path';
 
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
+const getNFCKeys = () => {
+  const pathToKeys = path.resolve(__dirname, '..', 'pn-nfc-keys.json');
+
+  if (fs.existsSync(pathToKeys)) {
+    return JSON.parse(fs.readFileSync(pathToKeys).toString());
+  }
+
+  throw new Error('No NFC keys were found');
+};
+
 const getBaseConfig = () => {
   const env = process.env.NODE_ENV || 'development';
   const stack = `pass-ninja-${env}`;
@@ -14,6 +24,7 @@ const getBaseConfig = () => {
   const federation = `cognito-idp.${region}.amazonaws.com/${userPoolId}`;
   const iotEndpoint = process.env.IOT_ENDPOINT || '';
   const host = `${iotEndpoint}.iot.${region}.amazonaws.com`;
+  const nfcKeys = getNFCKeys();
 
   const BASE_CONFIG = {
     stack,
@@ -23,14 +34,19 @@ const getBaseConfig = () => {
     identityPoolId,
     federation,
     iotEndpoint,
-    host
+    host,
+    nfc: {
+      selectPassTypeIdentifier: 'pass.com.ndudfield.nfc',
+      selectCollectorId: 77501435,
+      keys: nfcKeys
+    }
   };
 
   return BASE_CONFIG;
 };
 
 export declare type SerializedConfig = ReturnType<typeof getBaseConfig> & {
-  [key: string]: string;
+  [key: string]: string | ReturnType<typeof getBaseConfig>['nfc'];
 };
 
 export interface PassNinjaConfigurationOptions {
@@ -61,13 +77,13 @@ export class Configuration {
     // async save off main thread. state stored in this._config
     const write = () => {
       fs.writeFile(Configuration.file, JSON.stringify(config), err => {
-        if (!!err) throw err;
+        if (err) throw err;
         console.log(`Saved configuration file to ${Configuration.file}`);
       });
     };
 
     fs.stat(Configuration.directory, (err, stats) => {
-      if (!!stats) return write();
+      if (stats) return write();
 
       if (err && err.code === 'ENOENT') {
         return fs.mkdir(Configuration.directory, dirErr => {
@@ -114,11 +130,15 @@ export class Configuration {
     return this._config.host;
   }
 
+  get nfc() {
+    return this._config.nfc;
+  }
+
   constructor() {
-    for (let key in this._config) {
+    for (const key in this._config) {
       const value = this._config[key];
 
-      if (!(value && value.length)) {
+      if (!(value && `${value}`.length)) {
         throw new Error(`config.${key} must be defined in .env at build time`);
       }
     }

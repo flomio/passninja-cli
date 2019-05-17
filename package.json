@@ -12,7 +12,7 @@
     "tsc": "node_modules/.bin/tsc -p .",
     "tsc:watch": "node_modules/.bin/tsc --watch",
     "test": "node node_modules/jasmine/bin/jasmine --config=jasmine.json",
-    "start": "node_modules/.bin/nodemon --config nodemon.json",
+    "start": "node_modules/.bin/ts-node bin/pn",
     "lint": "tslint --project tslint.json"
   },
   "private": true,

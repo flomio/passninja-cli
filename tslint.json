@@ -4,12 +4,9 @@
     "no-trailing-whitespace": false,
     "no-default-export": true,
     "prefer-const": true,
-    "interface-name": true
+    "semicolon": true
   },
   "linterOptions": {
-    "exclude": [
-      "./no_compile/**/*",
-      "./no_compile/*"
-    ]
+    "exclude": ["./no_compile/**/*", "./no_compile/*"]
   }
 }
