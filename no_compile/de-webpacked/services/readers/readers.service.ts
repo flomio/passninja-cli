@@ -59,7 +59,7 @@ export class ReadersService {
 
   onReader = async reader => {
     const spec = await initReaderAndGetSpec(reader)
-
+ 
     dbg("Found reader", spec)
 
     const withSpec = { reader, spec }

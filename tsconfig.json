@@ -1,6 +1,6 @@
 {
   "compileOnSave": false,
-  "include": ["./lib/**/*", "./bin/**.*"],
+  "include": ["./lib/**/*", "./bin/**/*"],
   "exclude": ["./no_compile/**/*"],
   "compilerOptions": {
     "baseUrl": "./",
