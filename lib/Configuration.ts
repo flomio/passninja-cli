@@ -11,7 +11,6 @@ const getBaseConfig = () => {
   const identityPoolId = process.env.IDENTITY_POOL_ID || '';
   const federation = `cognito-idp.${region}.amazonaws.com/${userPoolId}`;
   const iotEndpoint = process.env.IOT_ENDPOINT || '';
-  const iotPolicy = process.env.IOT_POLICY || '';
   const env = process.env.NODE_ENV || 'development';
   const stack = `pass-ninja-${env}`;
   const brokerUrl = `${iotEndpoint}.iot.${region}.amazonaws.com`;
@@ -24,7 +23,6 @@ const getBaseConfig = () => {
     identityPoolId,
     federation,
     iotEndpoint,
-    iotPolicy,
     brokerUrl,
     ca: `-----BEGIN CERTIFICATE-----
       MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
@@ -132,10 +130,6 @@ export class Configuration {
 
   get iotEndpoint() {
     return this._config.iotEndpoint;
-  }
-
-  get iotPolicy() {
-    return this._config.iotPolicy;
   }
 
   get brokerUrl() {
