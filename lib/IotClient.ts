@@ -71,7 +71,7 @@ export class IotClient {
       secretKey: options.secretKey || '',
       sessionToken: options.sessionToken || '',
       // Set the maximum reconnect time to 500ms; this is a browser application
-      // so we don't want to leave the user waiting too long for reconnection after
+      // so we don't want to leave the user waiting too long for re-connection after
       // re-connecting to the network/re-opening their laptop/etc...
       baseReconnectTimeMs: options.baseReconnectTimeMs || 1000,
       maximumReconnectTimeMs: options.maximumReconnectTimeMs || 1000,

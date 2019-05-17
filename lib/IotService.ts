@@ -1,3 +1,7 @@
+import { CognitoIdentityCredentials } from 'aws-sdk';
+
+import { Configuration } from './Configuration';
+import { AuthorizationService } from './AuthorizationService';
 import {
   IotClient,
   OnMessageHandler,
@@ -5,32 +9,26 @@ import {
   OnCloseHandler
 } from './IotClient';
 
-import { CleanUpService } from './CleanUpService';
-
-import { Configuration } from './Configuration';
-
-import { AuthorizationService } from './AuthorizationService';
-
-import { Iot, CognitoIdentityCredentials } from 'aws-sdk';
-
-export declare interface InitNewIotClient {
+export const initNewClient = ({
+  auth,
+  config
+}: {
   auth: AuthorizationService;
   config: Configuration;
-}
-export const initNewClient = ({ auth, config }: InitNewIotClient) => {
+}) => {
   const { accessKeyId, secretAccessKey, sessionToken } = auth.credentials;
-  const { region, brokerUrl } = config;
-  const client = new IotClient(
+  const { region, host } = config;
+  new IotClient(
     {
+      clientId: 'testing-123-from-initNewClient',
       accessKeyId,
       secretKey: secretAccessKey,
       sessionToken,
       region,
-      host: brokerUrl
+      host
     },
     true
   );
-  // console.log(client);
 };
 
 export const updateClientCredentials = ({

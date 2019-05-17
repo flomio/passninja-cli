@@ -17,12 +17,9 @@ program
   .option('-u, --username <username>', 'Login as <username>')
   .option('-p, --password <password>', 'Login with <password>');
 
-program
-  .command('configure')
-  .description('setup your scanner for the first time')
-  .action(() => {
-    configure(program as Program);
-  });
+program.description('setup your scanner for the first time').action(() => {
+  configure(program as Program);
+});
 
 program.parse(process.argv);
 

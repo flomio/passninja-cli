@@ -9,9 +9,9 @@ import { CognitoIdentityCredentials } from 'aws-sdk';
 export const configure = (program: Program) => {
   const { username, password } = program;
 
-  const config = new Configuration({ username, password });
+  const config = new Configuration();
 
-  const auth = new AuthorizationService(config);
+  const auth = new AuthorizationService(config, username, password);
 
   auth.login().then(() => initNewClient({ auth, config }));
 };

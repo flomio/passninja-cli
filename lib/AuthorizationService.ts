@@ -1,29 +1,40 @@
 import {
   config as awsConfig,
   CognitoIdentityCredentials,
-  Iot,
   CognitoIdentityServiceProvider
 } from 'aws-sdk';
 
-import { BehaviorSubject } from 'rxjs';
-
-import { CleanUpService } from './CleanUpService';
 import { Configuration } from './Configuration';
-import { updateClientCredentials, initNewClient } from './IotService';
-
-export declare interface AuthorizationServiceOptions {
-  username?: string;
-  password?: string;
-  config: Configuration;
-}
+import { updateClientCredentials } from './IotService';
 
 export class AuthorizationService {
+  private static getUsername = () => {
+    /**
+     *
+     * Add inquirer module to prompt user at the command line
+     *
+     */
+    return 'demo@user.com';
+  };
 
-  credentials: CognitoIdentityCredentials = {} as any;
+  private static getPassword = () => {
+    /**
+     *
+     * Add inquirer module to prompt user at the command line
+     *
+     */
+    return 'Password123!';
+  };
+
+  credentials!: CognitoIdentityCredentials;
 
   private provider: CognitoIdentityServiceProvider;
 
-  constructor(private config: Configuration) {
+  constructor(
+    private config: Configuration,
+    private username: string = AuthorizationService.getUsername(),
+    private password: string = AuthorizationService.getPassword()
+  ) {
     awsConfig.region = this.config.region;
 
     this.provider = new CognitoIdentityServiceProvider({
@@ -31,20 +42,24 @@ export class AuthorizationService {
     });
   }
 
-  update = async () => {
-    await this.credentials.refreshPromise();
-    updateClientCredentials(this.credentials);
-  };
+  update = () =>
+    new Promise<CognitoIdentityCredentials>(async (resolve, reject) => {
+      this.credentials.refresh((err?: Error) => {
+        if (err) reject(err);
+        updateClientCredentials(this.credentials);
+        resolve(this.credentials);
+      });
+    });
 
   login = () =>
-    new Promise(async (resolve, reject) => {
+    new Promise<CognitoIdentityCredentials>(async (resolve, reject) => {
       const response = await this.provider
         .initiateAuth({
           AuthFlow: 'USER_PASSWORD_AUTH',
           ClientId: this.config.userPoolClientId,
           AuthParameters: {
-            USERNAME: this.config.username,
-            PASSWORD: this.config.password
+            USERNAME: this.username,
+            PASSWORD: this.password
           }
         })
         .promise();

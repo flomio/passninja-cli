@@ -7,7 +7,7 @@
   "scripts": {
     "build:cf": "node_modules/.bin/cloudform aws/cloudform > aws/template.json",
     "deploy:cf:prod": "node_modules/.bin/ts-node aws/deploy production",
-    "start": "node_modules/.bin/ts-node bin/pn configure",
+    "start": "node_modules/.bin/ts-node bin/pn",
     "test": "node node_modules/jasmine/bin/jasmine --config=jasmine.json"
   },
   "private": true,
