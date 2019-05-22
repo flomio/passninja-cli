@@ -1,12 +1,13 @@
-import { SessionHandler } from './AbstractSessionHandler';
-import { CommandKey } from '../Messages';
 import * as appleVAS from 'apple-vas-data-decrypt';
-import { fromBase64, toBase64, generateGVD } from '../SessionUtils';
-import { dbg } from '../../Logging';
-import { SecureSmartTapSession, getRedemptionValues } from 'smart-tap';
+import { CommandKey, fromBase64, toBase64, generateGVD } from './utils';
+import { dbg } from './Logging';
+import {
+  SecureSmartTapSession,
+  getRedemptionValues
+} from '../../smart-tap/dist';
 import { utils } from 'flomio-js-sdk';
 
-export class LocalSessionHandler implements SessionHandler {
+export class SessionHandler {
   constructor(private config: any) {}
 
   getDecrypter = () => {

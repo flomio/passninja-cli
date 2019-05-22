@@ -25,3 +25,20 @@ export const toBase64 = (buffer: Buffer) => {
 export const fromBase64 = (str: string) => {
   return Buffer.from(str, 'base64');
 };
+
+export const enum CommandKey {
+  select_ose,
+  negotiate_session,
+  get_smart_tap_data,
+  get_more_smart_tap_data,
+  received_response,
+  send_apdu,
+  got_data,
+  get_data,
+  un_power,
+  decrypt_smart_tap_data,
+  decrypted_smart_tap_data,
+  get_vas_data,
+  decrypt_vas_data,
+  decrypted_vas_data
+}

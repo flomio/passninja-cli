@@ -1,16 +1,9 @@
-// import { AuthorizationService } from './AuthorizationService';
-// import { initNewClient } from './IotService';
-// import { Configuration } from './Configuration';
-// import { CleanUpService } from './CleanUpService';
-// import { CognitoIdentityCredentials } from 'aws-sdk';
-
-import * as fs from 'fs';
-
 import { Program } from './pn';
-import { Reader } from '../lib/reader/Reader';
-import { LocalSessionHandler } from '../lib/reader/sessions/LocalSessionHandler';
 import { Configuration } from '../lib/Configuration';
 import { AuthorizationService } from '../lib/AuthorizationService';
+import { initNewClient, publish } from '../lib/IotService';
+import { Reader } from '../lib/Reader';
+import { SessionHandler } from '../lib/SessionHandler';
 
 export const startScanner = (program: Program) => {
   const { username, password } = program;
@@ -19,11 +12,20 @@ export const startScanner = (program: Program) => {
 
   const auth = new AuthorizationService(config, username, password);
 
-  // const localSession = new LocalSessionHandler(config);
+  auth
+    .login()
+    .then(() => {
+      initNewClient({ auth, config });
 
-  // const readerSession = new Reader(localSession, config);
+      publish('testing', 'testing 1, 2, 3....');
 
-  // readerSession.start();
+      const localSession = new SessionHandler(config);
 
-  // auth.login().then(() => initNewClient({ auth, config }));
+      const readerSession = new Reader(localSession, config);
+
+      readerSession.start();
+
+      console.log('started');
+    })
+    .catch(err => console.error(`>>> ERROR auth.login() >>> ${err}`));
 };

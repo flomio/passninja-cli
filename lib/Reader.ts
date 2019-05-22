@@ -1,18 +1,22 @@
 import * as pcsc from 'flomio-js-sdk-pcsc';
-import { SessionHandler } from './sessions/AbstractSessionHandler';
+import { SessionHandler } from '../no_compile/AbstractSessionHandler';
 import * as os from 'os';
 import * as flomio from 'flomio-js-sdk';
-import { CommandKey } from './Messages';
-import { generateGVD, toBase64, fromBase64 } from './SessionUtils';
-import { dbg, trc } from '../Logging';
+import { CommandKey, generateGVD, toBase64, fromBase64 } from './utils';
+import { dbg, trc } from './Logging';
 import { Configuration } from 'lib/Configuration';
+import { v4 } from 'uuid';
+import { publish } from './IotService';
+import { AuthorizationService } from './AuthorizationService';
 
 export class Reader {
   private session?: pcsc.Session;
+  readerId!: string;
 
   constructor(
     private readerSession: SessionHandler,
-    private config: Configuration
+    private config: Configuration,
+    private auth: AuthorizationService
   ) {}
 
   start = () => {
@@ -28,7 +32,13 @@ export class Reader {
   onReader = async (reader: pcsc.PCSCReader) => {
     const spec = await this.initReaderAndGetSpec(reader);
 
+    if (!spec) {
+      throw new Error('couldnt intialize reader to get serial number');
+    }
+
     dbg('Found reader', spec);
+
+    this.readerId = spec.type + '-' + spec.serial_number;
 
     const withSpec = { reader, spec };
 
@@ -104,13 +114,18 @@ export class Reader {
 
     dbg('Apple Decrypted Payload: ', resp);
 
-    // this.events.emit(vasData, {
-    //   type: "apple-pay",
-    //   uuid: v4(),
-    //   data: resp.args.data,
-    //   reader: readerWithSpec.spec,
-    //   passTypeIdentifier: selectPassTypeIdentifier
-    // })
+    console.log(`publishing to topic ${this.auth.credentials.identityId}`);
+
+    publish(
+      this.auth.credentials.identityId,
+      JSON.stringify({
+        type: 'apple-pay',
+        uuid: v4(),
+        data: resp.args.data,
+        reader: readerWithSpec.spec,
+        passTypeIdentifier: selectPassTypeIdentifier
+      })
+    );
 
     trc('GVD resp', gvd.SW);
     this.reset(reader);
@@ -222,14 +237,19 @@ export class Reader {
       }
     });
 
-    // this.events.emit(smartTapData, {
-    //   uuid: v4(),
-    //   // TODO: should use smartTap likely
-    //   type: "smart-tap",
-    //   reader: readerWithSpec.spec,
-    //   data: resp.args.data,
-    //   collectorId: selectOSEMsg.args.collectorId
-    // })
+    console.log(`publishing to topic ${this.auth.credentials.identityId}`);
+
+    publish(
+      this.auth.credentials.identityId,
+      JSON.stringify({
+        uuid: v4(),
+        // TODO: should use smartTap likely
+        type: 'smart-tap',
+        reader: readerWithSpec.spec,
+        data: resp.args.data,
+        collectorId: selectOSEMsg.args.collectorId
+      })
+    );
   };
 
   eject = (reader: pcsc.PCSCReader) => {

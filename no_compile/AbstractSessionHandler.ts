@@ -1,4 +1,4 @@
-import { CommandKey } from '../Messages'
+import { CommandKey } from '../lib/reader/Messages'
 
 export abstract class SessionHandler {
   abstract handleMessage (

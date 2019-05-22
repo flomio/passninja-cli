@@ -6,7 +6,9 @@
     "prefer-const": true,
     "semicolon": false,
     "space-before-function-paren": false,
-    "no-extra-boolean-cast": false
+    "no-extra-boolean-cast": false,
+    "no-unused-expression": false,
+    "no-duplicate-imports": false
   },
   "linterOptions": {
     "exclude": ["./no_compile/**/*", "./no_compile/*"]
