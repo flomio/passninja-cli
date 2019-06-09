@@ -41,38 +41,38 @@
 //     });
 //   }
 
-//   buildListeners() {
-//     const $connect = fromEvent<Connack>(this._client, 'connect').pipe(
-//       tap(con => {
-//         console.log(con);
-//         this.$status.next('online');
-//         console.log('connected to mqtt broker');
-//       })
-//     );
+// buildListeners() {
+//   const $connect = fromEvent<Connack>(this._client, 'connect').pipe(
+//     tap(con => {
+//       console.log(con);
+//       this.$status.next('online');
+//       console.log('connected to mqtt broker');
+//     })
+//   );
 
-//     const $error = fromEvent<Error>(this._client, 'error').pipe(
-//       flatMap(err => throwError(new Error(err.message)))
-//     );
+//   const $error = fromEvent<Error>(this._client, 'error').pipe(
+//     flatMap(err => throwError(new Error(err.message)))
+//   );
 
-//     const $offline = fromEvent<void>(this._client, 'offline').pipe(
-//       tap(() => {
-//         this.$status.next('offline');
-//         console.log('connection to mqtt broker offline');
-//       })
-//     );
+//   const $offline = fromEvent<void>(this._client, 'offline').pipe(
+//     tap(() => {
+//       this.$status.next('offline');
+//       console.log('connection to mqtt broker offline');
+//     })
+//   );
 
-//     const $close = fromEvent<void>(this._client, 'close').pipe(
-//       tap(() => {
-//         console.log('connection to mqtt broker was closed');
-//       })
-//     );
+//   const $close = fromEvent<void>(this._client, 'close').pipe(
+//     tap(() => {
+//       console.log('connection to mqtt broker was closed');
+//     })
+//   );
 
-//     // const $reconnect = fromEvent<void>(this._client, 'reconnect').pipe(
-//     //   tap(() => {
-//     //     console.log('reconnecting to mqtt broker')
-//     //   })
-//     // )
+//   // const $reconnect = fromEvent<void>(this._client, 'reconnect').pipe(
+//   //   tap(() => {
+//   //     console.log('reconnecting to mqtt broker')
+//   //   })
+//   // )
 
-//     return merge($connect, $error, $offline, $close);
-//   }
+//   return merge($connect, $error, $offline, $close);
+// }
 // }
