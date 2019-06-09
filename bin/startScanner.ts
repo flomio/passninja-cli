@@ -21,6 +21,7 @@ export const startScanner = (program: Program) => {
 
       const localSession = new SessionHandler(config);
 
+      // @ts-ignore
       const readerSession = new Reader(localSession, config);
 
       readerSession.start();

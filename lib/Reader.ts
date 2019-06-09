@@ -3,11 +3,14 @@ import { SessionHandler } from '../no_compile/AbstractSessionHandler';
 import * as os from 'os';
 import * as flomio from 'flomio-js-sdk';
 import { CommandKey, generateGVD, toBase64, fromBase64 } from './utils';
-import { dbg, trc } from './Logging';
+// import { dbg, trc } from './Logging';
 import { Configuration } from 'lib/Configuration';
 import { v4 } from 'uuid';
 import { publish } from './IotService';
 import { AuthorizationService } from './AuthorizationService';
+
+const trc = console.log
+const dbg = console.log
 
 export class Reader {
   private session?: pcsc.Session;
@@ -237,19 +240,20 @@ export class Reader {
       }
     });
 
-    console.log(`publishing to topic ${this.auth.credentials.identityId}`);
+    // console.log(`publishing to topic ${this.auth.credentials.identityId}`);
 
-    publish(
-      this.auth.credentials.identityId,
-      JSON.stringify({
-        uuid: v4(),
-        // TODO: should use smartTap likely
-        type: 'smart-tap',
-        reader: readerWithSpec.spec,
-        data: resp.args.data,
-        collectorId: selectOSEMsg.args.collectorId
-      })
-    );
+    const topic = 'testing' // this.auth.credentials.identityId
+    const message = JSON.stringify({
+      uuid: v4(),
+      // TODO: should use smartTap likely
+      type: 'smart-tap',
+      reader: readerWithSpec.spec,
+      data: resp.args.data,
+      collectorId: selectOSEMsg.args.collectorId
+    })
+
+    console.log(topic, message)
+    publish(topic, message)
   };
 
   eject = (reader: pcsc.PCSCReader) => {
