@@ -18,7 +18,7 @@
 //   sessionPresent: boolean;
 // }
 
-// export class MqttService {
+// export class MqttClient {
 //   private _client: MqttClient;
 //   private _brokerUrl: string;
 

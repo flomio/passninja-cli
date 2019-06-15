@@ -14,7 +14,7 @@
 // declare interface Connack {
 //   sessionPresent: boolean;
 // }
-// export class MqttService {
+// export class MqttClient {
 //   private _client: MqttClient;
 //   private _brokerUrl: string;
 //   $status = new BehaviorSubject<MqttStatus>('offline');
@@ -61,4 +61,4 @@
 //     return merge($connect, $error, $offline, $close);
 //   }
 // }
-//# sourceMappingURL=MqttService.js.map
+//# sourceMappingURL=MqttClient.js.map

@@ -5,7 +5,7 @@ import { initNewClient, publish } from '../lib/IotService';
 import { Reader } from '../lib/Reader';
 import { SessionHandler } from '../lib/SessionHandler';
 
-export const startScanner = (program: Program) => {
+export const scan = (program: Program) => {
   const { username, password } = program;
 
   const config = new Configuration();

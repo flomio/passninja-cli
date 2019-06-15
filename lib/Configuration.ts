@@ -4,7 +4,11 @@ import * as path from 'path';
 
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
-const getNFCKeys = () => {
+export declare interface NfcKeys {
+
+}
+
+export const getNFCKeys = (): NfcKeys => {
   const pathToKeys = path.resolve(__dirname, '..', 'pn-nfc-keys.json');
 
   if (fs.existsSync(pathToKeys)) {
@@ -14,35 +18,24 @@ const getNFCKeys = () => {
   throw new Error('No NFC keys were found');
 };
 
-const getBaseConfig = () => {
+export const getBaseConfig = () => {
   const env = process.env.NODE_ENV || 'development';
-  const stack = `pass-ninja-${env}`;
   const region = process.env.REGION || '';
-  const userPoolId = process.env.USER_POOL_ID || '';
-  const userPoolClientId = process.env.USER_POOL_CLIENT_ID || '';
-  const identityPoolId = process.env.IDENTITY_POOL_ID || '';
-  const federation = `cognito-idp.${region}.amazonaws.com/${userPoolId}`;
-  const iotEndpoint = process.env.IOT_ENDPOINT || '';
-  const host = `${iotEndpoint}.iot.${region}.amazonaws.com`;
-  const nfcKeys = getNFCKeys();
 
-  const BASE_CONFIG = {
-    stack,
+  return {
     region,
-    userPoolId,
-    userPoolClientId,
-    identityPoolId,
-    federation,
-    iotEndpoint,
-    host,
+    stack: `pass-ninja-${env}`,
+    userPoolId: process.env.USER_POOL_ID || '',
+    userPoolClientId: process.env.USER_POOL_CLIENT_ID || '',
+    identityPoolId: process.env.IDENTITY_POOL_ID || '',
+    federation: process.env.FEDERATION || '',
+    iotHost: `${process.env.IOT_HOST}.iot.${region}.amazonaws.com`,
     nfc: {
       selectPassTypeIdentifier: 'pass.com.ndudfield.nfc',
       selectCollectorId: 77501435,
-      keys: nfcKeys
+      keys: getNFCKeys()
     }
   };
-
-  return BASE_CONFIG;
 };
 
 export declare type SerializedConfig = ReturnType<typeof getBaseConfig> & {
@@ -122,19 +115,15 @@ export class Configuration {
     return this._config.federation;
   }
 
-  get iotEndpoint() {
-    return this._config.iotEndpoint;
-  }
-
-  get host() {
-    return this._config.host;
+  get iotHost() {
+    return this._config.iotHost;
   }
 
   get nfc() {
     return this._config.nfc;
   }
 
-  constructor() {
+  constructor(public readonly debug = false) {
     for (const key in this._config) {
       const value = this._config[key];
 

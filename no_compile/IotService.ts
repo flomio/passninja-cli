@@ -106,6 +106,7 @@ export class IotService {
     }
   };
 
+
   private buildListeners = () => {
     const $connect = fromEvent<any>(this.device, 'connect').pipe(
       tap(con => {
@@ -122,6 +123,12 @@ export class IotService {
       })
     );
 
+    const $close = fromEvent<void>(this.device, 'close').pipe(
+      tap(() => {
+        console.log('connection to mqtt broker was closed');
+      })
+    );
+
     const $offline = fromEvent<void>(this.device, 'offline').pipe(
       tap(() => {
         // this.$status.next('offline');
@@ -129,11 +136,6 @@ export class IotService {
       })
     );
 
-    const $close = fromEvent<void>(this.device, 'close').pipe(
-      tap(() => {
-        console.log('connection to mqtt broker was closed');
-      })
-    );
 
     const $reconnect = fromEvent<void>(this.device, 'reconnect').pipe(
       tap(() => {

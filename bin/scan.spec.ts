@@ -1,0 +1,5 @@
+describe('pn.ts', function() {
+  it('should load without crashing', function() {
+    expect(true).toBe(false);
+  });
+});
