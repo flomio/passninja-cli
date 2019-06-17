@@ -1,10 +1,20 @@
-import { Configuration } from './Configuration';
+import { Configuration, getNfc, isNfc } from './Configuration';
+import * as path from 'path';
 
-// describe('Configuration', function () {
-//   it('should build without errors', function() {
-//     expect(new Configuration()).not.toThrow()
-//   });
-// });
+describe('nfc keys', () => {
+  const pathToKeys = path.resolve(__dirname, 'pn-nfc-keys.json');
 
+  it('getNfcKeys should not throw when reading file', function() {
+    expect(() => getNfc(pathToKeys)).not.toThrow();
+  });
 
-console.log(new Configuration());
+  it('should return properly formed keys', () => {
+    expect(isNfc(getNfc(pathToKeys))).toEqual(true);
+  });
+});
+
+describe('Configuration', function() {
+  it('should build without throwing errors', () => {
+    expect(() => new Configuration()).not.toThrow()
+  })
+});
