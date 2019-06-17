@@ -1,5 +1,5 @@
 "use strict";
-// import { connect, MqttClient } from 'mqtt';
+// import { connect, MqttService } from 'mqtt';
 // import {
 //   fromEvent,
 //   throwError,
@@ -14,8 +14,8 @@
 // declare interface Connack {
 //   sessionPresent: boolean;
 // }
-// export class MqttClient {
-//   private _client: MqttClient;
+// export class MqttService {
+//   private _client: MqttService;
 //   private _brokerUrl: string;
 //   $status = new BehaviorSubject<MqttStatus>('offline');
 //   constructor(private _config: Config, private _cleanUp: CleanUpService) {
@@ -61,4 +61,4 @@
 //     return merge($connect, $error, $offline, $close);
 //   }
 // }
-//# sourceMappingURL=MqttClient.js.map
+//# sourceMappingURL=MqttService.js.map

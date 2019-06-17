@@ -2,8 +2,8 @@ import * as DeviceSdk from 'aws-iot-device-sdk';
 import { generate } from 'shortid';
 import { IConnackPacket } from 'mqtt';
 
-import { Configuration } from './Configuration';
-import { AuthService } from './AuthService';
+import { Configuration } from '../lib/Configuration';
+import { AuthService } from '../lib/AuthService';
 
 /**
  *

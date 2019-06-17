@@ -1,6 +1,6 @@
 import * as appleVAS from 'apple-vas-data-decrypt';
 import { CommandKey, fromBase64, toBase64, generateGVD } from './utils';
-import { dbg } from './Logging';
+import { dbg } from '../no_compile/Logging';
 import {
   SecureSmartTapSession,
   getRedemptionValues

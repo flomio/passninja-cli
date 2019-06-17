@@ -26,6 +26,7 @@
     "debug": "^4.1.1",
     "flomio-js-sdk": "git+https://github.com/flomio/flomio-js-sdk",
     "flomio-js-sdk-pcsc": "git+https://github.com/flomio/flomio-js-sdk-pcsc",
+    "isomorphic-fetch": "^2.2.1",
     "mqtt": "^2.18.8",
     "node-fetch": "^2.5.0",
     "node-forge": "^0.8.2",

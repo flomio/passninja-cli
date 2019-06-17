@@ -28,7 +28,9 @@ export class AuthorizationService {
 
   credentials!: CognitoIdentityCredentials;
 
-  private provider: CognitoIdentityServiceProvider;
+  private provider = new CognitoIdentityServiceProvider({
+    region: this.config.region
+  });
 
   constructor(
     private config: Configuration,
@@ -36,10 +38,6 @@ export class AuthorizationService {
     private password: string = AuthorizationService.getPassword()
   ) {
     awsConfig.region = this.config.region;
-
-    this.provider = new CognitoIdentityServiceProvider({
-      region: this.config.region
-    });
   }
 
   update = () =>
