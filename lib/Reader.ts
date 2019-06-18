@@ -6,21 +6,21 @@ import { CommandKey, generateGVD, toBase64, fromBase64 } from './utils';
 // import { dbg, trc } from './Logging';
 import { Configuration } from 'lib/Configuration';
 import { v4 } from 'uuid';
-import { publish } from './IotService';
-import { AuthorizationService } from './AuthorizationService';
+import { MqttService } from './MqttService';
 
-const trc = console.log
-const dbg = console.log
+const trc = console.log;
+const dbg = console.log;
 
 export class Reader {
   private session?: pcsc.Session;
   readerId!: string;
 
   constructor(
-    private readerSession: SessionHandler,
     private config: Configuration,
-    private auth: AuthorizationService
-  ) {}
+    private readerSession: SessionHandler,
+    private mqtt: MqttService
+  ) {
+  }
 
   start = () => {
     const connectionMode = os.platform() === 'win32' ? 'shared' : 'exclusive';
@@ -117,10 +117,9 @@ export class Reader {
 
     dbg('Apple Decrypted Payload: ', resp);
 
-    console.log(`publishing to topic ${this.auth.credentials.identityId}`);
+    // console.log(`publishing to topic ${this.auth.credentials.identityId}`);
 
-    publish(
-      this.auth.credentials.identityId,
+    await this.mqtt.publish(
       JSON.stringify({
         type: 'apple-pay',
         uuid: v4(),
@@ -242,18 +241,14 @@ export class Reader {
 
     // console.log(`publishing to topic ${this.auth.credentials.identityId}`);
 
-    const topic = 'testing' // this.auth.credentials.identityId
-    const message = JSON.stringify({
+    await this.mqtt.publish(JSON.stringify({
       uuid: v4(),
       // TODO: should use smartTap likely
       type: 'smart-tap',
       reader: readerWithSpec.spec,
       data: resp.args.data,
       collectorId: selectOSEMsg.args.collectorId
-    })
-
-    console.log(topic, message)
-    publish(topic, message)
+    }));
   };
 
   eject = (reader: pcsc.PCSCReader) => {
@@ -312,8 +307,8 @@ export class Reader {
       type: reader.name.includes('1255')
         ? 'FloBLE-Plus'
         : reader.name.includes('1311')
-        ? 'FloBLE-Micro'
-        : 'unknown',
+          ? 'FloBLE-Micro'
+          : 'unknown',
       serial_number: serialNumber,
       firmware
     };

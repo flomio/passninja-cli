@@ -10,7 +10,7 @@
     "build": "node_modules/.bin/webpack",
     "preinstall": "rm -f package-lock.json && rm -rf node_modules",
     "start": "npm run ts -- bin/pn",
-    "ts": "node_modules/.bin/ts-node -p tsconfig.json",
+    "ts": "node_modules/.bin/ts-node --project tsconfig.json",
     "test": "node_modules/.bin/jest",
     "lint": "tslint --project tslint.json"
   },

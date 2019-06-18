@@ -92,6 +92,8 @@ export class AuthService {
 
   login = (USERNAME = AuthService.getUsername(), PASSWORD = AuthService.getPassword()) =>
     new Promise<CognitoIdentityCredentials>(async (resolve, reject) => {
+      if (this.loggedIn) return resolve(awsConfig.credentials as CognitoIdentityCredentials);
+
       const response = await this.provider
         .initiateAuth({
           AuthFlow: 'USER_PASSWORD_AUTH',

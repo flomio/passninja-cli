@@ -22,7 +22,8 @@ program
   .description('Run PassNinja Cli and scan some passes!')
   .parse(process.argv);
 
-scan(program as Program);
+scan(program as Program)
+  .catch(err => console.error(err));
 
 // if (!process.argv.slice(2).length) {
 //   program.outputHelp();

@@ -11,9 +11,9 @@ export declare interface MqttMessage {
   message: string
 }
 
-const getMqttObservable = (client: DeviceSdk.device) => new Observable<MqttMessage>(observer => {
-  const callback = (topic: string, message: any) => {
-    observer.next({ topic, message });
+const getMqttMessageObservable = (client: DeviceSdk.device) => new Observable<MqttMessage>(observer => {
+  const callback = (topic: string, message: Buffer) => {
+    observer.next({ topic, message: message.toString() });
   };
 
   client.on('message', callback);
@@ -51,6 +51,7 @@ export class MqttService {
   }
 
   get topic() {
+    // return 'testing';
     return this.auth.identityId;
   }
 
@@ -70,7 +71,7 @@ export class MqttService {
 
   get messages$() {
     return this._client
-      ? getMqttObservable(this._client)
+      ? getMqttMessageObservable(this._client)
       // TODO: figure out logic for triggering stream to replace with fromEvent after connect
       : NEVER;
   }
@@ -111,7 +112,33 @@ export class MqttService {
     if (this._client$ && !this._client$.closed) this._client$.unsubscribe();
 
     this._client = this._client$ = this._connectedOnce = undefined;
+
+    this._connected = false
   };
+
+  subscribe = () =>
+    new Promise((resolve, reject) => {
+      if (!this._client) return reject(new Error('must be connected to subscribe'));
+
+      this._client.subscribe(
+        this.topic, { qos: 0 },
+        (err, granted) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(granted);
+        }
+      );
+    });
+
+  publish = (message: string) => new Promise((resolve, reject) => {
+    if (!this.connected) throw new Error('must be connected to publish');
+    this._client!.publish(this.topic, message, { qos: 1 }, err => {
+      if (err) return reject(err);
+      console.log(message);
+      resolve();
+    });
+  });
 
   private _buildClient$ = () => new Observable<boolean>(observer => {
     /**
@@ -153,7 +180,7 @@ export class MqttService {
   private _attachHandlers = (client: DeviceSdk.device, observer: Subscriber<boolean>) => {
     const listeners: { [name: string]: (obj: any) => void } = {
       connect: (connack: Packet) => {
-        console.log(`connected to mqtt broker: ${JSON.stringify(connack)}`);
+        if (this.config.debug) console.log(`connected to mqtt broker: ${JSON.stringify(connack)}`);
         this._connectedOnce = true;
         observer.next(true);
       },
@@ -221,40 +248,4 @@ export class MqttService {
     );
   };
 
-  publish = (message: string) => {
-    this._client
-      ? this._client.publish(this.topic, message)
-      : this.connect().then(() => this._client!.publish(this.topic, message));
-  };
 }
-
-//   private subscribe = () =>
-//     new Promise((resolve, reject) => {
-//       this._client.subscribe(
-//         this.topic,
-//         {
-//           qos: 0
-//         },
-//         (err, granted) => {
-//           if (err) {
-//             reject(err);
-//           }
-//
-//           this._$messages.next({
-//             topic: this.topic,
-//             message: {
-//               message: 'subscribed to topic',
-//               granted: JSON.stringify(granted)
-//             }
-//           });
-//
-//           resolve(granted);
-//         }
-//       );
-//     });
-// }
-
-// private unsubscribe = () => {
-//   this._client.unsubscribe(this.topic)
-//   console.debug('unsubscribed from topic', this.topic)
-// }
