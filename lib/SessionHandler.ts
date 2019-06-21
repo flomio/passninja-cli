@@ -4,7 +4,7 @@ import { dbg } from '../no_compile/Logging';
 import {
   SecureSmartTapSession,
   getRedemptionValues
-} from '../../smart-tap/dist';
+} from 'smart-tap';
 import { utils } from 'flomio-js-sdk';
 
 export class SessionHandler {

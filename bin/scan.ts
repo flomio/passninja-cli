@@ -24,7 +24,7 @@ export const scan = async (program: Program) => {
 
   const localSession = new SessionHandler(config);
   // @ts-ignore
-  const readerSession = new Reader(localSession, config);
+  const readerSession = new Reader(config, localSession, mqtt);
 
   readerSession.start();
 
