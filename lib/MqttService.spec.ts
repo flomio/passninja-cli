@@ -44,22 +44,22 @@ describe('MqttService', () => {
     mqtt.disconnect();
   });
 
-  // it('should publish to the correct topic', async function(done) {
-  //   expect(mqtt.topic).toEqual((awsConfig.credentials as CognitoIdentityCredentials).identityId);
-  //   await mqtt.connect();
-  //   await mqtt.subscribe();
-  //
-  //   const testMessage = { message: 'testing yo' };
-  //
-  //   mqtt.messages$.pipe(take(2)).subscribe(({ topic, message }) => {
-  //     if (topic === mqtt.topic) {
-  //       expect(message).toEqual(testMessage as any);
-  //       mqtt.disconnect();
-  //       done();
-  //     }
-  //   });
-  //
-  //   expect(await mqtt.publish(testMessage)).toEqual(undefined);
-  // });
+  it('should publish to the correct topic', async function(done) {
+    expect(mqtt.topic).toEqual((awsConfig.credentials as CognitoIdentityCredentials).identityId);
+    await mqtt.connect();
+    await mqtt.subscribe();
+
+    const testMessage = { message: 'testing yo' };
+
+    mqtt.messages$.pipe(take(2)).subscribe(({ topic, message }) => {
+      if (topic === mqtt.topic) {
+        expect(message).toEqual(JSON.stringify(testMessage as any));
+        mqtt.disconnect();
+        done();
+      }
+    });
+
+    expect(await mqtt.publish(testMessage)).toEqual(undefined);
+  });
 
 });

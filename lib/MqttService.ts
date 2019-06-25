@@ -107,12 +107,12 @@ export class MqttService {
     }
 
     instance = this;
-
-    this.auth.loggedIn$.subscribe(isLoggedIn => {
-      if (isLoggedIn && !(this.connected || this.connecting)) {
-        this.connect().catch(err => console.error(err));
-      }
-    });
+    //
+    // this.auth.loggedIn$.subscribe(isLoggedIn => {
+    //   if (isLoggedIn && !(this.connected || this.connecting)) {
+    //     this.connect().catch(err => console.error(err));
+    //   }
+    // });
   }
 
   connect = async () => new Promise<void>(async resolve => {
