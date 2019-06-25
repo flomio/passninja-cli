@@ -1,4 +1,4 @@
-import { Configuration, getNfc, isNfc } from './Configuration';
+import { ConfigurationService, getNfc, isNfc } from './ConfigurationService';
 import * as path from 'path';
 
 describe('nfc keys', () => {
@@ -13,8 +13,8 @@ describe('nfc keys', () => {
   });
 });
 
-describe('Configuration', function() {
+describe('ConfigurationService.ts', function() {
   it('should build without throwing errors', () => {
-    expect(() => new Configuration()).not.toThrow()
+    expect(() => new ConfigurationService()).not.toThrow()
   })
 });

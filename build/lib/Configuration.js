@@ -137,4 +137,4 @@ class Configuration {
 exports.Configuration = Configuration;
 const CONFIG = new Configuration();
 exports.CONFIG = CONFIG;
-//# sourceMappingURL=Configuration.js.map
+//# sourceMappingURL=ConfigurationService.js.map

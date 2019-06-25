@@ -1,48 +1,65 @@
-import { MqttService } from './MqttService';
-import { Configuration } from './Configuration';
-import { AuthService } from './AuthService';
 import { take } from 'rxjs/operators';
+import { CognitoIdentityCredentials, config as awsConfig } from 'aws-sdk';
+import { MqttService } from './MqttService';
+import { ConfigurationService } from './ConfigurationService';
+import { AuthService } from './AuthService';
+
+jest.setTimeout(120000);
 
 describe('MqttService', () => {
-  const config = new Configuration();
+  const config = new ConfigurationService();
   const auth = new AuthService(config);
   let mqtt: MqttService;
 
-  beforeEach(async () => {
-    if (!auth.loggedIn) {
-      await auth.login();
-    }
+  beforeAll(function() {
+    return new Promise(async resolve => {
+      await auth.login('demo@user.com', 'Password123!');
+      resolve();
+    });
+  });
+
+  beforeEach(function() {
     expect(auth.loggedIn).toEqual(true);
     mqtt = new MqttService(config, auth);
   });
 
-  afterEach(() => {
-    mqtt.disconnect()
+  it('should connect and disconnect', async function(done) {
+    expect(mqtt.connected).toEqual(false);
+    mqtt.connect();
+    expect(mqtt.connecting).toEqual(true);
+
+    setTimeout(() => {
+      expect(mqtt.connected).toEqual(true);
+      mqtt.disconnect();
+      expect(mqtt.connected).toEqual(false);
+      done();
+    }, 2000);
   });
 
-  it('should connect and disconnect', async () => {
-    expect(mqtt.connected).toEqual(false);
-    await mqtt.connect();
-    expect(mqtt.connected).toEqual(true);
-    mqtt.disconnect();
-    expect(mqtt.connected).toEqual(false);
-  });
-
-  it('should subscribe to the correct topic', async () => {
+  it('should subscribe to the correct topic', async function() {
+    expect(mqtt.topic).toEqual((awsConfig.credentials as CognitoIdentityCredentials).identityId);
     await mqtt.connect();
     const res = await mqtt.subscribe();
-    expect(res).toEqual([{ 'qos': 0, 'topic': auth.identityId }]);
+    expect(res).toEqual([{ 'qos': 1, 'topic': auth.identityId }]);
+    mqtt.disconnect();
   });
 
-  it('should publish to the correct topic', async done => {
-    await mqtt.connect();
-    await mqtt.subscribe();
-    const testMessage = 'testing yo';
-    mqtt.messages$.pipe(take(1)).subscribe(message => {
-      expect(message.message).toEqual(testMessage);
-      done();
-    });
-    expect(await mqtt.publish(testMessage)).toEqual(undefined);
-  });
+  // it('should publish to the correct topic', async function(done) {
+  //   expect(mqtt.topic).toEqual((awsConfig.credentials as CognitoIdentityCredentials).identityId);
+  //   await mqtt.connect();
+  //   await mqtt.subscribe();
+  //
+  //   const testMessage = { message: 'testing yo' };
+  //
+  //   mqtt.messages$.pipe(take(2)).subscribe(({ topic, message }) => {
+  //     if (topic === mqtt.topic) {
+  //       expect(message).toEqual(testMessage as any);
+  //       mqtt.disconnect();
+  //       done();
+  //     }
+  //   });
+  //
+  //   expect(await mqtt.publish(testMessage)).toEqual(undefined);
+  // });
 
 });

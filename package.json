@@ -26,9 +26,8 @@
     "debug": "^4.1.1",
     "flomio-js-sdk": "git+https://github.com/flomio/flomio-js-sdk.git#94601b22208624b02d29a84364473044f37194b3",
     "flomio-js-sdk-pcsc": "git+https://github.com/flomio/flomio-js-sdk-pcsc.git#584e60aa77a1b341851e3007c664df2e9672ccab",
-    "isomorphic-fetch": "^2.2.1",
     "mqtt": "^2.18.8",
-    "node-fetch": "^2.5.0",
+    "node-fetch": "^2.6.0",
     "node-forge": "^0.8.2",
     "pcsclite": "^0.6.0",
     "readdir-cluster": "^1.1.0",
@@ -39,7 +38,8 @@
     "smart-tap": "git+https://github.com/flomio/smart-tap",
     "tslint": "^5.16.0",
     "utf-8-validate": "^5.0.2",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "window-mock": "^0.1.0"
   },
   "devDependencies": {
     "@types/aws-iot-device-sdk": "^2.2.0",

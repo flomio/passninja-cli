@@ -1,29 +1,54 @@
+// import { Injectable, OnDestroy } from '@angular/core';
+import { Observable, Subscription, Subscriber, BehaviorSubject } from 'rxjs';
 import * as DeviceSdk from 'aws-iot-device-sdk';
-import { Observable, Subscription, NEVER, fromEvent, Subscriber } from 'rxjs';
 import { generate } from 'shortid';
+import { ISubscriptionGrant, Packet } from 'mqtt';
 
-import { Configuration } from './Configuration';
+import { ConfigurationService } from './ConfigurationService';
 import { AuthService } from './AuthService';
-import { Packet, IConnackPacket } from 'mqtt';
+
+export declare interface ReaderSpec {
+  type: string
+  serial_number?: string
+  firmware?: string
+}
+
+export declare interface ScanBase {
+  uuid: string
+  reader: ReaderSpec
+}
+
+export declare interface ApplePayScan extends ScanBase {
+  type: 'apple-pay'
+  passTypeIdentifier: string
+  data: {
+    timeStamp: string
+    message: string
+  }
+}
+
+export declare interface SmartTapScan extends ScanBase {
+  type: 'smart-tap',
+  data: {
+    redemptions: [{
+      smartTapValue: string
+      kind: string
+    }]
+  }
+}
+
+export declare type Scan = ApplePayScan | SmartTapScan
 
 export declare interface MqttMessage {
   topic: string
-  message: string
+  message: Scan
 }
 
-const getMqttMessageObservable = (client: DeviceSdk.device) => new Observable<MqttMessage>(observer => {
-  const callback = (topic: string, message: Buffer) => {
-    observer.next({ topic, message: message.toString() });
-  };
-
-  client.on('message', callback);
-
-  observer.add(() => {
-    if (client && client.hasOwnProperty('removeListener')) {
-      client.removeListener('message', callback);
-    }
-  });
-});
+type MessageHandler = (topic: string, message: Scan) => void
+type PacketHandler = (packet: Packet) => void
+type ErrorHandler = (err: Error) => void
+type EmptyHandler = () => void
+type Handler = MessageHandler | PacketHandler | ErrorHandler | EmptyHandler
 
 /**
  *
@@ -47,82 +72,85 @@ export class MqttService {
   }
 
   get clientId() {
-    return `${this.auth.identityId}-scanner-${this._clientIdSuffix}`;
+    return this.auth.identityId + this._clientIdSuffix;
   }
 
   get topic() {
-    // return 'testing';
     return this.auth.identityId;
   }
 
-  get packetsSent$() {
-    return this._client
-      ? fromEvent<Packet>(this._client, 'packetsend')
-      // TODO: figure out logic for triggering stream to replace with fromEvent after connect
-      : NEVER;
+  get packetSend$() {
+    return this._packetSend$.asObservable();
   }
 
-  get packetsReceived$() {
-    return this._client
-      ? fromEvent<Packet>(this._client, 'packetreceive')
-      // TODO: figure out logic for triggering stream to replace with fromEvent after connect
-      : NEVER;
+  get packetReceive$() {
+    return this._packetReceive$.asObservable();
   }
 
   get messages$() {
-    return this._client
-      ? getMqttMessageObservable(this._client)
-      // TODO: figure out logic for triggering stream to replace with fromEvent after connect
-      : NEVER;
+    return this._messages$.asObservable();
   }
 
+  protected _packetSend$ = new BehaviorSubject<{ packet: Packet }>({ packet: 'INIT' } as any);
+  protected _packetReceive$ = new BehaviorSubject<{ packet: Packet }>({ packet: 'INIT' } as any);
+  protected _messages$ = new BehaviorSubject<MqttMessage>({ topic: 'INIT', message: 'INIT' } as any);
+
+  private _handlerSubscription$?: Subscription;
   private _client?: DeviceSdk.device;
-  private _client$?: Subscription;
-  private _connectedOnce?: boolean;
-  private _clientIdSuffix = generate();
   private _connected = false;
+  private _connectedOnce?: true;
+  private _clientIdSuffix = `-dashboard-${generate()}`;
 
-  constructor(private config: Configuration, private auth: AuthService, createNewClient = false) {
-    if (createNewClient && !!instance) {
-      instance.disconnect();
-      instance = null as any;
-    }
-
+  constructor(private config: ConfigurationService, private auth: AuthService) {
     if (!!instance) {
       return instance;
     }
 
     instance = this;
+
+    this.auth.loggedIn$.subscribe(isLoggedIn => {
+      if (isLoggedIn && !(this.connected || this.connecting)) {
+        this.connect().catch(err => console.error(err));
+      }
+    });
   }
 
   connect = async () => new Promise<void>(async resolve => {
-    if (this._client) return;
+    if (this._client) {
+      return;
+    }
 
-    if (!this.auth.loggedIn) await this.auth.login();
-
-    this._client$ = this._buildClient$().subscribe(connected => {
+    this._handlerSubscription$ = this._buildClient$().subscribe(connected => {
       this._connected = connected;
-      if (connected) resolve();
+      if (connected) {
+        resolve();
+      }
     });
   });
 
   disconnect = () => {
-    if (this._client) this._client.end();
+    if (this._client) {
+      this._client.end();
+    }
 
-    if (this._client$ && !this._client$.closed) this._client$.unsubscribe();
+    if (this._handlerSubscription$ && !this._handlerSubscription$.closed) {
+      this._handlerSubscription$.unsubscribe();
+    }
 
-    this._client = this._client$ = this._connectedOnce = undefined;
+    this._client = this._handlerSubscription$ = this._connectedOnce = undefined;
 
-    this._connected = false
+    this._connected = false;
   };
 
   subscribe = () =>
     new Promise((resolve, reject) => {
-      if (!this._client) return reject(new Error('must be connected to subscribe'));
+      if (!this._client) {
+        return reject(new Error('must be connected to subscribe'));
+      }
 
       this._client.subscribe(
-        this.topic, { qos: 0 },
-        (err, granted) => {
+        this.topic, { qos: 1 },
+        (err?: Error, granted?: ISubscriptionGrant[]) => {
           if (err) {
             reject(err);
           }
@@ -131,14 +159,25 @@ export class MqttService {
       );
     });
 
-  publish = (message: string) => new Promise((resolve, reject) => {
-    if (!this.connected) throw new Error('must be connected to publish');
-    this._client!.publish(this.topic, message, { qos: 1 }, err => {
-      if (err) return reject(err);
-      console.log(message);
+  publish = (message: {}) => new Promise((resolve, reject) => {
+    if (!this.connected) {
+      throw new Error('must be connected to publish');
+    }
+
+    this._client!.publish(this.topic, JSON.stringify(message), { qos: 1 }, (err?: Error) => {
+      if (err) {
+        return reject(err);
+      }
       resolve();
     });
   });
+
+  cleanUp = () => {
+    this.disconnect();
+    this._messages$.complete();
+    this._packetSend$.complete();
+    this._packetReceive$.complete();
+  };
 
   private _buildClient$ = () => new Observable<boolean>(observer => {
     /**
@@ -170,22 +209,22 @@ export class MqttService {
 
     this._attachHandlers(this._client, observer);
 
-    if (Boolean(this.config.debug)) {
-      this._attachDebugHandlers(this._client, observer);
-    }
-
     this._updateWebSocketCredentials();
   });
 
   private _attachHandlers = (client: DeviceSdk.device, observer: Subscriber<boolean>) => {
-    const listeners: { [name: string]: (obj: any) => void } = {
-      connect: (connack: Packet) => {
-        if (this.config.debug) console.log(`connected to mqtt broker: ${JSON.stringify(connack)}`);
+    const listeners: { [name: string]: Handler } = {
+      connect: (packet: Packet) => {
+        if (this.config.debug) {
+          console.log(`connected to mqtt broker: ${JSON.stringify(packet)}`);
+        }
         this._connectedOnce = true;
         observer.next(true);
       },
       offline: () => {
-        if (this._connectedOnce) console.log('connection to mqtt broker offline');
+        if (this._connectedOnce) {
+          console.log('connection to mqtt broker offline');
+        }
         observer.next(false);
       },
       reconnect: () => {
@@ -196,49 +235,39 @@ export class MqttService {
       },
       error: (err: Error) => {
         // TODO: Matt - Create an MqttError class
-        if (this._connectedOnce) console.error(JSON.stringify(err));
-      }
+        if (this._connectedOnce) {
+          console.error(JSON.stringify(err));
+        }
+      },
+      packetsend: (packet: Packet) => this._packetSend$.next({ packet }),
+      packetreceive: (packet: Packet) => this._packetReceive$.next({ packet }),
+      message: (topic: string, message: Scan) => this._messages$.next({
+        topic,
+        message: (message as any).toString() as Scan
+      })
     };
 
+    if (this.config.debug) {
+      listeners.close = () => console.log('mqtt connection was closed');
+    }
+
+    // tslint:disable:forin
     for (const name in listeners) {
-      // @ts-ignore - function signature of package is incorrect. connack: Packet is passed
+      // @ts-ignore - function signature of package is incorrect for connect and message
       client.on(name, listeners[name]);
       observer.add(() => {
         if (client && client.hasOwnProperty('removeListener')) {
+          console.log('cleanup ' + name);
           client.removeListener(name, listeners[name]);
         }
       });
     }
   };
 
-  private _attachDebugHandlers = (client: DeviceSdk.device, observer: Subscriber<boolean>) => {
-    const offlineListener = () => {
-      console.log('connection to mqtt broker back online');
-    };
-    client.on('offline', offlineListener);
-    observer.add(() => {
-      if (client) client.removeListener('offline', offlineListener);
-    });
-
-    const reconnectListener = () => {
-      console.log('reconnecting to mqtt broker');
-    };
-    client.on('reconnect', reconnectListener);
-    observer.add(() => {
-      if (client) client.removeListener('reconnect', reconnectListener);
-    });
-
-    const closeListener = () => {
-      console.log('connection to mqtt broker was closed');
-    };
-    client.on('close', closeListener);
-    observer.add(() => {
-      if (client) client.removeListener('close', closeListener);
-    });
-  };
-
   private _updateWebSocketCredentials = () => {
-    if (!this._client) return;
+    if (!this._client) {
+      return;
+    }
 
     this._client.updateWebSocketCredentials(
       this.auth.accessKeyId,
@@ -247,5 +276,9 @@ export class MqttService {
       this.auth.expireTime
     );
   };
-
 }
+
+// @Injectable()
+// export class AngularMqttService extends MqttService implements OnDestroy {
+//   ngOnDestroy = this.cleanUp;
+// }

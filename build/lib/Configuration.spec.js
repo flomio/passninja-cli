@@ -11,9 +11,9 @@ describe('nfc keys', function () {
         expect(Configuration_1.isNfc(Configuration_1.getNfc(pathToKeys))).toEqual(true);
     });
 });
-describe('Configuration', function () {
+describe('ConfigurationService.ts', function () {
     it('should build without throwing errors', function () {
         expect(function () { return new Configuration_1.Configuration(); }).not.toThrow();
     });
 });
-//# sourceMappingURL=Configuration.spec.js.map
+//# sourceMappingURL=ConfigurationService.spec.js.map

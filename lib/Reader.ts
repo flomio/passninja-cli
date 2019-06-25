@@ -4,7 +4,7 @@ import * as os from 'os';
 import * as flomio from 'flomio-js-sdk';
 import { CommandKey, generateGVD, toBase64, fromBase64 } from './utils';
 // import { dbg, trc } from './Logging';
-import { Configuration } from 'lib/Configuration';
+import { ConfigurationService } from 'lib/ConfigurationService';
 import { v4 } from 'uuid';
 import { MqttService } from './MqttService';
 
@@ -16,7 +16,7 @@ export class Reader {
   readerId!: string;
 
   constructor(
-    private config: Configuration,
+    private config: ConfigurationService,
     private readerSession: SessionHandler,
     private mqtt: MqttService
   ) {

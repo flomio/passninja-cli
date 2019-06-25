@@ -105,39 +105,39 @@ export interface PassNinjaConfigurationOptions {
   password?: string;
 }
 
-export class Configuration {
+export class ConfigurationService {
   static get directory() {
     return path.join(os.homedir(), '.passninja');
   }
 
   static get file() {
-    return path.join(Configuration.directory, `pn-scanner.json`);
+    return path.join(ConfigurationService.directory, `pn-scanner.json`);
   }
 
   static get saved() {
     // block main thread to pull config file first time. Only done on startup to make
     // sure config will be defined everywhere
-    if (!fs.existsSync(Configuration.file)) {
+    if (!fs.existsSync(ConfigurationService.file)) {
       return getBaseConfig();
     }
 
-    return JSON.parse(fs.readFileSync(Configuration.file).toString());
+    return JSON.parse(fs.readFileSync(ConfigurationService.file).toString());
   }
 
   static set saved(config: SerializedConfig) {
     // async save off main thread. state stored in this._config
     const write = () => {
-      fs.writeFile(Configuration.file, JSON.stringify(config), err => {
+      fs.writeFile(ConfigurationService.file, JSON.stringify(config), err => {
         if (err) throw err;
-        console.log(`Saved configuration file to ${Configuration.file}`);
+        console.log(`Saved configuration file to ${ConfigurationService.file}`);
       });
     };
 
-    fs.stat(Configuration.directory, (err, stats) => {
+    fs.stat(ConfigurationService.directory, (err, stats) => {
       if (stats) return write();
 
       if (err && err.code === 'ENOENT') {
-        return fs.mkdir(Configuration.directory, dirErr => {
+        return fs.mkdir(ConfigurationService.directory, dirErr => {
           if (dirErr) console.error(dirErr);
           write();
         });
