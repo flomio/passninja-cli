@@ -76,7 +76,7 @@ export class MqttService {
   }
 
   get topic() {
-    return this.auth.identityId;
+    return !this.config.debug ? this.auth.identityId : `testing/${this.auth.identityId}`;
   }
 
   get packetSend$() {
