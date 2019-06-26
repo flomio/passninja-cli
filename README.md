@@ -19,6 +19,18 @@ separately.
 npm install
 ```
 
+.env file
+```bash
+REGION='us-east-1'
+PASS_COM_NDUDFIELD_NFC_PASSPHRASE='zxccxz'
+AWS_SDK_LOAD_CONFIG=0
+IOT_HOST="a1o5x5ek64x899-ats"
+USER_POOL_ID='us-east-1_JPtaYZuIe'
+USER_POOL_CLIENT_ID='4uttfioi9qprgvebbitc2hqr4k'
+IDENTITY_POOL_ID='us-east-1:b6878e56-c6d4-4bc5-96fc-687b4fad1872'
+FEDERATION='cognito-idp.us-east-1.amazonaws.com/us-east-1_JPtaYZuIe'
+```
+
 ## Install drivers
 
 Go to ACS 1255U reader [download page](https://www.acs.com.hk/en/products/403/acr1255u-j1-secure-bluetooth%C2%AE-nfc-reader/)
