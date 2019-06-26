@@ -6,7 +6,7 @@
     "baseUrl": "./",
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "outDir": "./build",
+    "outDir": "./dist",
     "sourceMap": true,
     "declaration": false,
     "strict": true,

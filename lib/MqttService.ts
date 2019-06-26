@@ -1,4 +1,3 @@
-// import { Injectable, OnDestroy } from '@angular/core';
 import { Observable, Subscription, Subscriber, BehaviorSubject } from 'rxjs';
 import * as DeviceSdk from 'aws-iot-device-sdk';
 import { generate } from 'shortid';
