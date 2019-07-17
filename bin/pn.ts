@@ -1,7 +1,10 @@
 #! /usr/bin/env node
 
+import * as path from 'path';
 import * as pkg from '../package.json';
 import * as program from 'commander';
+
+require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
 // Program export must be before import from  scan or will cause
 // circular dependency
@@ -11,7 +14,7 @@ export declare interface Program extends program.CommanderStatic {
 }
 
 import { spoof } from './spoof';
-import { scan } from './scan';
+import { scan }  from './scan';
 
 if (pkg.version) {
   program.version(pkg.version);
@@ -36,10 +39,10 @@ program
   .description('spoofs a scan of specified type')
   .action((type: string) => {
     if (!(type === 'apple' || type === 'google')) {
-      return console.error('can only spoof apple and google passes for now')
+      return console.error('can only spoof apple and google passes for now');
     }
     spoof(type, program)
-      .catch(err => console.error(err))
+      .catch(err => console.error(err));
   });
 
 if (!process.argv.slice(2).length) {
