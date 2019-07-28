@@ -25,10 +25,10 @@ REGION='us-east-1'
 PASS_COM_NDUDFIELD_NFC_PASSPHRASE='zxccxz'
 AWS_SDK_LOAD_CONFIG=0
 IOT_HOST="a1o5x5ek64x899-ats"
-USER_POOL_ID='us-east-1_JPtaYZuIe'
-USER_POOL_CLIENT_ID='4uttfioi9qprgvebbitc2hqr4k'
-IDENTITY_POOL_ID='us-east-1:b6878e56-c6d4-4bc5-96fc-687b4fad1872'
-FEDERATION='cognito-idp.us-east-1.amazonaws.com/us-east-1_JPtaYZuIe'
+USER_POOL_ID='us-east-1_s1r1YDAKQ'
+USER_POOL_CLIENT_ID='7s2akp7gpb3o3blthth66qouk5'
+IDENTITY_POOL_ID='us-east-1:2c2d84d3-5850-4161-b5a1-ea6b82f923fd'
+FEDERATION='cognito-idp.us-east-1.amazonaws.com/us-east-1_s1r1YDAKQ'
 ```
 
 ## Install drivers
