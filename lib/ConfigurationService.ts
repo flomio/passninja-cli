@@ -2,8 +2,6 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
-require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
-
 declare interface NfcKey {
   privateKeyPem: string;
 }

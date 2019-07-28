@@ -1,12 +1,19 @@
-import * as pcsc from 'flomio-js-sdk-pcsc';
-import { SessionHandler } from '../no_compile/AbstractSessionHandler';
-import * as os from 'os';
-import * as flomio from 'flomio-js-sdk';
-import { CommandKey, generateGVD, toBase64, fromBase64 } from './utils';
+import * as pcsc                from 'flomio-js-sdk-pcsc';
+import { SessionHandler }       from '../no_compile/AbstractSessionHandler';
+import * as os                  from 'os';
+import * as flomio              from 'flomio-js-sdk';
+import {
+  CommandKey,
+  generateGVD,
+  toBase64,
+  fromBase64
+}                               from './utils';
 // import { dbg, trc } from './Logging';
 import { ConfigurationService } from 'lib/ConfigurationService';
-import { v4 } from 'uuid';
-import { MqttService } from './MqttService';
+import { v4 }                   from 'uuid';
+import { MqttService }          from './MqttService';
+
+
 
 const trc = console.log;
 const dbg = console.log;
@@ -23,7 +30,9 @@ export class Reader {
   }
 
   start = () => {
-    const connectionMode = os.platform() === 'win32' ? 'shared' : 'exclusive';
+    const connectionMode = os.platform() === 'win32'
+                           ? 'shared'
+                           : 'exclusive';
     dbg('Creating pcsc.Session with', { connectionMode });
     this.session = new pcsc.Session({
       connectionMode
@@ -86,7 +95,7 @@ export class Reader {
     await this.selectOSE(tag);
 
     const selectPassTypeIdentifier = this.config.nfc.selectPassTypeIdentifier;
-    const gvd = await tag.sendAPDU(generateGVD(selectPassTypeIdentifier));
+    const gvd                      = await tag.sendAPDU(generateGVD(selectPassTypeIdentifier));
 
     dbg('GVD', gvd.SW);
 
@@ -108,10 +117,10 @@ export class Reader {
     // }
 
     const resp = await this.readerSession.handleMessage({
-      cmd: CommandKey.decrypt_vas_data,
+      cmd : CommandKey.decrypt_vas_data,
       args: {
         passTypeIdentifier: selectPassTypeIdentifier,
-        response: toBase64(gvd.full)
+        response          : toBase64(gvd.full)
       }
     });
 
@@ -119,15 +128,13 @@ export class Reader {
 
     // console.log(`publishing to topic ${this.auth.credentials.identityId}`);
 
-    await this.mqtt.publish(
-      JSON.stringify({
-        type: 'apple-pay',
-        uuid: v4(),
-        data: resp.args.data,
-        reader: readerWithSpec.spec,
-        passTypeIdentifier: selectPassTypeIdentifier
-      })
-    );
+    await this.mqtt.publish({
+      type              : 'apple-pay',
+      uuid              : v4(),
+      data              : resp.args.data,
+      reader            : readerWithSpec.spec,
+      passTypeIdentifier: selectPassTypeIdentifier
+    });
 
     trc('GVD resp', gvd.SW);
     this.reset(reader);
@@ -146,13 +153,13 @@ export class Reader {
     const reader = readerWithSpec.reader;
 
     const selectOSEMsg = {
-      cmd: CommandKey.select_ose,
+      cmd : CommandKey.select_ose,
       args: {
         // TODO: seems senseless to encode as string when session handler
         // is running locally
-        response: selectResp2.full.toString('base64'),
+        response          : selectResp2.full.toString('base64'),
         passTypeIdentifier: this.config.nfc.selectPassTypeIdentifier,
-        collectorId: this.config.nfc.selectCollectorId
+        collectorId       : this.config.nfc.selectCollectorId
       }
     };
 
@@ -233,22 +240,22 @@ export class Reader {
 
     resp = await this.readerSession.handleMessage({
       session: serializedOrLiveSession,
-      cmd: CommandKey.decrypt_smart_tap_data,
-      args: {
+      cmd    : CommandKey.decrypt_smart_tap_data,
+      args   : {
         responses: responses.map(toBase64)
       }
     });
 
     // console.log(`publishing to topic ${this.auth.credentials.identityId}`);
 
-    await this.mqtt.publish(JSON.stringify({
-      uuid: v4(),
+    await this.mqtt.publish({
+      uuid       : v4(),
       // TODO: should use smartTap likely
-      type: 'smart-tap',
-      reader: readerWithSpec.spec,
-      data: resp.args.data,
+      type       : 'smart-tap',
+      reader     : readerWithSpec.spec,
+      data       : resp.args.data,
       collectorId: selectOSEMsg.args.collectorId
-    }));
+    });
   };
 
   eject = (reader: pcsc.PCSCReader) => {
@@ -304,11 +311,11 @@ export class Reader {
     await reader.disconnect('leave');
 
     return {
-      type: reader.name.includes('1255')
-        ? 'FloBLE-Plus'
-        : reader.name.includes('1311')
-          ? 'FloBLE-Micro'
-          : 'unknown',
+      type         : reader.name.includes('1255')
+                     ? 'FloBLE-Plus'
+                     : reader.name.includes('1311')
+                       ? 'FloBLE-Micro'
+                       : 'unknown',
       serial_number: serialNumber,
       firmware
     };
