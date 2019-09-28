@@ -33,6 +33,7 @@
     "mqtt": "^2.18.8",
     "node-fetch": "^2.6.0",
     "node-forge": "^0.8.2",
+    "pcsclite": "^0.6.0",
     "readdir-cluster": "^1.1.0",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7",
