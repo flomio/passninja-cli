@@ -41,11 +41,11 @@ describe('PassNinja Demo App e2e tests.', function() {
 
   it('scan dash element shows up on dash page', function() {
 
-    browser.sleep(4000);
-    const condition3 = until.elementLocated(By.className('dash'));
+ 
+    const condition3 = until.elementLocated(By.className('pass-type-and-time'));
     browser.driver.wait(
       async driver => condition3.fn(driver),
-      10000,
+      3000,
       'Dash Page Elements Should Load Successfully.'
     );
   });
