@@ -2,12 +2,7 @@
 
 import {
   browser,
-  element,
-  by,
   By,
-  $,
-  $$,
-  ExpectedConditions
 } from 'protractor';
 
 import { WebElement, until } from 'selenium-webdriver';
@@ -44,7 +39,7 @@ describe('PassNinja Demo App e2e tests.', function() {
     );
   });
 
-  it('loads one dash element on the dash page', function() {
+  it('scan dash element shows up on dash page', function() {
 
     browser.sleep(4000);
     const condition3 = until.elementLocated(By.className('dash'));

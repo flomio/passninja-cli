@@ -16,6 +16,7 @@
     "spoof:apple": "npm run spoof -- apple",
     "spoof:google": "npm run spoof -- google",
     "ts": "node_modules/.bin/ts-node",
+    "e2e": "node_modules/protractor/bin/protractor e2e/protractor.conf.js",
     "test": "node_modules/.bin/jest",
     "lint": "tslint --project tslint.json",
     "postinstall": "cd ./node_modules/protractor && npm i webdriver-manager@latest && cd ../.. && ./node_modules/.bin/webdriver-manager update"
