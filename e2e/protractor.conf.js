@@ -21,6 +21,7 @@ exports.config = {
       args: ['--test-type']
     }
   },
+  SELENIUM_PROMISE_MANAGER: false,
   //change to false to support safari
   directConnect: true,
   baseUrl: '(http://localhost:4200/)',

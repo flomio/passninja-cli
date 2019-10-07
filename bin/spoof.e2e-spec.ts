@@ -29,7 +29,9 @@ describe('PassNinja Demo App e2e tests.', function() {
   });
 
   it('spoofs a apple boarding pass', async function() {
+      browser.sleep(2000)
     await spoof('appleFlight');
+    browser.sleep(2000)
   });
 
   it('spoofs an apple coupon scan', async function() {
