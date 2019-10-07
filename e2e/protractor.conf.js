@@ -11,7 +11,7 @@ exports.config = {
   allScriptsTimeout: 11000,
   specs: [
     './lib/**/*.e2e-spec.ts',
-    '../lib/**/*.e2e-spec.ts'
+    '../bin/**/*.e2e-spec.ts'
   ],
 
   // added chromeOptoions --test-type to allow https with self-issued certificate

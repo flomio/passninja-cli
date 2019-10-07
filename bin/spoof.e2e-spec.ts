@@ -15,11 +15,11 @@ var parent: WebElement;
 describe('PassNinja Demo App e2e tests.', function() {
   it('opens the dash', async function() {
     await browser.get(' https://move-demo.idcards2go.com/demo/make-pass/dash');
-    await browser.sleep(500);
+    await browser.sleep(5000);
   });
 
   it('logs in to AWS', async function() {
-    browser.sleep(1000);
+    await browser.sleep(4000);
 
     myElement = await browser.driver.findElement(
       By.className('mat-dialog-container')
@@ -29,9 +29,7 @@ describe('PassNinja Demo App e2e tests.', function() {
   });
 
   it('spoofs a apple boarding pass', async function() {
-      browser.sleep(2000)
-    await spoof('appleFlight');
-    browser.sleep(2000)
+    expect(await spoof('appleFlight')).toBe('done');
   });
 
   it('spoofs an apple coupon scan', async function() {
