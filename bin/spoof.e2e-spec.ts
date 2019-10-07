@@ -86,4 +86,11 @@ describe('PassNinja Demo App e2e tests.', function() {
     );
     expect(await test.isPresent()).toBe(true);
   });
+
+  it('Google Pass shows up on dash', async function() {
+    const test = element(
+      By.xpath("//*[contains(@alt, '" + 'Google Pay Scan' + "')]")
+    );
+    expect(await test.isPresent()).toBe(true);
+  });
 });
