@@ -15,11 +15,11 @@ var parent: WebElement;
 describe('PassNinja Demo App e2e tests.', function() {
   it('opens the dash', async function() {
     await browser.get(' https://move-demo.idcards2go.com/demo/make-pass/dash');
-    await browser.sleep(5000);
+    await browser.sleep(400);
   });
 
   it('logs in to AWS', async function() {
-    await browser.sleep(4000);
+ 
 
     myElement = await browser.driver.findElement(
       By.className('mat-dialog-container')
@@ -33,19 +33,23 @@ describe('PassNinja Demo App e2e tests.', function() {
   });
 
   it('spoofs an apple coupon scan', async function() {
-    await spoof('appleCoupon');
+    expect(await spoof('appleCoupon')).toBe('done');
   });
 
   it('spoofs an apple loyalty scan', async function() {
-    await spoof('appleLoyalty');
+    expect(await spoof('appleLoyalty')).toBe('done');
   });
 
   it('spoofs an apple gift scan', async function() {
-    await spoof('appleGift');
+    expect(await spoof('appleGift')).toBe('done');
   });
 
   it('spoofs an apple event scan', async function() {
-    await spoof('appleEvent');
+    expect(await spoof('appleEvent')).toBe('done');
+  });
+
+  it('spoofs a google scan', async function() {
+    expect(await spoof('google')).toBe('done');
   });
 
   it('Event Ticket Pass shows up on dash', async function() {
