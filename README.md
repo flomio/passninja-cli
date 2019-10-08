@@ -66,6 +66,13 @@ eg.
 <string>0x0001</string>
 ```
 
+## e2e testing
+
+To run end-to-end testing:
+```
+npm run e2e
+```
+
 ## Run the headless client
 
 From the root directory of the repo run:

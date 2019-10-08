@@ -2,18 +2,19 @@ import { Program }              from './pn';
 import { ConfigurationService } from '../lib/ConfigurationService';
 import { AuthService }          from '../lib/AuthService';
 import { MqttService }          from '../lib/MqttService';
+var uuid_1 = require("uuid");
 
-
+const now = new Date()
 
 const reader = {
-  type         : 'FlowBePlus',
-  serial_number: 'serial_number',
-  firmware     : '1.0'
+  type         : 'FloBlePlus',
+  serial_number: 'RR464-0017564',
+  firmware     : 'ACR1255U-J1 SWV 3.00.05'
 };
 
 const googleScan = {
   reader,
-  uuid: 'uuid',
+  uuid: uuid_1(),
   type: 'smart-tap',
   data: {
     redemptions: [{
@@ -23,18 +24,63 @@ const googleScan = {
   }
 };
 
-const appleScan = {
+const appleFlightScan = {
   reader,
-  uuid              : 'uuid',
+  uuid              : uuid_1(),
   type              : 'apple-pay',
-  passTypeIdentifier: 'passTypeIdentifier',
+  passTypeIdentifier: 'pass.com.ndudfield.nfc',
   data              : {
-    timeStamp: 'timestamp',
-    message  : 'message'
+    timeStamp: now.toISOString(),
+    message  : '357291.35101723264'
   }
 };
 
-export const spoof = (type: 'google' | 'apple', program?: Program) => new Promise(async resolve => {
+const appleEventTicketScan = {
+  reader,
+  uuid              : uuid_1(),
+  type              : 'apple-pay',
+  passTypeIdentifier: 'pass.com.ndudfield.nfc',
+  data              : {
+    timeStamp: now.toISOString(),
+    message  : 'e8f33d58-10f5-433a-8836-a04d2549af9f'
+  }
+};
+
+const appleCouponScan = {
+  reader,
+  uuid              : uuid_1(),
+  type              : 'apple-pay',
+  passTypeIdentifier: 'pass.com.ndudfield.nfc',
+  data              : {
+    timeStamp: now.toISOString(),
+    message  : '3186bdfc-a013-4860-9d1f-1ca0a98dfb6f'
+  }
+};
+
+const appleGiftScan = {
+  reader,
+  uuid              : uuid_1(),
+  type              : 'apple-pay',
+  passTypeIdentifier: 'pass.com.ndudfield.nfc',
+  data              : {
+    timeStamp: now.toISOString(),
+    message  : 'fa5ba873-d87f-4bc9-b301-a68d1c20deb8'
+  }
+};
+
+const appleLoyaltyScan = {
+  reader,
+  uuid              : uuid_1(),
+  type              : 'apple-pay',
+  passTypeIdentifier: 'pass.com.ndudfield.nfc',
+  data              : {
+    timeStamp: now.toISOString(),
+    message  : '7eea7d2c-df44-40a3-badc-93ae2fd64c91'
+  }
+};
+
+
+export const spoof = (type: 'google' | 'appleFlight' | 'appleLoyalty' | 'appleGift' | 'appleCoupon' | 'appleEvent', program?: Program) => new Promise(async resolve => {
 
   const config = new ConfigurationService(program && program.debug);
   const auth   = new AuthService(config);
@@ -45,13 +91,19 @@ export const spoof = (type: 'google' | 'apple', program?: Program) => new Promis
 
   const mqtt = new MqttService(config, auth);
   await mqtt.connect();
+ 
+  const message = (type === 'appleFlight' ? appleFlightScan
+                  : type === 'appleCoupon' ? appleCouponScan
+                  : type === 'appleLoyalty' ? appleLoyaltyScan
+                  : type === 'appleGift' ? appleGiftScan
 
-  const message = type === 'google'
-                  ? googleScan
-                  : appleScan;
+                  : type === 'appleEvent' ? appleEventTicketScan
+                  : googleScan);
 
+                  
   await mqtt.publish(message);
   mqtt.cleanUp();
 
   console.log(`topic: ${mqtt.topic}\nmessage: ${JSON.stringify(message)}\n`);
+  resolve('done')
 });
