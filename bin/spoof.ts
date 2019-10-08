@@ -2,13 +2,12 @@ import { Program }              from './pn';
 import { ConfigurationService } from '../lib/ConfigurationService';
 import { AuthService }          from '../lib/AuthService';
 import { MqttService }          from '../lib/MqttService';
-
 var uuid_1 = require("uuid");
 
 const now = new Date()
 
 const reader = {
-  type         : 'FlowBePlus',
+  type         : 'FloBePlus',
   serial_number: 'RR464-0017564',
   firmware     : 'ACR1255U-J1 SWV 3.00.05'
 };

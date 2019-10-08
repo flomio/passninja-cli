@@ -38,7 +38,6 @@ program
   .command('spoof <type>')
   .description('spoofs a scan of specified type')
   .action((type: string) => {
-    console.log('type: ', type)
     if (!(type === 'appleFlight' || type === 'appleEvent'  || type === 'appleLoyalty' ||  type === 'appleGift' || type === 'appleCoupon' || type === 'google')) {
       return console.error('can only spoof apple and google passes for now');
     }
