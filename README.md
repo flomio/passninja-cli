@@ -66,8 +66,9 @@ eg.
 <string>0x0001</string>
 ```
 
-## e2e Testing
+## e2e testing
 
+To run end-to-end testing:
 ```
 npm run e2e
 ```

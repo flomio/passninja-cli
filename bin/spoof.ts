@@ -7,7 +7,7 @@ var uuid_1 = require("uuid");
 const now = new Date()
 
 const reader = {
-  type         : 'FloBePlus',
+  type         : 'FloBlePlus',
   serial_number: 'RR464-0017564',
   firmware     : 'ACR1255U-J1 SWV 3.00.05'
 };
