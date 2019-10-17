@@ -20,7 +20,7 @@
     "test": "node_modules/.bin/jest --verbose --passWithNoTests",
     "test:coverage": "npm test -- --coverage",
     "test:badges": "npm run test:coverage  && jest-coverage-badges",
-    "lint": "tslint --project tslint.json",
+    "lint": "node_modeules/tslint --project tslint.json",
     "postinstall": "cd ./node_modules/protractor && npm i webdriver-manager@latest && cd ../.. && ./node_modules/.bin/webdriver-manager update"
   },
   "dependencies": {
@@ -70,11 +70,15 @@
     "clean-webpack-plugin": "^2.0.1",
     "cloudform": "^4.0.0-alpha.0",
     "dotenv": "^7.0.0",
+    "eslint": "^6.5.1",
+    "eslint-config-prettier": "^6.4.0",
+    "eslint-plugin-prettier": "^3.1.1",
     "fork-ts-checker-webpack-plugin": "^1.2.0",
     "husky": "^3.0.9",
     "jasmine-spec-reporter": "^4.2.1",
     "jest": "^24.8.0",
     "jest-coverage-badges": "^1.1.2",
+    "lint-staged": "^9.4.2",
     "nodemon": "^1.18.11",
     "nodemon-webpack-plugin": "^4.0.8",
     "shebang-loader": "0.0.1",
@@ -102,7 +106,7 @@
   },
   "lint-staged": {
     "*.ts": [
-      "npm run lint",
+      "npm run lint-staged",
       "git add"
     ]
   },
