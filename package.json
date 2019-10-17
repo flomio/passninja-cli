@@ -20,7 +20,7 @@
     "test": "node_modules/.bin/jest --verbose --passWithNoTests",
     "test:coverage": "npm test -- --coverage",
     "test:badges": "npm run test:coverage  && jest-coverage-badges",
-    "lint": "node_modeules/tslint --project tslint.json",
+    "lint": "node_modeules/eslint",
     "postinstall": "cd ./node_modules/protractor && npm i webdriver-manager@latest && cd ../.. && ./node_modules/.bin/webdriver-manager update"
   },
   "dependencies": {
@@ -100,13 +100,13 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint",
+      "pre-commit": "lint-staged",
       "pre-push": "npm run test:badges && git add 'README.md'"
     }
   },
   "lint-staged": {
     "*.ts": [
-      "npm run lint-staged",
+      "npm run lint",
       "git add"
     ]
   },
