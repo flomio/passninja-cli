@@ -17,7 +17,9 @@
     "spoof:google": "npm run spoof -- google",
     "ts": "node_modules/.bin/ts-node",
     "e2e": "node_modules/protractor/bin/protractor e2e/protractor.conf.js",
-    "test": "node_modules/.bin/jest",
+    "test": "node_modules/.bin/jest --verbose --passWithNoTests",
+    "test:coverage": "npm test -- --coverage",
+    "test:badges": "npm run test:coverage  && jest-coverage-badges",
     "lint": "tslint --project tslint.json",
     "postinstall": "cd ./node_modules/protractor && npm i webdriver-manager@latest && cd ../.. && ./node_modules/.bin/webdriver-manager update"
   },
@@ -69,8 +71,10 @@
     "cloudform": "^4.0.0-alpha.0",
     "dotenv": "^7.0.0",
     "fork-ts-checker-webpack-plugin": "^1.2.0",
+    "husky": "^3.0.9",
     "jasmine-spec-reporter": "^4.2.1",
     "jest": "^24.8.0",
+    "jest-coverage-badges": "^1.1.2",
     "nodemon": "^1.18.11",
     "nodemon-webpack-plugin": "^4.0.8",
     "shebang-loader": "0.0.1",
@@ -90,7 +94,22 @@
     "exec": "npm run tsc && npm run test",
     "delay": 1000
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint",
+      "pre-push": "npm run test:badges && git add 'README.md'"
+    }
+  },
+  "lint-staged": {
+    "*.ts": [
+      "npm run lint",
+      "git add"
+    ]
+  },
   "jest": {
+    "coverageReporters": [
+      "json-summary"
+    ],
     "preset": "ts-jest",
     "testEnvironment": "node",
     "testRegex": "(lib|bin)\\/.*\\.(spec|test)\\.ts$"
