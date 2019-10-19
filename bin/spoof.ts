@@ -2,13 +2,12 @@ import { Program } from './pn';
 import { ConfigurationService } from '../lib/ConfigurationService';
 import { AuthService } from '../lib/AuthService';
 import { MqttService } from '../lib/MqttService';
-//import uuid_1 from 'uuid';
-import {v1} from 'uuid'
+import { v1 } from 'uuid';
 const now = new Date();
 
 const reader = {
   type: 'FloBlePlus',
-/*eslint-disable */
+  /*eslint-disable */
   serial_number: 'RR464-0017564',
   /*eslint-enable */
   firmware: 'ACR1255U-J1 SWV 3.00.05'
