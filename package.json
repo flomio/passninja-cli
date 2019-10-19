@@ -20,7 +20,7 @@
     "test": "node_modules/.bin/jest --verbose --passWithNoTests",
     "test:coverage": "npm test -- --coverage",
     "test:badges": "npm run test:coverage  && jest-coverage-badges",
-    "lint": "node_modeules/eslint",
+    "lint": "node_modules/.bin/eslint ./bin/**/*.ts",
     "postinstall": "cd ./node_modules/protractor && npm i webdriver-manager@latest && cd ../.. && ./node_modules/.bin/webdriver-manager update"
   },
   "dependencies": {
@@ -67,6 +67,8 @@
     "@types/request-promise-native": "^1.0.15",
     "@types/shortid": "0.0.29",
     "@types/uuid": "^3.4.4",
+    "@typescript-eslint/eslint-plugin": "^2.4.0",
+    "@typescript-eslint/parser": "^2.4.0",
     "clean-webpack-plugin": "^2.0.1",
     "cloudform": "^4.0.0-alpha.0",
     "dotenv": "^7.0.0",
@@ -81,6 +83,7 @@
     "lint-staged": "^9.4.2",
     "nodemon": "^1.18.11",
     "nodemon-webpack-plugin": "^4.0.8",
+    "prettier": "^1.18.2",
     "shebang-loader": "0.0.1",
     "ts-jest": "^24.0.2",
     "ts-loader": "^5.4.3",
@@ -100,12 +103,12 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged",
+      "pre-commit": "npm run lint",
       "pre-push": "npm run test:badges && git add 'README.md'"
     }
   },
   "lint-staged": {
-    "*.ts": [
+    "bin/**/**": [
       "npm run lint",
       "git add"
     ]

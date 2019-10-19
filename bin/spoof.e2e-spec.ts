@@ -1,13 +1,13 @@
 // experiemental.e2e-spec.ts
 // SELENIUM_PROMISE_MANAGER is disabled in protractor.conf.js to allow use of await/async
 import { browser, By, element } from 'protractor';
-import { WebElement, until } from 'selenium-webdriver';
+import { WebElement } from 'selenium-webdriver';
 import { spoof } from '../bin/spoof';
 
 require('dotenv').config();
 
-var myElement: WebElement;
-var parent: WebElement;
+let myElement: WebElement;
+let parent: WebElement;
 
 describe('PassNinja Demo App e2e tests.', function() {
   it('opens the dash', async function() {

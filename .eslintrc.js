@@ -15,6 +15,7 @@ module.exports = {
     rules: {
         "@typescript-eslint/explicit-function-return-type": 0,
         "@typescript-eslint/no-explicit-any": 0,
-        "@typescript-eslint/interface-name-prefix": [1, "never"]
+        "@typescript-eslint/interface-name-prefix": [1, "never"],
+        "@typescript-eslint/ban-ts-ignore": 0
     }
 };
