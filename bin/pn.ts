@@ -14,7 +14,7 @@ export declare interface Program extends program.CommanderStatic {
 }
 
 import { spoof } from './spoof';
-import { scan }  from './scan';
+import { scan } from './scan';
 
 if (pkg.version) {
   program.version(pkg.version);
@@ -30,19 +30,26 @@ program
   .command('scan')
   .description('start the reader to scan passes')
   .action(() => {
-    scan(program as Program)
-      .catch(err => console.error(err));
+    scan(program as Program).catch(err => console.error(err));
   });
 
 program
   .command('spoof <type>')
   .description('spoofs a scan of specified type')
   .action((type: string) => {
-    if (!(type === 'appleFlight' || type === 'appleEvent'  || type === 'appleLoyalty' ||  type === 'appleGift' || type === 'appleCoupon' || type === 'google')) {
+    if (
+      !(
+        type === 'appleFlight' ||
+        type === 'appleEvent' ||
+        type === 'appleLoyalty' ||
+        type === 'appleGift' ||
+        type === 'appleCoupon' ||
+        type === 'google'
+      )
+    ) {
       return console.error('can only spoof apple and google passes for now');
     }
-    spoof(type, program)
-      .catch(err => console.error(err));
+    spoof(type, program).catch(err => console.error(err));
   });
 
 if (!process.argv.slice(2).length) {

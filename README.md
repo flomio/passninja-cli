@@ -1,3 +1,9 @@
+##### Jest Coverage
+![](./coverage/badge-statements.svg)
+![](./coverage/badge-branches.svg)
+![](./coverage/badge-functions.svg) 
+![](./coverage/badge-lines.svg) 
+
 # Configuring 
 
 ## Prerequisites

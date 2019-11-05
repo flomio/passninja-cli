@@ -17,8 +17,10 @@
     "spoof:google": "npm run spoof -- google",
     "ts": "node_modules/.bin/ts-node",
     "e2e": "node_modules/protractor/bin/protractor e2e/protractor.conf.js",
-    "test": "node_modules/.bin/jest",
-    "lint": "tslint --project tslint.json",
+    "test": "node_modules/.bin/jest --verbose --passWithNoTests",
+    "test:coverage": "npm test -- --coverage",
+    "test:badges": "npm run test:coverage  && jest-coverage-badges",
+    "lint": "node_modules/.bin/eslint ./bin/**/*.ts",
     "postinstall": "cd ./node_modules/protractor && npm i webdriver-manager@latest && cd ../.. && ./node_modules/.bin/webdriver-manager update"
   },
   "dependencies": {
@@ -65,14 +67,23 @@
     "@types/request-promise-native": "^1.0.15",
     "@types/shortid": "0.0.29",
     "@types/uuid": "^3.4.4",
+    "@typescript-eslint/eslint-plugin": "^2.4.0",
+    "@typescript-eslint/parser": "^2.4.0",
     "clean-webpack-plugin": "^2.0.1",
     "cloudform": "^4.0.0-alpha.0",
     "dotenv": "^7.0.0",
+    "eslint": "^6.5.1",
+    "eslint-config-prettier": "^6.4.0",
+    "eslint-plugin-prettier": "^3.1.1",
     "fork-ts-checker-webpack-plugin": "^1.2.0",
+    "husky": "^3.0.9",
     "jasmine-spec-reporter": "^4.2.1",
     "jest": "^24.8.0",
+    "jest-coverage-badges": "^1.1.2",
+    "lint-staged": "^9.4.2",
     "nodemon": "^1.18.11",
     "nodemon-webpack-plugin": "^4.0.8",
+    "prettier": "^1.18.2",
     "shebang-loader": "0.0.1",
     "ts-jest": "^24.0.2",
     "ts-loader": "^5.4.3",
@@ -90,7 +101,22 @@
     "exec": "npm run tsc && npm run test",
     "delay": 1000
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint",
+      "pre-push": "npm run test:badges && git add 'README.md'"
+    }
+  },
+  "lint-staged": {
+    "bin/**/**": [
+      "npm run lint",
+      "git add"
+    ]
+  },
   "jest": {
+    "coverageReporters": [
+      "json-summary"
+    ],
     "preset": "ts-jest",
     "testEnvironment": "node",
     "testRegex": "(lib|bin)\\/.*\\.(spec|test)\\.ts$"
