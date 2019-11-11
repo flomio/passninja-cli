@@ -50,7 +50,7 @@ export class Reader {
 
     dbg('Found reader', spec);
 
-    dbg('License Check: ', await flomio.licensing.isRegistered(reader))
+    dbg('License Check Passed? ', await flomio.licensing.isRegistered(reader))
     if (!await flomio.licensing.isRegistered(reader)) {
       console.error('reader not licensed.')
       process.exit(1)
