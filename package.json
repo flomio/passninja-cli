@@ -69,6 +69,7 @@
     "cloudform": "^4.0.0-alpha.0",
     "dotenv": "^7.0.0",
     "fork-ts-checker-webpack-plugin": "^1.2.0",
+    "husky": "^3.0.9",
     "jasmine-spec-reporter": "^4.2.1",
     "jest": "^24.8.0",
     "nodemon": "^1.18.11",
