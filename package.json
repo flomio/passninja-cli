@@ -36,7 +36,7 @@
     "commander": "^2.20.0",
     "debug": "^4.1.1",
     "flomio-js-sdk": "git+https://github.com/flomio/flomio-js-sdk",
-    "flomio-js-sdk-pcsc": "git+https://github.com/flomio/flomio-js-sdk-pcsc.git#502081db18a8e9505fca50043b923f1d3fe1de94",
+    "flomio-js-sdk-pcsc": "git+https://github.com/flomio/flomio-js-sdk-pcsc.git",
     "jasmine": "^3.5.0",
     "mqtt": "^2.18.8",
     "node-fetch": "^2.6.0",

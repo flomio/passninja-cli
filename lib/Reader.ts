@@ -50,6 +50,12 @@ export class Reader {
 
     dbg('Found reader', spec);
 
+    dbg('License Check Passed? ', await flomio.licensing.isRegistered(reader))
+    if (!await flomio.licensing.isRegistered(reader)) {
+      console.error('reader not licensed.')
+      process.exit(1)
+    }
+
     this.readerId = spec.type + '-' + spec.serial_number;
 
     const withSpec = { reader, spec };
