@@ -20,7 +20,8 @@
     "test": "node_modules/.bin/jest --verbose --passWithNoTests",
     "test:coverage": "npm test -- --coverage",
     "test:badges": "npm run test:coverage  && jest-coverage-badges",
-    "lint": "node_modules/.bin/eslint ./bin/**/*.ts",
+    "lint": "node_modules/.bin/eslint --ext .ts",
+    "lint:all": "npm run lint -- lib/ bin/ --fix",
     "postinstall": "cd ./node_modules/protractor && npm i webdriver-manager@latest && cd ../.. && ./node_modules/.bin/webdriver-manager update"
   },
   "dependencies": {

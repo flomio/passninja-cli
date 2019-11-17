@@ -1,19 +1,12 @@
-import * as pcsc                from 'flomio-js-sdk-pcsc';
-import { SessionHandler }       from '../no_compile/AbstractSessionHandler';
-import * as os                  from 'os';
-import * as flomio              from 'flomio-js-sdk';
-import {
-  CommandKey,
-  generateGVD,
-  toBase64,
-  fromBase64
-}                               from './utils';
-// import { dbg, trc } from './Logging';
-import { ConfigurationService } from 'lib/ConfigurationService';
-import { v4 }                   from 'uuid';
-import { MqttService }          from './MqttService';
-
-
+import os from 'os';
+import axios from 'axios';
+import pcsc from 'flomio-js-sdk-pcsc';
+import flomio from 'flomio-js-sdk';
+import { v4 } from 'uuid';
+import { SessionHandler } from './SessionHandler';
+import { MqttService, MessageToPublish } from './MqttService';
+import { ConfigurationService } from './ConfigurationService';
+import { CommandKey, generateGVD, toBase64, fromBase64 } from './utils';
 
 const trc = console.log;
 const dbg = console.log;
@@ -26,13 +19,10 @@ export class Reader {
     private config: ConfigurationService,
     private readerSession: SessionHandler,
     private mqtt: MqttService
-  ) {
-  }
+  ) {}
 
   start = () => {
-    const connectionMode = os.platform() === 'win32'
-                           ? 'shared'
-                           : 'exclusive';
+    const connectionMode = os.platform() === 'win32' ? 'shared' : 'exclusive';
     dbg('Creating pcsc.Session with', { connectionMode });
     this.session = new pcsc.Session({
       connectionMode
@@ -45,15 +35,15 @@ export class Reader {
     const spec = await this.initReaderAndGetSpec(reader);
 
     if (!spec) {
-      throw new Error('couldnt intialize reader to get serial number');
+      throw new Error("couldn't initialize reader to get serial number");
     }
 
     dbg('Found reader', spec);
 
-    dbg('License Check Passed? ', await flomio.licensing.isRegistered(reader))
-    if (!await flomio.licensing.isRegistered(reader)) {
-      console.error('reader not licensed.')
-      process.exit(1)
+    dbg('License Check Passed? ', await flomio.licensing.isRegistered(reader));
+    if (!(await flomio.licensing.isRegistered(reader))) {
+      console.error('reader not licensed.');
+      process.exit(1);
     }
 
     this.readerId = spec.type + '-' + spec.serial_number;
@@ -100,8 +90,8 @@ export class Reader {
     // TODO: make this double selecting optional
     await this.selectOSE(tag);
 
-    const selectPassTypeIdentifier = this.config.nfc.selectPassTypeIdentifier;
-    const gvd                      = await tag.sendAPDU(generateGVD(selectPassTypeIdentifier));
+    const passTypeIdentifier = this.config.passTypeIdentifier;
+    const gvd = await tag.sendAPDU(generateGVD(passTypeIdentifier));
 
     dbg('GVD', gvd.SW);
 
@@ -123,23 +113,23 @@ export class Reader {
     // }
 
     const resp = await this.readerSession.handleMessage({
-      cmd : CommandKey.decrypt_vas_data,
+      cmd: CommandKey.decrypt_vas_data,
       args: {
-        passTypeIdentifier: selectPassTypeIdentifier,
-        response          : toBase64(gvd.full)
+        passTypeIdentifier,
+        response: toBase64(gvd.full)
       }
     });
 
     dbg('Apple Decrypted Payload: ', resp);
 
-    // console.log(`publishing to topic ${this.auth.credentials.identityId}`);
-
-    await this.mqtt.publish({
-      type              : 'apple-pay',
-      uuid              : v4(),
-      data              : resp.args.data,
-      reader            : readerWithSpec.spec,
-      passTypeIdentifier: selectPassTypeIdentifier
+    await this.handleDecryptedMessage({
+      uuid: v4(),
+      reader: readerWithSpec.spec,
+      type: 'apple-pay',
+      //TODO: This is whole file is not type safe. Needs to be rewritten.
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      data: resp!.args.data as any,
+      passTypeIdentifier
     });
 
     trc('GVD resp', gvd.SW);
@@ -159,13 +149,13 @@ export class Reader {
     const reader = readerWithSpec.reader;
 
     const selectOSEMsg = {
-      cmd : CommandKey.select_ose,
+      cmd: CommandKey.select_ose,
       args: {
         // TODO: seems senseless to encode as string when session handler
         // is running locally
-        response          : selectResp2.full.toString('base64'),
-        passTypeIdentifier: this.config.nfc.selectPassTypeIdentifier,
-        collectorId       : this.config.nfc.selectCollectorId
+        response: selectResp2.full.toString('base64'),
+        passTypeIdentifier: this.config.passTypeIdentifier,
+        collectorId: this.config.collectorId
       }
     };
 
@@ -174,11 +164,15 @@ export class Reader {
 
     const responses = [];
 
-    if (!(resp.cmd === CommandKey.get_smart_tap_data)) {
+    //TODO: This is whole file is not type safe. Needs to be rewritten.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (!(resp!.cmd === CommandKey.get_smart_tap_data)) {
       return;
     }
 
-    const negotiateApdu = fromBase64(resp.args.negotiate + '33333');
+    //TODO: This is whole file is not type safe. Needs to be rewritten.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const negotiateApdu = fromBase64(resp!.args.negotiate + '33333');
 
     trc('Negotiate apdu', negotiateApdu.toString('hex'));
 
@@ -202,7 +196,9 @@ export class Reader {
       }
     }
 
-    const apdu = fromBase64(resp.args.get);
+    //TODO: This is whole file is not type safe. Needs to be rewritten.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const apdu = fromBase64(resp!.args.get!);
     // apdu[apdu.length - 1] = 255
     trc('Get apdu', apdu.length, 'LE=', apdu.slice(-1));
 
@@ -242,26 +238,42 @@ export class Reader {
 
     this.unpower(reader);
 
-    const serializedOrLiveSession = resp.session;
+    //TODO: This is whole file is not type safe. Needs to be rewritten.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const serializedOrLiveSession = resp!.session;
 
     resp = await this.readerSession.handleMessage({
       session: serializedOrLiveSession,
-      cmd    : CommandKey.decrypt_smart_tap_data,
-      args   : {
+      cmd: CommandKey.decrypt_smart_tap_data,
+      args: {
         responses: responses.map(toBase64)
       }
     });
 
     // console.log(`publishing to topic ${this.auth.credentials.identityId}`);
 
-    await this.mqtt.publish({
-      uuid       : v4(),
+    await this.handleDecryptedMessage({
+      uuid: v4(),
+      reader: readerWithSpec.spec,
       // TODO: should use smartTap likely
-      type       : 'smart-tap',
-      reader     : readerWithSpec.spec,
-      data       : resp.args.data,
+      type: 'smart-tap',
+      //TODO: This is whole file is not type safe. Needs to be rewritten.
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      data: resp!.args.data as any,
       collectorId: selectOSEMsg.args.collectorId
     });
+  };
+
+  handleDecryptedMessage = async (message: MessageToPublish) => {
+    if (!!this.config.httpUrl) {
+      axios({
+        method: 'POST',
+        url: this.config.httpUrl,
+        data: JSON.stringify(message)
+      }).catch(console.error);
+    } else {
+      this.mqtt.publish(message);
+    }
   };
 
   eject = (reader: pcsc.PCSCReader) => {
@@ -317,11 +329,12 @@ export class Reader {
     await reader.disconnect('leave');
 
     return {
-      type         : reader.name.includes('1255')
-                     ? 'FloBLE-Plus'
-                     : reader.name.includes('1311')
-                       ? 'FloBLE-Micro'
-                       : 'unknown',
+      type: reader.name.includes('1255')
+        ? 'FloBLE-Plus'
+        : reader.name.includes('1311')
+        ? 'FloBLE-Micro'
+        : 'unknown',
+      // eslint-disable-next-line @typescript-eslint/camelcase
       serial_number: serialNumber,
       firmware
     };

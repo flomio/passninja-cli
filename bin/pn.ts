@@ -9,8 +9,15 @@ require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 // Program export must be before import from  scan or will cause
 // circular dependency
 export declare interface Program extends program.CommanderStatic {
+  debug?: boolean;
   username?: string;
   password?: string;
+  collectorId: number;
+  passTypeIdentifier: string;
+  httpUrl?: string;
+  httpHost?: string;
+  httpPort?: string;
+  httpPath?: string;
 }
 
 import { spoof } from './spoof';
@@ -24,6 +31,18 @@ program
   .option('-d, --debug', 'Turns on debugging flag')
   .option('-u, --username <username>', 'Login as <username>')
   .option('-p, --password <password>', 'Login with <password>')
+  .option('--pass-type-id <passTypeIdentifier>', 'The passTypeId to poll for')
+  .option('--collector-id <collectorId>', 'The collectorId to poll for')
+  .option(
+    '--http-url <url>',
+    'Fully qualified url, including "http://" to post scans to'
+  )
+  .option('--http-host <httpHost>', 'Http Host to post scans to')
+  .option('--http-port <httpPort>', 'Http Port to post scans to')
+  .option(
+    '--http-path <httpPath>',
+    'Http path, starting with leading slash, to send scans to.  Only valid with if --http-host and --http-port are specified'
+  )
   .description('Run PassNinja Cli and scan some passes!');
 
 program
@@ -49,7 +68,7 @@ program
     ) {
       return console.error('can only spoof apple and google passes for now');
     }
-    spoof(type, program).catch(err => console.error(err));
+    spoof(program as Program, type).catch(err => console.error(err));
   });
 
 if (!process.argv.slice(2).length) {

@@ -1,7 +1,7 @@
 import { Program } from './pn';
 import { ConfigurationService } from '../lib/ConfigurationService';
 import { AuthService } from '../lib/AuthService';
-import { MqttService } from '../lib/MqttService';
+import { MqttService, SmartTapScan, ApplePayScan } from '../lib/MqttService';
 import { v1 } from 'uuid';
 const now = new Date();
 
@@ -13,10 +13,11 @@ const reader = {
   firmware: 'ACR1255U-J1 SWV 3.00.05'
 };
 
-const googleScan = {
+const googleScan: SmartTapScan = {
   reader,
   uuid: v1(),
   type: 'smart-tap',
+  collectorId: 12947583,
   data: {
     redemptions: [
       {
@@ -27,7 +28,7 @@ const googleScan = {
   }
 };
 
-const appleFlightScan = {
+const appleFlightScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
@@ -38,7 +39,7 @@ const appleFlightScan = {
   }
 };
 
-const appleEventTicketScan = {
+const appleEventTicketScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
@@ -49,7 +50,7 @@ const appleEventTicketScan = {
   }
 };
 
-const appleCouponScan = {
+const appleCouponScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
@@ -60,7 +61,7 @@ const appleCouponScan = {
   }
 };
 
-const appleGiftScan = {
+const appleGiftScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
@@ -71,7 +72,7 @@ const appleGiftScan = {
   }
 };
 
-const appleLoyaltyScan = {
+const appleLoyaltyScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
@@ -83,22 +84,20 @@ const appleLoyaltyScan = {
 };
 
 export const spoof = (
+  program: Program,
   type:
     | 'google'
     | 'appleFlight'
     | 'appleLoyalty'
     | 'appleGift'
     | 'appleCoupon'
-    | 'appleEvent',
-  program?: Program
+    | 'appleEvent'
 ) =>
   new Promise(async resolve => {
-    const config = new ConfigurationService(program && program.debug);
-    const auth = new AuthService(config);
+    const config = new ConfigurationService(program);
 
-    program
-      ? await auth.login(program.username, program.password)
-      : await auth.login();
+    const auth = new AuthService(config);
+    await auth.login(program.username, program.password);
 
     const mqtt = new MqttService(config, auth);
     await mqtt.connect();

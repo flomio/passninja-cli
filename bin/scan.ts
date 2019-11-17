@@ -6,7 +6,7 @@ import { Reader } from '../lib/Reader';
 import { SessionHandler } from '../lib/SessionHandler';
 
 export const scan = async (program: Program) => {
-  const config = new ConfigurationService();
+  const config = new ConfigurationService(program);
 
   const { username, password } = program;
   const auth = new AuthService(config);
@@ -22,5 +22,13 @@ export const scan = async (program: Program) => {
 
   readerSession.start();
 
-  console.log('started scanning to topic: ' + mqtt.topic);
+  console.log(`>>>\n>>>\n>>> STARTED SCANNING\n>>>\n>>>\n>>>`);
+
+  if (mqtt.topic) {
+    console.log('publishing scans via mqtt to topic: ' + mqtt.topic);
+  }
+
+  if (config.httpUrl) {
+    console.log('publishing scans via http POST to: ' + config.httpUrl);
+  }
 };
