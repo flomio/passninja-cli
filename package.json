@@ -30,6 +30,7 @@
     "apple-vas-data-decrypt": "git+https://github.com/flomio/apple-vas-data-decrypt",
     "aws-iot-device-sdk": "^2.2.1",
     "aws-sdk": "^2.439.0",
+    "axios": "^0.19.0",
     "base-x": "^3.0.5",
     "bufferutil": "^4.0.1",
     "chromedriver": "^77.0.0",
@@ -58,6 +59,7 @@
   },
   "devDependencies": {
     "@types/aws-iot-device-sdk": "^2.2.0",
+    "@types/axios": "^0.14.0",
     "@types/base-x": "^3.0.0",
     "@types/commander": "^2.12.2",
     "@types/debug": "^4.1.4",
