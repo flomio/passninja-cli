@@ -1,102 +1,12 @@
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getBaseConfig } from './utils/getBaseConfig';
+import { isNfc } from './utils';
 
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
-declare interface NfcKey {
-  privateKeyPem: string;
-}
-
-const isNfcKey = (key: any): key is NfcKey => {
-  return typeof key === 'object'
-    && key.hasOwnProperty('privateKeyPem')
-    && typeof (key as NfcKey).privateKeyPem === 'string'
-    && !!(key as NfcKey).privateKeyPem.length;
-};
-
-declare interface AppleVasKey extends NfcKey {
-  passTypeIdentifier: string
-}
-
-const isAppleVasKey = (key: any): key is AppleVasKey => {
-  return isNfcKey(key)
-    && key.hasOwnProperty('passTypeIdentifier')
-    && typeof (key as AppleVasKey).passTypeIdentifier === 'string'
-    && !!(key as AppleVasKey).passTypeIdentifier.length;
-};
-
-declare interface GoogleSmartTapKey extends NfcKey {
-  collectorId: number
-  version: number
-}
-
-const isGoogleSmartTapKey = (key: any): key is GoogleSmartTapKey => {
-  return isNfcKey(key)
-    && typeof (key as GoogleSmartTapKey).collectorId === 'number'
-    && typeof (key as GoogleSmartTapKey).version === 'number';
-};
-
-declare interface NfcKeys {
-  appleVAS: {
-    keys: AppleVasKey[]
-  },
-  googleSmartTap: {
-    keys: GoogleSmartTapKey[]
-  }
-}
-
-const isNfcKeys = (keys: any): keys is NfcKeys => {
-
-  const isValidKeyArray = (keyName: 'googleSmartTap' | 'appleVAS') => keys.hasOwnProperty(keyName)
-    && keys[keyName].hasOwnProperty('keys')
-    && Array.isArray(keys[keyName].keys)
-    && !keys[keyName].keys.filter((key: any) =>
-      keyName === 'googleSmartTap'
-        ? !isGoogleSmartTapKey(key)
-        : !isAppleVasKey(key)
-    ).length;
-
-  return typeof keys === 'object'
-    && isValidKeyArray('appleVAS')
-    && isValidKeyArray('googleSmartTap');
-};
-
-export const getNfc = (pathToKeys: string) => {
-  // pass in key string for future support for lambda based get on registration
-  if (fs.existsSync(pathToKeys)) {
-    const keys = JSON.parse(fs.readFileSync(pathToKeys).toString()) as NfcKeys;
-    return {
-      selectPassTypeIdentifier: 'pass.com.ndudfield.nfc',
-      selectCollectorId: 77501435,
-      keys
-    };
-  }
-  throw new Error('No NFC keys were found');
-};
-
-export const isNfc = (nfc: any) => {
-  return isNfcKeys(nfc.keys);
-};
-
-export const getBaseConfig = () => {
-  const env = process.env.NODE_ENV || 'development';
-  const region = process.env.REGION || '';
-  const pathToKeys = path.resolve(__dirname, 'pn-nfc-keys.json');
-
-  return {
-    region,
-    stack: `pass-ninja-${env}`,
-    userPoolId: process.env.USER_POOL_ID || '',
-    userPoolClientId: process.env.USER_POOL_CLIENT_ID || '',
-    identityPoolId: process.env.IDENTITY_POOL_ID || '',
-    federation: process.env.FEDERATION || '',
-    iotHost: `${process.env.IOT_HOST}.iot.${region}.amazonaws.com`,
-    nfc: getNfc(pathToKeys)
-  };
-};
-
-export declare type SerializedConfig = ReturnType<typeof getBaseConfig> & {
+export type SerializedConfig = ReturnType<typeof getBaseConfig> & {
   [key: string]: string | ReturnType<typeof getBaseConfig>['nfc'];
 };
 

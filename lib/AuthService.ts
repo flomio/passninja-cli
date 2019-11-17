@@ -7,8 +7,6 @@ import {
 
 import { ConfigurationService } from './ConfigurationService';
 
-const isEmptyString = (obj: any): boolean => obj instanceof String && !obj.length;
-
 const getProp = <T extends keyof CognitoIdentityCredentials>(name: T) =>
   awsConfig.credentials instanceof CognitoIdentityCredentials
     ? awsConfig.credentials[name]

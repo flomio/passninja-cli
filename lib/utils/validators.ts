@@ -1,18 +1,41 @@
-const emptyString = (obj: any) => obj instanceof String && !obj.length;
+export const isEmptyString = (obj: any) => obj instanceof String && !obj.length;
 
-const iString = (obj: any) => obj instanceof String;
+export const iString = (obj: any) => obj instanceof String;
 
-export declare interface NfcKey {
+export interface NfcKey {
   privateKeyPem: string;
 }
-export declare interface AppleVasKey extends NfcKey {
+
+export const isNfcKey = (key: any): key is NfcKey => {
+  return typeof key === 'object'
+    && key.hasOwnProperty('privateKeyPem')
+    && typeof (key as NfcKey).privateKeyPem === 'string'
+    && !!(key as NfcKey).privateKeyPem.length;
+};
+
+export interface AppleVasKey extends NfcKey {
   passTypeIdentifier: string
 }
-export declare interface GoogleSmartTapKey extends NfcKey {
+
+export const isAppleVasKey = (key: any): key is AppleVasKey => {
+  return isNfcKey(key)
+    && key.hasOwnProperty('passTypeIdentifier')
+    && typeof (key as AppleVasKey).passTypeIdentifier === 'string'
+    && !!(key as AppleVasKey).passTypeIdentifier.length;
+};
+
+export interface GoogleSmartTapKey extends NfcKey {
   collectorId: number
   version: number
 }
-export declare interface NfcKeys {
+
+export const isGoogleSmartTapKey = (key: any): key is GoogleSmartTapKey => {
+  return isNfcKey(key)
+    && typeof (key as GoogleSmartTapKey).collectorId === 'number'
+    && typeof (key as GoogleSmartTapKey).version === 'number';
+};
+
+export interface NfcKeys {
   appleVAS: {
     keys: AppleVasKey[]
   },
@@ -21,27 +44,7 @@ export declare interface NfcKeys {
   }
 }
 
-const isNfcKey = (key: any): key is NfcKey => {
-  return typeof key === 'object'
-    && key.hasOwnProperty('privateKeyPem')
-    && typeof (key as NfcKey).privateKeyPem === 'string'
-    && !!(key as NfcKey).privateKeyPem.length;
-};
-
-const isAppleVasKey = (key: any): key is AppleVasKey => {
-  return isNfcKey(key)
-    && key.hasOwnProperty('passTypeIdentifier')
-    && typeof (key as AppleVasKey).passTypeIdentifier === 'string'
-    && !!(key as AppleVasKey).passTypeIdentifier.length;
-};
-
-const isGoogleSmartTapKey = (key: any): key is GoogleSmartTapKey => {
-  return isNfcKey(key)
-    && typeof (key as GoogleSmartTapKey).collectorId === 'number'
-    && typeof (key as GoogleSmartTapKey).version === 'number';
-};
-
-const isNfcKeys = (keys: any): keys is NfcKeys => {
+export const isNfcKeys = (keys: any): keys is NfcKeys => {
 
   const isValidKeyArray = (keyName: 'googleSmartTap' | 'appleVAS') => keys.hasOwnProperty(keyName)
     && keys[keyName].hasOwnProperty('keys')
@@ -57,15 +60,6 @@ const isNfcKeys = (keys: any): keys is NfcKeys => {
     && isValidKeyArray('googleSmartTap');
 };
 
-const isNfc = (nfc: any) => {
+export const isNfc = (nfc: any) => {
   return isNfcKeys(nfc.keys);
-};
-
-export const Is = {
-  string: iString,
-  emptyString,
-  nfc: isNfc,
-  nfcKeys: isNfcKeys,
-  googleSmartTapKey: isGoogleSmartTapKey,
-  appleVasKey: isAppleVasKey
 };

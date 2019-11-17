@@ -1,10 +1,12 @@
-import { ConfigurationService, getNfc, isNfc } from './ConfigurationService';
+import { ConfigurationService } from './ConfigurationService';
 import * as path from 'path';
+import { isNfc } from './utils';
+import { getNfc } from './utils/getBaseConfig';
 
 describe('nfc keys', () => {
   const pathToKeys = path.resolve(__dirname, 'pn-nfc-keys.json');
 
-  it('getNfcKeys should not throw when reading file', function() {
+  it('getNfcKeys should not throw when reading file', function () {
     expect(() => getNfc(pathToKeys)).not.toThrow();
   });
 
@@ -13,7 +15,7 @@ describe('nfc keys', () => {
   });
 });
 
-describe('ConfigurationService.ts', function() {
+describe('ConfigurationService.ts', function () {
   it('should build without throwing errors', () => {
     expect(() => new ConfigurationService()).not.toThrow()
   })
