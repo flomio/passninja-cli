@@ -29,6 +29,6 @@ export const scan = async (program: Program) => {
   }
 
   if (config.http) {
-    console.log('publishing scans via http POST to: ' + await config.httpUrl);
+    console.log('publishing scans via http POST to: ' + (await config.httpUrl));
   }
 };

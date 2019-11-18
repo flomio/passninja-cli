@@ -34,7 +34,10 @@ program
   .option('--pass-type-id <passTypeIdentifier>', 'The passTypeId to poll for')
   .option('--collector-id <collectorId>', 'The collectorId to poll for')
   .option('-h, --http', 'Send scans via http')
-  .option('--http-url <httpUrl>', 'Http url, including "http://" to post scans to. If present will override httpHost, httpPort, httpPath')
+  .option(
+    '--http-url <httpUrl>',
+    'Http url, including "http://" to post scans to. If present will override httpHost, httpPort, httpPath'
+  )
   .option('--http-host <httpHost>', 'Http Host to post scans to')
   .option('--http-port <httpPort>', 'Http Port to post scans to')
   .option('--http-path <httpPath>', 'Http path to send scans to')
@@ -46,7 +49,9 @@ program
   .description('start the reader to scan passes')
   .action(() => {
     if (!(program.http || program.mqtt)) {
-      throw new Error('must supply either -http and/or -mqtt flag to determine where scans should be posted');
+      throw new Error(
+        'must supply either -http and/or -mqtt flag to determine where scans should be posted'
+      );
     }
 
     scan(program as Program).catch(err => console.error(err));

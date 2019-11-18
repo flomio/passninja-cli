@@ -65,8 +65,8 @@ export class ConfigurationService {
     this.collectorId = !collectorId
       ? this.nfc.google.collectorId
       : typeof collectorId === 'number'
-        ? collectorId
-        : parseInt(collectorId);
+      ? collectorId
+      : parseInt(collectorId);
 
     this.httpUrl = this.getHttpUrl(program);
 
@@ -85,29 +85,27 @@ export class ConfigurationService {
     port,
     path
   }: {
-    url?: string,
-    host?: string,
-    port?: number,
-    path?: string
+    url?: string;
+    host?: string;
+    port?: string | number;
+    path?: string;
   }) => {
     if (url) {
       return url;
     }
 
-    let httpUrl = `http://${host || 'localhost'}`
+    let httpUrl = `http://${host || 'localhost'}`;
 
     if (port) {
       httpUrl += `:${port}`;
     }
 
     if (path) {
-      httpUrl += path.startsWith('/')
-        ? path
-        : `/${path}`;
+      httpUrl += path.startsWith('/') ? path : `/${path}`;
     }
 
     return httpUrl;
-  }
+  };
 
   private getHttpUrl = async (program: Program) => {
     if (program.http) {
@@ -124,17 +122,21 @@ export class ConfigurationService {
       }
 
       try {
+        //eslint-disable-next-line @typescript-eslint/no-var-requires
         const configJson = require(ConfigurationService.configJsonLocation);
 
-        console.log(`config file was found at ${ConfigurationService.configJsonLocation}`);
+        console.log(
+          `config file was found at ${ConfigurationService.configJsonLocation}`
+        );
 
         const { host, port, path, url } = configJson;
 
         return this.buildUrl({ url, host, port, path });
-
       } catch (err) {
         if (err.message.startsWith('Cannot find module')) {
-          console.log(`No config file found at ${ConfigurationService.configJsonLocation}`)
+          console.log(
+            `No config file found at ${ConfigurationService.configJsonLocation}`
+          );
         }
       }
     }
