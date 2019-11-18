@@ -1,8 +1,6 @@
 import { Program } from 'bin/pn';
 import { nfcKeys } from './nfcKeys';
 
-const REGION = process.env.REGION || 'us-east-1';
-
 export class ConfigurationService {
   // location for configuration file
   static configJsonLocation = '/home/bioconnect/config.json';
@@ -14,42 +12,19 @@ export class ConfigurationService {
   public collectorId: number;
   public passTypeIdentifier: string;
   public httpUrl: Promise<string>;
-
-  get region() {
-    return REGION;
-  }
-
-  get userPoolClientId() {
-    return process.env.USER_POOL_CLIENT_ID || '7hsccetpkumpavofq81ifji292';
-  }
-
-  get userPoolId() {
-    return process.env.USER_POOL_ID || 'us-east-1_qa9UNxt2o';
-  }
-
-  get identityPoolId() {
-    return (
-      process.env.IDENTITY_POOL_ID ||
-      'us-east-1:8aca505e-e2e8-4583-ac79-ee2fc760c84f'
-    );
-  }
-
-  get federation() {
-    return (
-      process.env.FEDERATION ||
-      'cognito-idp.us-east-1.amazonaws.com/us-east-1_qa9UNxt2o'
-    );
-  }
-
-  get iotHost() {
-    return process.env.IOT_HOST
-      ? `a1o5x5ek64x899-ats.iot.${REGION}.amazonaws.com`
-      : `${process.env.IOT_HOST}.iot.${REGION}.amazonaws.com`;
-  }
-
-  get nfc() {
-    return nfcKeys;
-  }
+  public region = process.env.REGION || 'us-east-1';
+  public userPoolClientId =
+    process.env.USER_POOL_CLIENT_ID || '7hsccetpkumpavofq81ifji292';
+  public userPoolId = process.env.USER_POOL_ID || 'us-east-1_qa9UNxt2o';
+  public identityPoolId =
+    process.env.IDENTITY_POOL_ID ||
+    'us-east-1:8aca505e-e2e8-4583-ac79-ee2fc760c84f';
+  public federation =
+    process.env.FEDERATION ||
+    'cognito-idp.us-east-1.amazonaws.com/us-east-1_qa9UNxt2o';
+  public iotHost =
+    process.env.IOT_HOST || `a1o5x5ek64x899-ats.iot.us-east-1.amazonaws.com`;
+  public nfc = nfcKeys;
 
   constructor(program: Program) {
     const { debug, http, mqtt, collectorId, passTypeIdentifier } = program;
@@ -112,7 +87,9 @@ export class ConfigurationService {
       const { httpUrl, httpHost, httpPort, httpPath } = program;
 
       if (httpUrl || httpHost || httpPort || httpPath) {
-        console.log('using command line http configuration');
+        console.log(
+          '>>>\n>>>\n>>>\n>>> using command line http configuration\n>>>\n>>>\n>>> '
+        );
         return this.buildUrl({
           url: httpUrl,
           host: httpHost,
@@ -126,7 +103,7 @@ export class ConfigurationService {
         const configJson = require(ConfigurationService.configJsonLocation);
 
         console.log(
-          `config file was found at ${ConfigurationService.configJsonLocation}`
+          `>>>\n>>>\n>>>\n>>> config file was found at ${ConfigurationService.configJsonLocation}\n>>>\n>>>\n>>> `
         );
 
         const { host, port, path, url } = configJson;
@@ -135,7 +112,7 @@ export class ConfigurationService {
       } catch (err) {
         if (err.message.startsWith('Cannot find module')) {
           console.log(
-            `No config file found at ${ConfigurationService.configJsonLocation}`
+            `>>>\n>>>\n>>>\n>>> No config file found at ${ConfigurationService.configJsonLocation}. \n>>>\n>>>\n>>> `
           );
         }
       }

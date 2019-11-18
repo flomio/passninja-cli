@@ -26,15 +26,19 @@ export const scan = async (program: Program) => {
 
   readerSession.start();
 
-  console.log(`>>>\n>>>\n>>> STARTED SCANNING\n>>>\n>>>\n>>>`);
+  console.log(`>>>\n>>>\n>>>`);
 
   if (config.mqtt) {
     // if config.mqtt is true then mqtt and mqtt.topic will both be defined to get to here
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    console.log('publishing scans via mqtt to topic: ' + mqtt!.topic);
+    console.log('>>> publishing scans via mqtt to topic: ' + mqtt!.topic);
   }
 
   if (config.http) {
-    console.log('publishing scans via http POST to: ' + (await config.httpUrl));
+    console.log(
+      '>>>\n>>> publishing scans via http POST to: ' + (await config.httpUrl)
+    );
   }
+
+  console.log(`>>>\n>>>\n>>>\n>>> SCANNER STARTED\n>>>\n>>>\n>>>`);
 };

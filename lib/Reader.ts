@@ -1,7 +1,7 @@
-import os from 'os';
+import * as os from 'os';
 import axios from 'axios';
-import pcsc from 'flomio-js-sdk-pcsc';
-import flomio from 'flomio-js-sdk';
+import * as pcsc from 'flomio-js-sdk-pcsc';
+import * as flomio from 'flomio-js-sdk';
 import { v4 } from 'uuid';
 import { SessionHandler } from './SessionHandler';
 import { MqttService, MessageToPublish } from './MqttService';
