@@ -24,11 +24,11 @@ export const scan = async (program: Program) => {
 
   console.log(`>>>\n>>>\n>>> STARTED SCANNING\n>>>\n>>>\n>>>`);
 
-  if (mqtt.topic) {
+  if (config.mqtt) {
     console.log('publishing scans via mqtt to topic: ' + mqtt.topic);
   }
 
-  if (config.httpUrl) {
-    console.log('publishing scans via http POST to: ' + config.httpUrl);
+  if (config.http) {
+    console.log('publishing scans via http POST to: ' + await config.httpUrl);
   }
 };

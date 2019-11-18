@@ -19,7 +19,7 @@ export class Reader {
     private config: ConfigurationService,
     private readerSession: SessionHandler,
     private mqtt: MqttService
-  ) {}
+  ) { }
 
   start = () => {
     const connectionMode = os.platform() === 'win32' ? 'shared' : 'exclusive';
@@ -265,13 +265,15 @@ export class Reader {
   };
 
   handleDecryptedMessage = async (message: MessageToPublish) => {
-    if (!!this.config.httpUrl) {
+    if (this.config.http) {
       axios({
         method: 'POST',
-        url: this.config.httpUrl,
+        url: await this.config.httpUrl,
         data: JSON.stringify(message)
       }).catch(console.error);
-    } else {
+    }
+
+    if (this.config.mqtt) {
       this.mqtt.publish(message);
     }
   };
@@ -332,8 +334,8 @@ export class Reader {
       type: reader.name.includes('1255')
         ? 'FloBLE-Plus'
         : reader.name.includes('1311')
-        ? 'FloBLE-Micro'
-        : 'unknown',
+          ? 'FloBLE-Micro'
+          : 'unknown',
       // eslint-disable-next-line @typescript-eslint/camelcase
       serial_number: serialNumber,
       firmware

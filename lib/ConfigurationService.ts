@@ -1,58 +1,19 @@
-// import * as fs from 'fs';
-import * as path from 'path';
 import { Program } from 'bin/pn';
 import { nfcKeys } from './nfcKeys';
-
-require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
 const REGION = process.env.REGION || 'us-east-1';
 
 export class ConfigurationService {
-  // static get directory() {
-  //   return path.join('home', 'bioconnect');
-  // }
-
-  // static get file() {
-  //   return path.join(ConfigurationService.directory, `pn-scanner.json`);
-  // }
-
-  // static get saved() {
-  //   // block main thread to pull config file first time. Only done on startup to make
-  //   // sure config will be defined everywhere
-  //   if (!fs.existsSync(ConfigurationService.file)) {
-  //     return getBaseConfig();
-  //   }
-
-  //   return JSON.parse(fs.readFileSync(ConfigurationService.file).toString());
-  // }
-
-  // static set saved(config: SerializedConfig) {
-  //   // async save off main thread. state stored in this._config
-  //   const write = () => {
-  //     fs.writeFile(ConfigurationService.file, JSON.stringify(config), err => {
-  //       if (err) throw err;
-  //       console.log(`Saved configuration file to ${ConfigurationService.file}`);
-  //     });
-  //   };
-
-  //   fs.stat(ConfigurationService.directory, (err, stats) => {
-  //     if (stats) return write();
-
-  //     if (err && err.code === 'ENOENT') {
-  //       return fs.mkdir(ConfigurationService.directory, dirErr => {
-  //         if (dirErr) console.error(dirErr);
-  //         write();
-  //       });
-  //     }
-
-  //     throw err;
-  //   });
-  // }
+  // location for configuration file
+  static configJsonLocation = '/home/bioconnect/config.json';
+  static defaultHttpUrl = 'http://localhost:3080';
 
   public debug?: boolean;
+  public http: boolean;
+  public mqtt: boolean;
   public collectorId: number;
   public passTypeIdentifier: string;
-  public httpUrl?: string;
+  public httpUrl: Promise<string>;
 
   get region() {
     return REGION;
@@ -91,9 +52,11 @@ export class ConfigurationService {
   }
 
   constructor(program: Program) {
-    const { debug, collectorId, passTypeIdentifier } = program;
+    const { debug, http, mqtt, collectorId, passTypeIdentifier } = program;
 
     this.debug = debug;
+    this.http = !!http;
+    this.mqtt = !!mqtt;
 
     this.passTypeIdentifier = passTypeIdentifier
       ? passTypeIdentifier
@@ -102,10 +65,10 @@ export class ConfigurationService {
     this.collectorId = !collectorId
       ? this.nfc.google.collectorId
       : typeof collectorId === 'number'
-      ? collectorId
-      : parseInt(collectorId);
+        ? collectorId
+        : parseInt(collectorId);
 
-    this.httpUrl = this.getHttpUrl();
+    this.httpUrl = this.getHttpUrl(program);
 
     if (!this.passTypeIdentifier) {
       throw new Error('must supply a passTypeIdentifier when running the cli');
@@ -116,7 +79,66 @@ export class ConfigurationService {
     }
   }
 
-  private getHttpUrl = () => {
-    return 'http://localhost:3080';
+  private buildUrl = ({
+    url,
+    host,
+    port,
+    path
+  }: {
+    url?: string,
+    host?: string,
+    port?: number,
+    path?: string
+  }) => {
+    if (url) {
+      return url;
+    }
+
+    let httpUrl = `http://${host || 'localhost'}`
+
+    if (port) {
+      httpUrl += `:${port}`;
+    }
+
+    if (path) {
+      httpUrl += path.startsWith('/')
+        ? path
+        : `/${path}`;
+    }
+
+    return httpUrl;
+  }
+
+  private getHttpUrl = async (program: Program) => {
+    if (program.http) {
+      const { httpUrl, httpHost, httpPort, httpPath } = program;
+
+      if (httpUrl || httpHost || httpPort || httpPath) {
+        console.log('using command line http configuration');
+        return this.buildUrl({
+          url: httpUrl,
+          host: httpHost,
+          port: httpPort,
+          path: httpPath
+        });
+      }
+
+      try {
+        const configJson = require(ConfigurationService.configJsonLocation);
+
+        console.log(`config file was found at ${ConfigurationService.configJsonLocation}`);
+
+        const { host, port, path, url } = configJson;
+
+        return this.buildUrl({ url, host, port, path });
+
+      } catch (err) {
+        if (err.message.startsWith('Cannot find module')) {
+          console.log(`No config file found at ${ConfigurationService.configJsonLocation}`)
+        }
+      }
+    }
+
+    return ConfigurationService.defaultHttpUrl;
   };
 }
