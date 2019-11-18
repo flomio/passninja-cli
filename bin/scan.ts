@@ -40,5 +40,16 @@ export const scan = async (program: Program) => {
     );
   }
 
-  console.log(`>>>\n>>>\n>>>\n>>> SCANNER STARTED\n>>>\n>>>\n>>>`);
+  console.log(`>>>
+>>>
+>>>
+>>> SCANNER STARTED
+>>>
+>>>
+>>> POLLING FOR
+>>>
+>>> collectorId: ${config.collectorId}
+>>> passTypeIdentifier: ${config.passTypeIdentifier}
+>>>
+>>>`);
 };
