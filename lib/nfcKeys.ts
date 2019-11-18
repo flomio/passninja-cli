@@ -1,8 +1,7 @@
 export const nfcKeys = {
   apple: {
     passTypeIdentifier: 'pass.com.passninja.bioconnect.demo',
-    privateKeyPem:
-      `\n-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIOJJT5dWejSvxJRj3gvOIOBIgzqLvKBF1RImfuao4GyXoAoGCCqGSM49\nAwEHoUQDQgAETkFu6xr9i4GKk1+Jn+UxayuuC+SQLfXA0sE5J5iQx3qHgxC7j1MU\nlAgbygBXxFPSGKrFd38wzT5hDdjsPjlytQ==\n-----END EC PRIVATE KEY-----\n`
+    privateKeyPem: `\n-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIOJJT5dWejSvxJRj3gvOIOBIgzqLvKBF1RImfuao4GyXoAoGCCqGSM49\nAwEHoUQDQgAETkFu6xr9i4GKk1+Jn+UxayuuC+SQLfXA0sE5J5iQx3qHgxC7j1MU\nlAgbygBXxFPSGKrFd38wzT5hDdjsPjlytQ==\n-----END EC PRIVATE KEY-----\n`
   },
   google: {
     collectorId: 77501435,

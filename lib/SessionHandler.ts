@@ -3,10 +3,11 @@ import { utils } from 'flomio-js-sdk';
 import { SecureSmartTapSession, getRedemptionValues } from 'smart-tap';
 import { CommandKey, fromBase64, toBase64, generateGVD } from './utils';
 
-const dbg = (...args: any[]) => { };
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const dbg = (...args: any[]) => {};
 
 export class SessionHandler {
-  constructor(private config: any) { }
+  constructor(private config: any) {}
 
   getDecrypter = () => {
     const decrypter = appleVAS.makeDecrypter(
