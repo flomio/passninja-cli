@@ -18,7 +18,7 @@ export class Reader {
   constructor(
     private config: ConfigurationService,
     private readerSession: SessionHandler,
-    private mqtt: MqttService
+    private mqtt?: MqttService
   ) {}
 
   start = () => {
@@ -273,7 +273,7 @@ export class Reader {
       }).catch(console.error);
     }
 
-    if (this.config.mqtt) {
+    if (this.mqtt && this.config.mqtt) {
       this.mqtt.publish(message);
     }
   };
