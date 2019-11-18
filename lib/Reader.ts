@@ -8,8 +8,8 @@ import { MqttService, MessageToPublish } from './MqttService';
 import { ConfigurationService } from './ConfigurationService';
 import { CommandKey, generateGVD, toBase64, fromBase64 } from './utils';
 
-const trc = console.log;
-const dbg = console.log;
+const trc = (...args: any[]) => { };
+const dbg = (...args: any[]) => { };
 
 export class Reader {
   private session?: pcsc.Session;
@@ -19,7 +19,7 @@ export class Reader {
     private config: ConfigurationService,
     private readerSession: SessionHandler,
     private mqtt?: MqttService
-  ) {}
+  ) { }
 
   start = () => {
     const connectionMode = os.platform() === 'win32' ? 'shared' : 'exclusive';
@@ -265,6 +265,8 @@ export class Reader {
   };
 
   handleDecryptedMessage = async (message: MessageToPublish) => {
+    console.log(message);
+
     if (this.config.http) {
       axios({
         method: 'POST',
@@ -334,8 +336,8 @@ export class Reader {
       type: reader.name.includes('1255')
         ? 'FloBLE-Plus'
         : reader.name.includes('1311')
-        ? 'FloBLE-Micro'
-        : 'unknown',
+          ? 'FloBLE-Micro'
+          : 'unknown',
       // eslint-disable-next-line @typescript-eslint/camelcase
       serial_number: serialNumber,
       firmware
