@@ -1,12 +1,16 @@
 import { Program } from 'bin/pn';
 import { nfcKeys } from './nfcKeys';
 
+interface ConfigJson {
+  httpUrl?: string;
+}
+
 export class ConfigurationService {
   // location for configuration file
-  static configJsonLocation = '/home/bioconnect/config.json';
   static defaultHttpUrl = 'http://localhost:3080';
 
   public debug?: boolean;
+  public configJson: Promise<ConfigJson | undefined>;
   public http: boolean;
   public mqtt: boolean;
   public collectorId: number;
@@ -27,7 +31,14 @@ export class ConfigurationService {
   public nfc = nfcKeys;
 
   constructor(program: Program) {
-    const { debug, http, mqtt, collectorId, passTypeIdentifier } = program;
+    const {
+      debug,
+      config,
+      http,
+      mqtt,
+      collectorId,
+      passTypeIdentifier
+    } = program;
 
     this.debug = debug;
     this.http = !!http;
@@ -37,85 +48,60 @@ export class ConfigurationService {
       ? passTypeIdentifier
       : this.nfc.apple.passTypeIdentifier;
 
+    if (!this.passTypeIdentifier) {
+      throw new Error('must supply a passTypeIdentifier when running the cli');
+    }
+
     this.collectorId = !collectorId
       ? this.nfc.google.collectorId
       : typeof collectorId === 'number'
       ? collectorId
       : parseInt(collectorId);
 
-    this.httpUrl = this.getHttpUrl(program);
-
-    if (!this.passTypeIdentifier) {
-      throw new Error('must supply a passTypeIdentifier when running the cli');
-    }
-
     if (!this.collectorId) {
       throw new Error('must supply a collectorId when running the cli');
     }
+
+    this.configJson = this.getConfigJson(config);
+    this.httpUrl = this.getHttpUrl(program);
   }
 
-  private buildUrl = ({
-    url,
-    host,
-    port,
-    path
-  }: {
-    url?: string;
-    host?: string;
-    port?: string | number;
-    path?: string;
-  }) => {
-    if (url) {
-      return url;
+  private getConfigJson = async (configPath?: string) => {
+    if (!configPath) return undefined;
+
+    try {
+      //eslint-disable-next-line @typescript-eslint/no-var-requires
+      const configJson: ConfigJson = require(configPath);
+
+      console.log(`>>> config file was found at ${configPath}\n>>>`);
+
+      return configJson;
+    } catch (err) {
+      if (err.message.startsWith('Cannot find module')) {
+        console.log(`>>> No config file found at ${configPath}\n>>>`);
+      }
     }
-
-    let httpUrl = `http://${host || 'localhost'}`;
-
-    if (port) {
-      httpUrl += `:${port}`;
-    }
-
-    if (path) {
-      httpUrl += path.startsWith('/') ? path : `/${path}`;
-    }
-
-    return httpUrl;
   };
 
   private getHttpUrl = async (program: Program) => {
-    if (program.http) {
-      const { httpUrl, httpHost, httpPort, httpPath } = program;
-
-      if (httpUrl || httpHost || httpPort || httpPath) {
-        console.log(
-          '>>>\n>>>\n>>>\n>>> using command line http configuration\n>>>\n>>>\n>>> '
-        );
-        return this.buildUrl({
-          url: httpUrl,
-          host: httpHost,
-          port: httpPort,
-          path: httpPath
-        });
+    const validateUrl = (url: string) => {
+      if (!url.startsWith('http://')) {
+        throw new Error('PassNinja Cli only supports POST via http');
       }
 
-      try {
-        //eslint-disable-next-line @typescript-eslint/no-var-requires
-        const configJson = require(ConfigurationService.configJsonLocation);
+      return url;
+    };
 
-        console.log(
-          `>>>\n>>>\n>>>\n>>> config file was found at ${ConfigurationService.configJsonLocation}\n>>>\n>>>\n>>> `
-        );
+    const config = await this.configJson;
 
-        const { host, port, path, url } = configJson;
+    if (config && config.httpUrl) {
+      this.http = true;
+      return validateUrl(config.httpUrl);
+    }
 
-        return this.buildUrl({ url, host, port, path });
-      } catch (err) {
-        if (err.message.startsWith('Cannot find module')) {
-          console.log(
-            `>>>\n>>>\n>>>\n>>> No config file found at ${ConfigurationService.configJsonLocation}. \n>>>\n>>>\n>>> `
-          );
-        }
-      }
+    if (typeof program.http === 'string') {
+      console.log('>>>\n>>> using command line http url\n>>>');
+      return validateUrl(program.http);
     }
 
     return ConfigurationService.defaultHttpUrl;

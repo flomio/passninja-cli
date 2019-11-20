@@ -8,16 +8,13 @@ require('dotenv').config();
 // circular dependency
 export declare interface Program extends program.CommanderStatic {
   debug?: boolean;
+  config?: string;
+  http?: string;
+  mqtt?: boolean;
   username?: string;
   password?: string;
-  collectorId: number;
-  passTypeIdentifier: string;
-  http?: boolean;
-  httpUrl?: string;
-  httpHost?: string;
-  httpPort?: string;
-  httpPath?: string;
-  mqtt?: boolean;
+  collectorId?: number;
+  passTypeIdentifier?: string;
 }
 
 import { spoof } from './spoof';
@@ -31,29 +28,23 @@ program
   .option('-d, --debug', 'Turns on debugging flag')
   .option('-u, --username <username>', 'Login as <username>')
   .option('-p, --password <password>', 'Login with <password>')
+  .option(
+    '-c, --config <path>',
+    'absolute path, including filename, of config.json'
+  )
+  .option(
+    '-h, --http [httpUrl]',
+    'Send scans via http. If httpUrl is provided it must include "http://"'
+  )
+  .option('-m, --mqtt', 'Send scans via mqtt')
   .option('--pass-type-id <passTypeIdentifier>', 'The passTypeId to poll for')
   .option('--collector-id <collectorId>', 'The collectorId to poll for')
-  .option('-h, --http', 'Send scans via http')
-  .option(
-    '--http-url <httpUrl>',
-    'Http url, including "http://" to post scans to. If present will override httpHost, httpPort, httpPath'
-  )
-  .option('--http-host <httpHost>', 'Http Host to post scans to')
-  .option('--http-port <httpPort>', 'Http Port to post scans to')
-  .option('--http-path <httpPath>', 'Http path to send scans to')
-  .option('-m, --mqtt', 'Send scans via mqtt')
   .description('Run PassNinja Cli and scan some passes!');
 
 program
   .command('scan')
   .description('start the reader to scan passes')
   .action(() => {
-    if (!(program.http || program.mqtt)) {
-      throw new Error(
-        'must supply either -http and/or -mqtt flag to determine where scans should be posted'
-      );
-    }
-
     scan(program as Program).catch(err => console.error(err));
   });
 
