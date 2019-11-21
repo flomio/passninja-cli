@@ -107,14 +107,14 @@ export const spoof = (
       type === 'appleFlight'
         ? appleFlightScan
         : type === 'appleCoupon'
-          ? appleCouponScan
-          : type === 'appleLoyalty'
-            ? appleLoyaltyScan
-            : type === 'appleGift'
-              ? appleGiftScan
-              : type === 'appleEvent'
-                ? appleEventTicketScan
-                : googleScan;
+        ? appleCouponScan
+        : type === 'appleLoyalty'
+        ? appleLoyaltyScan
+        : type === 'appleGift'
+        ? appleGiftScan
+        : type === 'appleEvent'
+        ? appleEventTicketScan
+        : googleScan;
 
     await mqtt.publish(message);
     mqtt.cleanUp();
