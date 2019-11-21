@@ -4,10 +4,10 @@ import { SecureSmartTapSession, getRedemptionValues } from 'smart-tap';
 import { CommandKey, fromBase64, toBase64, generateGVD } from './utils';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const dbg = (...args: any[]) => {};
+const dbg = (...args: any[]) => { };
 
 export class SessionHandler {
-  constructor(private config: any) {}
+  constructor(private config: any) { }
 
   getDecrypter = () => {
     const decrypter = appleVAS.makeDecrypter(

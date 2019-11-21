@@ -1,12 +1,9 @@
-const path = require('path')
-const CleanWebpackPlugin = require('clean-webpack-plugin')
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
-// const NodemonPlugin = require('nodemon-webpack-plugin')
-// const HtmlWebpackPlugin = require('html-webpack-plugin')
-// const CopyWebpackPlugin = require('copy-webpack-plugin')
+const path = require('path');
+const CleanWebpackPlugin = require('clean-webpack-plugin');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
-const ENV = process.env.NODE_ENV || 'development'
-const PROD = ENV === 'production'
+const ENV = process.env.NODE_ENV || 'development';
+const PROD = ENV === 'production';
 
 module.exports = () => {
   const config = {
@@ -19,12 +16,15 @@ module.exports = () => {
     },
     resolve: {
       extensions: ['.js', '.ts', '.json'],
-      modules: ['node_modules']
+      modules: ['node_modules'],
     },
     module: {
       rules: [
         {
           test: /\.ts$/,
+          exclude: [
+            path.resolve(__dirname, '**/*spec.ts')
+          ],
           use: [
             {
               loader: 'ts-loader',

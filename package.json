@@ -55,6 +55,7 @@
     "tslint": "^5.16.0",
     "utf-8-validate": "^5.0.2",
     "uuid": "^3.3.2",
+    "web-bluetooth": "^0.1.2",
     "webdriver-manager": "^12.1.7",
     "window-mock": "^0.1.0"
   },
@@ -70,6 +71,7 @@
     "@types/request-promise-native": "^1.0.15",
     "@types/shortid": "0.0.29",
     "@types/uuid": "^3.4.4",
+    "@types/web-bluetooth": "0.0.4",
     "@typescript-eslint/eslint-plugin": "^2.4.0",
     "@typescript-eslint/parser": "^2.4.0",
     "clean-webpack-plugin": "^2.0.1",

@@ -3,6 +3,7 @@ import { ConfigurationService } from '../lib/ConfigurationService';
 import { AuthService } from '../lib/AuthService';
 import { MqttService, SmartTapScan, ApplePayScan } from '../lib/MqttService';
 import { v1 } from 'uuid';
+
 const now = new Date();
 
 const reader = {
@@ -106,14 +107,14 @@ export const spoof = (
       type === 'appleFlight'
         ? appleFlightScan
         : type === 'appleCoupon'
-        ? appleCouponScan
-        : type === 'appleLoyalty'
-        ? appleLoyaltyScan
-        : type === 'appleGift'
-        ? appleGiftScan
-        : type === 'appleEvent'
-        ? appleEventTicketScan
-        : googleScan;
+          ? appleCouponScan
+          : type === 'appleLoyalty'
+            ? appleLoyaltyScan
+            : type === 'appleGift'
+              ? appleGiftScan
+              : type === 'appleEvent'
+                ? appleEventTicketScan
+                : googleScan;
 
     await mqtt.publish(message);
     mqtt.cleanUp();
