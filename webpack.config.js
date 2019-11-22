@@ -13,7 +13,7 @@ module.exports = () => {
     target: 'node',
     output: {
       filename: 'pn.js',
-      path: path.resolve(__dirname, 'dist')
+      path: path.resolve(__dirname, 'out')
     },
     resolve: {
       extensions: ['.js', '.ts', '.json', '.node'],
@@ -55,14 +55,19 @@ module.exports = () => {
         { test: /.*/, loader: 'shebang-loader' }
       ]
     },
-    externals: './dist/Release/pcsclite.node',
     plugins: [
       new CleanWebpackPlugin(),
       new ForkTsCheckerWebpackPlugin(),
-      new CopyPlugin([{
-        from: './node_modules/@pokusew/pcsclite/build/Release/pcsclite.node',
-        to: 'Release'
-      }])
+      new CopyPlugin([
+        {
+          from: './node_modules/@pokusew/pcsclite/build/Release/pcsclite.node',
+          to: './Release'
+        },
+        {
+          from: 'package.init.json',
+          to: './package.json'
+        }
+      ])
     ]
   }
 
