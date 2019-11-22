@@ -17,6 +17,8 @@ Untitled.ipynb
 /build
 /tmp
 /out-tsc
+out/
+
 # Only exists if Bazel was run
 /bazel-out
 
