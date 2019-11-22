@@ -31,14 +31,7 @@ export class ConfigurationService {
   public nfc = nfcKeys;
 
   constructor(program: Program) {
-    const {
-      debug,
-      config,
-      http,
-      mqtt,
-      collectorId,
-      passTypeId
-    } = program;
+    const { debug, config, http, mqtt, collectorId, passTypeId } = program;
 
     this.debug = debug;
     this.http = !!http;
