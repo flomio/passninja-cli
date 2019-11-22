@@ -59,13 +59,13 @@
     "window-mock": "^0.1.0"
   },
   "devDependencies": {
-    "@types/jasmine": "2.8.6",
-    "@types/jasminewd2": "2.0.3",
     "@types/aws-iot-device-sdk": "^2.2.0",
     "@types/axios": "^0.14.0",
     "@types/base-x": "^3.0.0",
     "@types/commander": "^2.12.2",
     "@types/debug": "^4.1.4",
+    "@types/jasmine": "2.8.6",
+    "@types/jasminewd2": "2.0.3",
     "@types/jest": "^24.0.14",
     "@types/node": "^8.9.5",
     "@types/node-forge": "^0.8.2",
@@ -77,6 +77,7 @@
     "@typescript-eslint/parser": "^2.4.0",
     "clean-webpack-plugin": "^2.0.1",
     "cloudform": "^4.0.0-alpha.0",
+    "copy-webpack-plugin": "^5.0.5",
     "dotenv": "^7.0.0",
     "eslint": "^6.5.1",
     "eslint-config-prettier": "^6.4.0",
@@ -96,7 +97,7 @@
     "ts-loader": "^5.4.3",
     "ts-node": "^7.0.1",
     "tslint-config-standard": "^8.0.1",
-    "typescript": "^3.4.5",
+    "typescript": "3.4.5",
     "webpack": "^4.30.0",
     "webpack-cli": "^3.3.1"
   },

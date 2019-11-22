@@ -1,6 +1,7 @@
 const path = require('path');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 const ENV = process.env.NODE_ENV || 'development';
 const PROD = ENV === 'production';
@@ -15,7 +16,7 @@ module.exports = () => {
       path: path.resolve(__dirname, 'dist')
     },
     resolve: {
-      extensions: ['.js', '.ts', '.json'],
+      extensions: ['.js', '.ts', '.json', '.node'],
       modules: ['node_modules'],
     },
     module: {
@@ -42,6 +43,8 @@ module.exports = () => {
            * and in order to build, the node_modules/pokeusew/pcsclite/lib/pcsclite.js
            * needs to be modified.
            * 
+           * https://stackoverflow.com/questions/42878256/importing-pokusew-pcsclite-in-angular2-electron-throws-typeerror
+           * 
            * const pcsclite = require('node-loader!./../build/Release/pcsclite.node');
            * 
            * the line above needs to replace the require on line 4 of that file and 
@@ -52,7 +55,15 @@ module.exports = () => {
         { test: /.*/, loader: 'shebang-loader' }
       ]
     },
-    plugins: [new CleanWebpackPlugin(), new ForkTsCheckerWebpackPlugin()]
+    externals: './dist/Release/pcsclite.node',
+    plugins: [
+      new CleanWebpackPlugin(),
+      new ForkTsCheckerWebpackPlugin(),
+      new CopyPlugin([{
+        from: './node_modules/@pokusew/pcsclite/build/Release/pcsclite.node',
+        to: 'Release'
+      }])
+    ]
   }
 
   if (!PROD) {
