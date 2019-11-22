@@ -14,7 +14,7 @@ export declare interface Program extends program.CommanderStatic {
   username?: string;
   password?: string;
   collectorId?: number;
-  passTypeIdentifier?: string;
+  passTypeId?: string;
 }
 
 import { spoof } from './spoof';
@@ -37,7 +37,7 @@ program
     'Send scans via http. If httpUrl is provided it must include "http://"'
   )
   .option('-m, --mqtt', 'Send scans via mqtt')
-  .option('--pass-type-id <passTypeIdentifier>', 'The passTypeId to poll for')
+  .option('--pass-type-id <passTypeId>', 'The passTypeId to poll for')
   .option('--collector-id <collectorId>', 'The collectorId to poll for')
   .description('Run PassNinja Cli and scan some passes!');
 

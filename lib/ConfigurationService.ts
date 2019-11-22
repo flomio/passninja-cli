@@ -37,15 +37,15 @@ export class ConfigurationService {
       http,
       mqtt,
       collectorId,
-      passTypeIdentifier
+      passTypeId
     } = program;
 
     this.debug = debug;
     this.http = !!http;
     this.mqtt = !!mqtt;
 
-    this.passTypeIdentifier = passTypeIdentifier
-      ? passTypeIdentifier
+    this.passTypeIdentifier = passTypeId
+      ? passTypeId
       : this.nfc.apple.passTypeIdentifier;
 
     if (!this.passTypeIdentifier) {

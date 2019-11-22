@@ -1,4 +1,4 @@
-import appleVAS from 'apple-vas-data-decrypt';
+import { makeDecrypter } from 'apple-vas-data-decrypt';
 import { utils } from 'flomio-js-sdk';
 import { SecureSmartTapSession, getRedemptionValues } from 'smart-tap';
 import { CommandKey, fromBase64, toBase64, generateGVD } from './utils';
@@ -10,7 +10,7 @@ export class SessionHandler {
   constructor(private config: any) {}
 
   getDecrypter = () => {
-    const decrypter = appleVAS.makeDecrypter(
+    const decrypter = makeDecrypter(
       this.config.passTypeIdentifier,
       this.config.nfc.apple.privateKeyPem
     );
