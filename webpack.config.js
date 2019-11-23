@@ -1,4 +1,5 @@
 const path = require('path');
+const os = require('os');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
@@ -55,7 +56,6 @@ module.exports = () => {
     },
     plugins: [
       new CleanWebpackPlugin(),
-      new ForkTsCheckerWebpackPlugin(),
       new CopyPlugin([
         {
           from: './node_modules/@pokusew/pcsclite/build/Release/pcsclite.node',
@@ -73,6 +73,10 @@ module.exports = () => {
 
   if (!PROD) {
     config.devtool = 'source-map'
+  }
+
+  if (!os.arch().includes('arm')) {
+    config.plugins.push(new ForkTsCheckerWebpackPlugin());
   }
 
   return config
