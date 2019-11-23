@@ -4,9 +4,6 @@
     "./lib/**/*",
     "./bin/**/*"
   ],
-  "exclude": [
-    "./no_compile/**/*"
-  ],
   "compilerOptions": {
     "baseUrl": "./",
     "allowSyntheticDefaultImports": true,
