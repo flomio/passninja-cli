@@ -1,11 +1,13 @@
 const path = require('path');
 const os = require('os');
+const childProcess = require('child_process');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
-
 const ENV = process.env.NODE_ENV || 'development';
 const PROD = ENV === 'production';
+
+childProcess.execSync('cp -r ./node_modules/buffertools/build/Release ./node_modules/buffertools/build/Debug')
 
 module.exports = () => {
   const config = {
@@ -58,7 +60,7 @@ module.exports = () => {
       new CleanWebpackPlugin(),
       new CopyPlugin([
         {
-          from: './node_modules/@pokusew/pcsclite/build/Release/pcsclite.node',
+          from: './node_modules/pcsclite/build/Release/pcsclite.node',
           // copy binding to '${REPO_ROOT}/${OUTPUT_DIR}/Release
           to: './Release'
         },
