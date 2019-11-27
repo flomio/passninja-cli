@@ -63,8 +63,11 @@ export class ConfigurationService {
     if (!configPath) return undefined;
 
     try {
-      //eslint-disable-next-line @typescript-eslint/no-var-requires
-      const configJson: ConfigJson = require(configPath);
+      // prettier-ignore
+      // @ts-ignore
+      const requireFunc = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require; // eslint-disable-line @typescript-eslint/camelcase
+
+      const configJson: ConfigJson = requireFunc(configPath);
 
       console.log(`>>> config file was found at ${configPath}\n>>>`);
 
@@ -73,6 +76,15 @@ export class ConfigurationService {
       if (err.message.startsWith('Cannot find module')) {
         console.log(`>>> No config file found at ${configPath}\n>>>`);
       }
+
+      if (err.message.includes(': Unexpected token')) {
+        const location = err.message.split('JSON at position ')[1];
+        console.log(
+          `>>> Invalid JSON syntax in config.json at position ${location}\n>>>`
+        );
+      }
+
+      throw err;
     }
   };
 
