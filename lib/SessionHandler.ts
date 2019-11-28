@@ -1,21 +1,21 @@
-import * as appleVAS from 'apple-vas-data-decrypt';
-import { CommandKey, fromBase64, toBase64, generateGVD } from './utils';
-import { dbg } from '../no_compile/Logging';
-import {
-  SecureSmartTapSession,
-  getRedemptionValues
-} from 'smart-tap';
+import { makeDecrypter } from 'apple-vas-data-decrypt';
 import { utils } from 'flomio-js-sdk';
+import { SecureSmartTapSession, getRedemptionValues } from 'smart-tap';
+import { CommandKey, fromBase64, toBase64, generateGVD } from './utils';
+import { ConfigurationService } from './ConfigurationService';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const dbg = (...args: any[]) => {};
 
 export class SessionHandler {
-  constructor(private config: any) {}
+  constructor(private config: ConfigurationService) {}
 
-  getDecrypter = () => {
-    const key1 = this.config.nfc.keys.appleVAS.keys[0];
-    const decrypter = appleVAS.makeDecrypter(
-      this.config.nfc.selectPassTypeIdentifier,
-      key1.privateKeyPem
+  getDecrypter = async () => {
+    const decrypter = makeDecrypter(
+      await this.config.getPassTypeId(),
+      this.config.nfc.apple.privateKeyPem
     );
+
     return decrypter;
   };
 
@@ -23,22 +23,18 @@ export class SessionHandler {
     return true;
   }
 
-  nfcConf() {
-    return this.config.nfc.keys;
-  }
-
   async handleMessage(message: { cmd: CommandKey; args: any; session?: any }) {
     dbg('handling message', message);
 
     if (message.cmd === CommandKey.select_ose) {
-      const key = this.nfcConf().googleSmartTap.keys[0];
+      const { version, privateKeyPem } = this.config.nfc.google;
 
       const session = new SecureSmartTapSession({
         type: 'privateKey',
-        collectorId: this.config.nfc.selectCollectorId,
+        collectorId: await this.config.getCollectorId(),
         privateKey: {
-          version: key.version,
-          pem: key.privateKeyPem
+          version: version,
+          pem: privateKeyPem
         }
       });
       await session.selectOSECommand();
@@ -72,7 +68,7 @@ export class SessionHandler {
           cmd: CommandKey.get_vas_data,
           args: {
             get: utils
-              .unhex(generateGVD(this.config.nfc.selectPassTypeIdentifier))
+              .unhex(generateGVD(await this.config.getPassTypeId()))
               .toString('base64')
           }
         };
@@ -100,7 +96,7 @@ export class SessionHandler {
         }
       };
     } else if (message.cmd === CommandKey.decrypt_vas_data) {
-      const decrypter = this.getDecrypter();
+      const decrypter = await this.getDecrypter();
       const decrypted = decrypter(fromBase64(message.args.response));
 
       if (!decrypted.success) {

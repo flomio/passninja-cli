@@ -1,193 +1,137 @@
-import * as os from 'os';
-import * as fs from 'fs';
-import * as path from 'path';
+import { Program } from 'bin/pn';
+import { nfcKeys } from './nfcKeys';
 
-require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
-
-declare interface NfcKey {
-  privateKeyPem: string;
-}
-
-const isNfcKey = (key: any): key is NfcKey => {
-  return typeof key === 'object'
-    && key.hasOwnProperty('privateKeyPem')
-    && typeof (key as NfcKey).privateKeyPem === 'string'
-    && !!(key as NfcKey).privateKeyPem.length;
-};
-
-declare interface AppleVasKey extends NfcKey {
-  passTypeIdentifier: string
-}
-
-const isAppleVasKey = (key: any): key is AppleVasKey => {
-  return isNfcKey(key)
-    && key.hasOwnProperty('passTypeIdentifier')
-    && typeof (key as AppleVasKey).passTypeIdentifier === 'string'
-    && !!(key as AppleVasKey).passTypeIdentifier.length;
-};
-
-declare interface GoogleSmartTapKey extends NfcKey {
-  collectorId: number
-  version: number
-}
-
-const isGoogleSmartTapKey = (key: any): key is GoogleSmartTapKey => {
-  return isNfcKey(key)
-    && typeof (key as GoogleSmartTapKey).collectorId === 'number'
-    && typeof (key as GoogleSmartTapKey).version === 'number';
-};
-
-declare interface NfcKeys {
-  appleVAS: {
-    keys: AppleVasKey[]
-  },
-  googleSmartTap: {
-    keys: GoogleSmartTapKey[]
-  }
-}
-
-const isNfcKeys = (keys: any): keys is NfcKeys => {
-
-  const isValidKeyArray = (keyName: 'googleSmartTap' | 'appleVAS') => keys.hasOwnProperty(keyName)
-    && keys[keyName].hasOwnProperty('keys')
-    && Array.isArray(keys[keyName].keys)
-    && !keys[keyName].keys.filter((key: any) =>
-      keyName === 'googleSmartTap'
-        ? !isGoogleSmartTapKey(key)
-        : !isAppleVasKey(key)
-    ).length;
-
-  return typeof keys === 'object'
-    && isValidKeyArray('appleVAS')
-    && isValidKeyArray('googleSmartTap');
-};
-
-export const getNfc = (pathToKeys: string) => {
-  // pass in key string for future support for lambda based get on registration
-  if (fs.existsSync(pathToKeys)) {
-    const keys = JSON.parse(fs.readFileSync(pathToKeys).toString()) as NfcKeys;
-    return {
-      selectPassTypeIdentifier: 'pass.com.ndudfield.nfc',
-      selectCollectorId: 77501435,
-      keys
-    };
-  }
-  throw new Error('No NFC keys were found');
-};
-
-export const isNfc = (nfc: any) => {
-  return isNfcKeys(nfc.keys);
-};
-
-export const getBaseConfig = () => {
-  const env = process.env.NODE_ENV || 'development';
-  const region = process.env.REGION || '';
-  const pathToKeys = path.resolve(__dirname, 'pn-nfc-keys.json');
-
-  return {
-    region,
-    stack: `pass-ninja-${env}`,
-    userPoolId: process.env.USER_POOL_ID || '',
-    userPoolClientId: process.env.USER_POOL_CLIENT_ID || '',
-    identityPoolId: process.env.IDENTITY_POOL_ID || '',
-    federation: process.env.FEDERATION || '',
-    iotHost: `${process.env.IOT_HOST}.iot.${region}.amazonaws.com`,
-    nfc: getNfc(pathToKeys)
-  };
-};
-
-export declare type SerializedConfig = ReturnType<typeof getBaseConfig> & {
-  [key: string]: string | ReturnType<typeof getBaseConfig>['nfc'];
-};
-
-export interface PassNinjaConfigurationOptions {
-  username?: string;
-  password?: string;
+interface ConfigJson {
+  httpUrl?: string;
+  passTypeId?: string;
+  collectorId?: number;
 }
 
 export class ConfigurationService {
-  static get directory() {
-    return path.join(os.homedir(), '.passninja');
-  }
+  // location for configuration file
+  static defaultHttpUrl = 'http://localhost:3080';
 
-  static get file() {
-    return path.join(ConfigurationService.directory, `pn-scanner.json`);
-  }
+  private _collectorId: number;
+  private _passTypeId: string;
 
-  static get saved() {
-    // block main thread to pull config file first time. Only done on startup to make
-    // sure config will be defined everywhere
-    if (!fs.existsSync(ConfigurationService.file)) {
-      return getBaseConfig();
+  public debug?: boolean;
+  public configJson: Promise<ConfigJson | undefined>;
+  public http: boolean;
+  public mqtt: boolean;
+  public httpUrl: Promise<string>;
+  public region = process.env.REGION || 'us-east-1';
+  public userPoolClientId =
+    process.env.USER_POOL_CLIENT_ID || '7hsccetpkumpavofq81ifji292';
+  public userPoolId = process.env.USER_POOL_ID || 'us-east-1_qa9UNxt2o';
+  public identityPoolId =
+    process.env.IDENTITY_POOL_ID ||
+    'us-east-1:8aca505e-e2e8-4583-ac79-ee2fc760c84f';
+  public federation =
+    process.env.FEDERATION ||
+    'cognito-idp.us-east-1.amazonaws.com/us-east-1_qa9UNxt2o';
+  public iotHost =
+    process.env.IOT_HOST || `a1o5x5ek64x899-ats.iot.us-east-1.amazonaws.com`;
+  public nfc = nfcKeys;
+
+  constructor(program: Program) {
+    const { debug, config, http, mqtt, collectorId, passTypeId } = program;
+
+    this.debug = debug;
+    this.http = !!http;
+    this.mqtt = !!mqtt;
+
+    this._passTypeId = passTypeId ? passTypeId : this.nfc.apple.passTypeId;
+
+    if (!this._passTypeId) {
+      throw new Error('must supply a passTypeId when running the cli');
     }
 
-    return JSON.parse(fs.readFileSync(ConfigurationService.file).toString());
+    this._collectorId = !collectorId
+      ? this.nfc.google.collectorId
+      : typeof collectorId === 'number'
+      ? collectorId
+      : +collectorId;
+
+    if (!this._collectorId) {
+      throw new Error('must supply a collectorId when running the cli');
+    }
+
+    this.configJson = this.getConfigJson(config);
+    this.httpUrl = this.getHttpUrl(program);
   }
 
-  static set saved(config: SerializedConfig) {
-    // async save off main thread. state stored in this._config
-    const write = () => {
-      fs.writeFile(ConfigurationService.file, JSON.stringify(config), err => {
-        if (err) throw err;
-        console.log(`Saved configuration file to ${ConfigurationService.file}`);
-      });
-    };
+  public getCollectorId = async () => {
+    const config = await this.configJson;
 
-    fs.stat(ConfigurationService.directory, (err, stats) => {
-      if (stats) return write();
+    if (config && config.collectorId) {
+      return +config.collectorId;
+    }
 
-      if (err && err.code === 'ENOENT') {
-        return fs.mkdir(ConfigurationService.directory, dirErr => {
-          if (dirErr) console.error(dirErr);
-          write();
-        });
+    return this._collectorId;
+  };
+
+  public getPassTypeId = async () => {
+    const config = await this.configJson;
+
+    if (config && config.passTypeId) {
+      return config.passTypeId;
+    }
+
+    return this._passTypeId;
+  };
+
+  private getConfigJson = async (configPath?: string) => {
+    if (!configPath) return undefined;
+
+    try {
+      // prettier-ignore
+      // @ts-ignore
+      const requireFunc = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require; // eslint-disable-line @typescript-eslint/camelcase
+
+      const configJson: ConfigJson = requireFunc(configPath);
+
+      console.log(`>>> config file was found at ${configPath}\n>>>`);
+
+      return configJson;
+    } catch (err) {
+      if (err.message.startsWith('Cannot find module')) {
+        console.log(`>>> No config file found at ${configPath}\n>>>`);
+        return undefined;
+      }
+
+      if (err.message.includes(': Unexpected token')) {
+        const location = err.message.split('JSON at position ')[1];
+        console.log(
+          `>>> Invalid JSON syntax in config.json at position ${location}\n>>>`
+        );
+        return undefined;
       }
 
       throw err;
-    });
-  }
-
-  private _config: SerializedConfig = getBaseConfig();
-
-  get region() {
-    return this._config.region;
-  }
-
-  get userPoolClientId() {
-    return this._config.userPoolClientId;
-  }
-
-  get userPoolId() {
-    return this._config.userPoolId;
-  }
-
-  get identityPoolId() {
-    return this._config.identityPoolId;
-  }
-
-  get federation() {
-    return this._config.federation;
-  }
-
-  get iotHost() {
-    return this._config.iotHost;
-  }
-
-  get nfc() {
-    return this._config.nfc;
-  }
-
-  constructor(public readonly debug = false) {
-    for (const key in this._config) {
-      const value = this._config[key];
-
-      if (typeof value === 'string' && !value.length) {
-        throw new Error(`config.${key} must be defined in .env at build time`);
-      }
-
-      if (key === 'nfc' && !isNfc(value)) {
-        throw new Error(`malformed nfc keys at build time`);
-      }
     }
-  }
+  };
+
+  private getHttpUrl = async (program: Program) => {
+    const validateUrl = (url: string) => {
+      if (!url.startsWith('http://')) {
+        throw new Error('PassNinja Cli only supports POST via http');
+      }
+
+      return url;
+    };
+
+    const config = await this.configJson;
+
+    if (config && config.httpUrl) {
+      this.http = true;
+      return validateUrl(config.httpUrl);
+    }
+
+    if (typeof program.http === 'string') {
+      console.log('>>>\n>>> using command line http url\n>>>');
+      return validateUrl(program.http);
+    }
+
+    return ConfigurationService.defaultHttpUrl;
+  };
 }

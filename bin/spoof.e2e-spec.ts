@@ -3,6 +3,11 @@
 import { browser, By, element } from 'protractor';
 import { WebElement } from 'selenium-webdriver';
 import { spoof } from '../bin/spoof';
+import * as program from 'commander';
+
+program.mqtt = true;
+program.username = 'demo@user.com';
+program.password = 'Password123!';
 
 require('dotenv').config();
 
@@ -24,27 +29,27 @@ describe('PassNinja Demo App e2e tests.', function() {
   });
 
   it('spoofs a apple boarding pass', async function() {
-    expect(await spoof('appleFlight')).toBe('done');
+    expect(await spoof(program, 'appleFlight')).toBe('done');
   });
 
   it('spoofs an apple coupon scan', async function() {
-    expect(await spoof('appleCoupon')).toBe('done');
+    expect(await spoof(program, 'appleCoupon')).toBe('done');
   });
 
   it('spoofs an apple loyalty scan', async function() {
-    expect(await spoof('appleLoyalty')).toBe('done');
+    expect(await spoof(program, 'appleLoyalty')).toBe('done');
   });
 
   it('spoofs an apple gift scan', async function() {
-    expect(await spoof('appleGift')).toBe('done');
+    expect(await spoof(program, 'appleGift')).toBe('done');
   });
 
   it('spoofs an apple event scan', async function() {
-    expect(await spoof('appleEvent')).toBe('done');
+    expect(await spoof(program, 'appleEvent')).toBe('done');
   });
 
   it('spoofs a google scan', async function() {
-    expect(await spoof('google')).toBe('done');
+    expect(await spoof(program, 'google')).toBe('done');
   });
 
   it('Event Ticket Pass shows up on dash', async function() {

@@ -9,10 +9,10 @@ function createSha256(data: string) {
     .toUpperCase();
 }
 
-export function generateGVD(passTypeIdentifier: string) {
+export function generateGVD(passTypeId: string) {
   return (
     '80CA0101369F220201009F2520' +
-    createSha256(passTypeIdentifier) +
+    createSha256(passTypeId) +
     '9F2804C' +
     '5266B6E9F260400000002'
   );

@@ -1,16 +1,20 @@
 #! /usr/bin/env node
-
-import * as path from 'path';
 import * as pkg from '../package.json';
 import * as program from 'commander';
 
-require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
+require('dotenv').config();
 
 // Program export must be before import from  scan or will cause
 // circular dependency
 export declare interface Program extends program.CommanderStatic {
+  debug?: boolean;
+  config?: string;
+  http?: string;
+  mqtt?: boolean;
   username?: string;
   password?: string;
+  collectorId?: number;
+  passTypeId?: string;
 }
 
 import { spoof } from './spoof';
@@ -24,6 +28,17 @@ program
   .option('-d, --debug', 'Turns on debugging flag')
   .option('-u, --username <username>', 'Login as <username>')
   .option('-p, --password <password>', 'Login with <password>')
+  .option(
+    '-c, --config <path>',
+    'absolute path, including filename, of config.json'
+  )
+  .option(
+    '-h, --http [httpUrl]',
+    'Send scans via http. If httpUrl is provided it must include "http://"'
+  )
+  .option('-m, --mqtt', 'Send scans via mqtt')
+  .option('--pass-type-id <passTypeId>', 'The passTypeId to poll for')
+  .option('--collector-id <collectorId>', 'The collectorId to poll for')
   .description('Run PassNinja Cli and scan some passes!');
 
 program
@@ -49,7 +64,7 @@ program
     ) {
       return console.error('can only spoof apple and google passes for now');
     }
-    spoof(type, program).catch(err => console.error(err));
+    spoof(program as Program, type).catch(err => console.error(err));
   });
 
 if (!process.argv.slice(2).length) {

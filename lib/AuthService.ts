@@ -7,8 +7,6 @@ import {
 
 import { ConfigurationService } from './ConfigurationService';
 
-const isEmptyString = (obj: any): boolean => obj instanceof String && !obj.length;
-
 const getProp = <T extends keyof CognitoIdentityCredentials>(name: T) =>
   awsConfig.credentials instanceof CognitoIdentityCredentials
     ? awsConfig.credentials[name]
@@ -77,7 +75,10 @@ export class AuthService {
     });
   }
 
-  login = (USERNAME = AuthService.getUsername(), PASSWORD = AuthService.getPassword()) =>
+  login = (
+    USERNAME = AuthService.getUsername(),
+    PASSWORD = AuthService.getPassword()
+  ) =>
     new Promise<CognitoIdentityCredentials>(async (resolve, reject) => {
       const finalize = () => {
         if (!this._loggedIn$.getValue()) {
@@ -118,7 +119,8 @@ export class AuthService {
 
       (awsConfig.credentials as any).params.Logins = {};
 
-      (awsConfig.credentials as any).params.Logins[this.config.federation] = response.AuthenticationResult.IdToken;
+      (awsConfig.credentials as any).params.Logins[this.config.federation] =
+        response.AuthenticationResult.IdToken;
 
       (awsConfig.credentials as CognitoIdentityCredentials).expired = true;
 

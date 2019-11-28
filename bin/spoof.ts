@@ -1,8 +1,9 @@
 import { Program } from './pn';
 import { ConfigurationService } from '../lib/ConfigurationService';
 import { AuthService } from '../lib/AuthService';
-import { MqttService } from '../lib/MqttService';
+import { MqttService, SmartTapScan, ApplePayScan } from '../lib/MqttService';
 import { v1 } from 'uuid';
+
 const now = new Date();
 
 const reader = {
@@ -13,10 +14,11 @@ const reader = {
   firmware: 'ACR1255U-J1 SWV 3.00.05'
 };
 
-const googleScan = {
+const googleScan: SmartTapScan = {
   reader,
   uuid: v1(),
   type: 'smart-tap',
+  collectorId: 12947583,
   data: {
     redemptions: [
       {
@@ -27,55 +29,55 @@ const googleScan = {
   }
 };
 
-const appleFlightScan = {
+const appleFlightScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
-  passTypeIdentifier: 'pass.com.ndudfield.nfc',
+  passTypeId: 'pass.com.ndudfield.nfc',
   data: {
     timeStamp: now.toISOString(),
     message: '357291.35101723264'
   }
 };
 
-const appleEventTicketScan = {
+const appleEventTicketScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
-  passTypeIdentifier: 'pass.com.ndudfield.nfc',
+  passTypeId: 'pass.com.ndudfield.nfc',
   data: {
     timeStamp: now.toISOString(),
     message: 'e8f33d58-10f5-433a-8836-a04d2549af9f'
   }
 };
 
-const appleCouponScan = {
+const appleCouponScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
-  passTypeIdentifier: 'pass.com.ndudfield.nfc',
+  passTypeId: 'pass.com.ndudfield.nfc',
   data: {
     timeStamp: now.toISOString(),
     message: '3186bdfc-a013-4860-9d1f-1ca0a98dfb6f'
   }
 };
 
-const appleGiftScan = {
+const appleGiftScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
-  passTypeIdentifier: 'pass.com.ndudfield.nfc',
+  passTypeId: 'pass.com.ndudfield.nfc',
   data: {
     timeStamp: now.toISOString(),
     message: 'fa5ba873-d87f-4bc9-b301-a68d1c20deb8'
   }
 };
 
-const appleLoyaltyScan = {
+const appleLoyaltyScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
-  passTypeIdentifier: 'pass.com.ndudfield.nfc',
+  passTypeId: 'pass.com.ndudfield.nfc',
   data: {
     timeStamp: now.toISOString(),
     message: '7eea7d2c-df44-40a3-badc-93ae2fd64c91'
@@ -83,22 +85,20 @@ const appleLoyaltyScan = {
 };
 
 export const spoof = (
+  program: Program,
   type:
     | 'google'
     | 'appleFlight'
     | 'appleLoyalty'
     | 'appleGift'
     | 'appleCoupon'
-    | 'appleEvent',
-  program?: Program
+    | 'appleEvent'
 ) =>
   new Promise(async resolve => {
-    const config = new ConfigurationService(program && program.debug);
-    const auth = new AuthService(config);
+    const config = new ConfigurationService(program);
 
-    program
-      ? await auth.login(program.username, program.password)
-      : await auth.login();
+    const auth = new AuthService(config);
+    await auth.login(program.username, program.password);
 
     const mqtt = new MqttService(config, auth);
     await mqtt.connect();

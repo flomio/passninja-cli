@@ -14,9 +14,11 @@ Untitled.ipynb
 #
 #
 # compiled output
-/dist
+/build
 /tmp
 /out-tsc
+out/
+
 # Only exists if Bazel was run
 /bazel-out
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/camelcase  */
 export const enum CommandKey {
   select_ose,
   negotiate_session,

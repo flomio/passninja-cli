@@ -7,47 +7,50 @@ import { ConfigurationService } from './ConfigurationService';
 import { AuthService } from './AuthService';
 
 export declare interface ReaderSpec {
-  type: string
-  serial_number?: string
-  firmware?: string
+  type: string;
+  serial_number?: string;
+  firmware?: string;
 }
 
 export declare interface ScanBase {
-  uuid: string
-  reader: ReaderSpec
+  uuid: string;
+  reader: ReaderSpec;
 }
 
 export declare interface ApplePayScan extends ScanBase {
-  type: 'apple-pay'
-  passTypeIdentifier: string
+  type: 'apple-pay';
+  passTypeId: string;
   data: {
-    timeStamp: string
-    message: string
-  }
+    timeStamp: string;
+    message: string;
+  };
 }
 
 export declare interface SmartTapScan extends ScanBase {
-  type: 'smart-tap',
+  type: 'smart-tap';
+  collectorId: number;
   data: {
-    redemptions: [{
-      smartTapValue: string
-      kind: string
-    }]
-  }
+    redemptions: [
+      {
+        smartTapValue: string;
+        kind: string;
+      }
+    ];
+  };
 }
 
-export declare type Scan = ApplePayScan | SmartTapScan
+export declare type MessageToPublish = ApplePayScan | SmartTapScan;
 
 export declare interface MqttMessage {
-  topic: string
-  message: Scan
+  topic: string;
+  message: MessageToPublish;
 }
 
-type MessageHandler = (topic: string, message: Scan) => void
-type PacketHandler = (packet: Packet) => void
-type ErrorHandler = (err: Error) => void
-type EmptyHandler = () => void
-type Handler = MessageHandler | PacketHandler | ErrorHandler | EmptyHandler
+type MessageHandler = (topic: string, message: MessageToPublish) => void;
+type PacketHandler = (packet: Packet) => void;
+type ErrorHandler = (err: Error) => void;
+type EmptyHandler = () => void;
+type Handler = MessageHandler | PacketHandler | ErrorHandler | EmptyHandler;
 
 /**
  *
@@ -75,7 +78,9 @@ export class MqttService {
   }
 
   get topic() {
-    return !this.config.debug ? this.auth.identityId : `testing/${this.auth.identityId}`;
+    return !this.config.debug
+      ? this.auth.identityId
+      : `testing/${this.auth.identityId}`;
   }
 
   get packetSend$() {
@@ -90,9 +95,16 @@ export class MqttService {
     return this._messages$.asObservable();
   }
 
-  protected _packetSend$ = new BehaviorSubject<{ packet: Packet }>({ packet: 'INIT' } as any);
-  protected _packetReceive$ = new BehaviorSubject<{ packet: Packet }>({ packet: 'INIT' } as any);
-  protected _messages$ = new BehaviorSubject<MqttMessage>({ topic: 'INIT', message: 'INIT' } as any);
+  protected _packetSend$ = new BehaviorSubject<{ packet: Packet }>({
+    packet: 'INIT'
+  } as any);
+  protected _packetReceive$ = new BehaviorSubject<{ packet: Packet }>({
+    packet: 'INIT'
+  } as any);
+  protected _messages$ = new BehaviorSubject<MqttMessage>({
+    topic: 'INIT',
+    message: 'INIT'
+  } as any);
 
   private _handlerSubscription$?: Subscription;
   private _client?: DeviceSdk.device;
@@ -114,18 +126,19 @@ export class MqttService {
     // });
   }
 
-  connect = async () => new Promise<void>(async resolve => {
-    if (this._client) {
-      return;
-    }
-
-    this._handlerSubscription$ = this._buildClient$().subscribe(connected => {
-      this._connected = connected;
-      if (connected) {
-        resolve();
+  connect = async () =>
+    new Promise<void>(async resolve => {
+      if (this._client) {
+        return;
       }
+
+      this._handlerSubscription$ = this._buildClient$().subscribe(connected => {
+        this._connected = connected;
+        if (connected) {
+          resolve();
+        }
+      });
     });
-  });
 
   disconnect = () => {
     if (this._client) {
@@ -148,7 +161,8 @@ export class MqttService {
       }
 
       this._client.subscribe(
-        this.topic, { qos: 1 },
+        this.topic,
+        { qos: 1 },
         (err?: Error, granted?: ISubscriptionGrant[]) => {
           if (err) {
             reject(err);
@@ -158,18 +172,24 @@ export class MqttService {
       );
     });
 
-  publish = (message: {}) => new Promise((resolve, reject) => {
-    if (!this.connected) {
-      throw new Error('must be connected to publish');
-    }
-
-    this._client!.publish(this.topic, JSON.stringify(message), { qos: 1 }, (err?: Error) => {
-      if (err) {
-        return reject(err);
+  publish = (message: MessageToPublish) =>
+    new Promise((resolve, reject) => {
+      if (!(this._client && this.connected)) {
+        throw new Error('must be connected to publish');
       }
-      resolve();
+
+      this._client.publish(
+        this.topic,
+        JSON.stringify(message),
+        { qos: 1 },
+        (err?: Error) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve();
+        }
+      );
     });
-  });
 
   cleanUp = () => {
     this.disconnect();
@@ -178,40 +198,44 @@ export class MqttService {
     this._packetReceive$.complete();
   };
 
-  private _buildClient$ = () => new Observable<boolean>(observer => {
-    /**
-     * Instantiate AWS IoT device object
-     * Note that the credentials must be initialized with empty strings;
-     * When we successfully authenticate to the Cognito Identity Pool,
-     * the credentials will be dynamically updated.
-     */
-    // console.log(this.config);
-    this._client = new DeviceSdk.device({
-      // clientId, region, and host are required options
-      clientId: this.clientId,
-      region: this.config.region,
-      host: this.config.iotHost,
-      // AWS access key ID, secret key and session token must be
-      // initialized with empty strings
-      accessKeyId: '',
-      secretKey: '',
-      sessionToken: '',
-      // Set the maximum reconnect time to 500ms; this is a browser application
-      // so we don't want to leave the user waiting too long for re-connection after
-      // re-connecting to the network/re-opening their laptop/etc...
-      baseReconnectTimeMs: 1000,
-      maximumReconnectTimeMs: 1000,
-      protocol: 'wss',
-      debug: this.config.debug,
-      autoResubscribe: true
+  private _buildClient$ = () =>
+    new Observable<boolean>(observer => {
+      /**
+       * Instantiate AWS IoT device object
+       * Note that the credentials must be initialized with empty strings;
+       * When we successfully authenticate to the Cognito Identity Pool,
+       * the credentials will be dynamically updated.
+       */
+      // console.log(this.config);
+      this._client = new DeviceSdk.device({
+        // clientId, region, and host are required options
+        clientId: this.clientId,
+        region: this.config.region,
+        host: this.config.iotHost,
+        // AWS access key ID, secret key and session token must be
+        // initialized with empty strings
+        accessKeyId: '',
+        secretKey: '',
+        sessionToken: '',
+        // Set the maximum reconnect time to 500ms; this is a browser application
+        // so we don't want to leave the user waiting too long for re-connection after
+        // re-connecting to the network/re-opening their laptop/etc...
+        baseReconnectTimeMs: 1000,
+        maximumReconnectTimeMs: 1000,
+        protocol: 'wss',
+        debug: this.config.debug,
+        autoResubscribe: true
+      });
+
+      this._attachHandlers(this._client, observer);
+
+      this._updateWebSocketCredentials();
     });
 
-    this._attachHandlers(this._client, observer);
-
-    this._updateWebSocketCredentials();
-  });
-
-  private _attachHandlers = (client: DeviceSdk.device, observer: Subscriber<boolean>) => {
+  private _attachHandlers = (
+    client: DeviceSdk.device,
+    observer: Subscriber<boolean>
+  ) => {
     const listeners: { [name: string]: Handler } = {
       connect: (packet: Packet) => {
         if (this.config.debug) {
@@ -240,17 +264,17 @@ export class MqttService {
       },
       packetsend: (packet: Packet) => this._packetSend$.next({ packet }),
       packetreceive: (packet: Packet) => this._packetReceive$.next({ packet }),
-      message: (topic: string, message: Scan) => this._messages$.next({
-        topic,
-        message: (message as any).toString() as Scan
-      })
+      message: (topic: string, message: MessageToPublish) =>
+        this._messages$.next({
+          topic,
+          message: (message as any).toString() as MessageToPublish
+        })
     };
 
     if (this.config.debug) {
       listeners.close = () => console.log('mqtt connection was closed');
     }
 
-    // tslint:disable:forin
     for (const name in listeners) {
       // @ts-ignore - function signature of package is incorrect for connect and message
       client.on(name, listeners[name]);
@@ -276,8 +300,3 @@ export class MqttService {
     );
   };
 }
-
-// @Injectable()
-// export class AngularMqttService extends MqttService implements OnDestroy {
-//   ngOnDestroy = this.cleanUp;
-// }
