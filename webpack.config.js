@@ -1,9 +1,9 @@
 const path = require('path');
 const os = require('os');
-const childProcess = require('child_process');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const Obfuscator = require('webpack-obfuscator');
 const ENV = process.env.NODE_ENV || 'development';
 const PROD = ENV === 'production';
 
@@ -54,6 +54,9 @@ module.exports = () => {
     },
     plugins: [
       new CleanWebpackPlugin(),
+      new Obfuscator({
+        rotateUnicodeArray: true
+      }),
       new CopyPlugin([
         {
           from: './node_modules/pcsclite/build/Release/pcsclite.node',
