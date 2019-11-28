@@ -51,8 +51,8 @@ export const scan = async (program: Program) => {
 >>>
 >>> POLLING FOR
 >>>
->>> collectorId: ${config.collectorId}
->>> passTypeIdentifier: ${config.passTypeIdentifier}
+>>> collectorId: ${await config.getCollectorId()}
+>>> passTypeId: ${await config.getPassTypeId()}
 >>>
 >>>`);
 };

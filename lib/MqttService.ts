@@ -19,7 +19,7 @@ export declare interface ScanBase {
 
 export declare interface ApplePayScan extends ScanBase {
   type: 'apple-pay';
-  passTypeIdentifier: string;
+  passTypeId: string;
   data: {
     timeStamp: string;
     message: string;

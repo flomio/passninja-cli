@@ -16,15 +16,15 @@ export const isNfcKey = (key: any): key is NfcKey => {
 };
 
 export interface AppleVasKey extends NfcKey {
-  passTypeIdentifier: string;
+  passTypeId: string;
 }
 
 export const isAppleVasKey = (key: any): key is AppleVasKey => {
   return (
     isNfcKey(key) &&
-    key.hasOwnProperty('passTypeIdentifier') &&
-    typeof (key as AppleVasKey).passTypeIdentifier === 'string' &&
-    !!(key as AppleVasKey).passTypeIdentifier.length
+    key.hasOwnProperty('passTypeId') &&
+    typeof (key as AppleVasKey).passTypeId === 'string' &&
+    !!(key as AppleVasKey).passTypeId.length
   );
 };
 

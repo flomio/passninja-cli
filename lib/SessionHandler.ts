@@ -2,16 +2,17 @@ import { makeDecrypter } from 'apple-vas-data-decrypt';
 import { utils } from 'flomio-js-sdk';
 import { SecureSmartTapSession, getRedemptionValues } from 'smart-tap';
 import { CommandKey, fromBase64, toBase64, generateGVD } from './utils';
+import { ConfigurationService } from './ConfigurationService';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const dbg = (...args: any[]) => {};
 
 export class SessionHandler {
-  constructor(private config: any) {}
+  constructor(private config: ConfigurationService) {}
 
-  getDecrypter = () => {
+  getDecrypter = async () => {
     const decrypter = makeDecrypter(
-      this.config.passTypeIdentifier,
+      await this.config.getPassTypeId(),
       this.config.nfc.apple.privateKeyPem
     );
 
@@ -30,7 +31,7 @@ export class SessionHandler {
 
       const session = new SecureSmartTapSession({
         type: 'privateKey',
-        collectorId: this.config.collectorId,
+        collectorId: await this.config.getCollectorId(),
         privateKey: {
           version: version,
           pem: privateKeyPem
@@ -67,7 +68,7 @@ export class SessionHandler {
           cmd: CommandKey.get_vas_data,
           args: {
             get: utils
-              .unhex(generateGVD(this.config.passTypeIdentifier))
+              .unhex(generateGVD(await this.config.getPassTypeId()))
               .toString('base64')
           }
         };
@@ -95,7 +96,7 @@ export class SessionHandler {
         }
       };
     } else if (message.cmd === CommandKey.decrypt_vas_data) {
-      const decrypter = this.getDecrypter();
+      const decrypter = await this.getDecrypter();
       const decrypted = decrypter(fromBase64(message.args.response));
 
       if (!decrypted.success) {

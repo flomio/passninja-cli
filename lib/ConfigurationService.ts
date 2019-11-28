@@ -3,18 +3,21 @@ import { nfcKeys } from './nfcKeys';
 
 interface ConfigJson {
   httpUrl?: string;
+  passTypeId?: string;
+  collectorId?: number;
 }
 
 export class ConfigurationService {
   // location for configuration file
   static defaultHttpUrl = 'http://localhost:3080';
 
+  private _collectorId: number;
+  private _passTypeId: string;
+
   public debug?: boolean;
   public configJson: Promise<ConfigJson | undefined>;
   public http: boolean;
   public mqtt: boolean;
-  public collectorId: number;
-  public passTypeIdentifier: string;
   public httpUrl: Promise<string>;
   public region = process.env.REGION || 'us-east-1';
   public userPoolClientId =
@@ -37,27 +40,45 @@ export class ConfigurationService {
     this.http = !!http;
     this.mqtt = !!mqtt;
 
-    this.passTypeIdentifier = passTypeId
-      ? passTypeId
-      : this.nfc.apple.passTypeIdentifier;
+    this._passTypeId = passTypeId ? passTypeId : this.nfc.apple.passTypeId;
 
-    if (!this.passTypeIdentifier) {
-      throw new Error('must supply a passTypeIdentifier when running the cli');
+    if (!this._passTypeId) {
+      throw new Error('must supply a passTypeId when running the cli');
     }
 
-    this.collectorId = !collectorId
+    this._collectorId = !collectorId
       ? this.nfc.google.collectorId
       : typeof collectorId === 'number'
       ? collectorId
-      : parseInt(collectorId);
+      : +collectorId;
 
-    if (!this.collectorId) {
+    if (!this._collectorId) {
       throw new Error('must supply a collectorId when running the cli');
     }
 
     this.configJson = this.getConfigJson(config);
     this.httpUrl = this.getHttpUrl(program);
   }
+
+  public getCollectorId = async () => {
+    const config = await this.configJson;
+
+    if (config && config.collectorId) {
+      return +config.collectorId;
+    }
+
+    return this._collectorId;
+  };
+
+  public getPassTypeId = async () => {
+    const config = await this.configJson;
+
+    if (config && config.passTypeId) {
+      return config.passTypeId;
+    }
+
+    return this._passTypeId;
+  };
 
   private getConfigJson = async (configPath?: string) => {
     if (!configPath) return undefined;

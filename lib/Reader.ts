@@ -92,8 +92,8 @@ export class Reader {
     // TODO: make this double selecting optional
     await this.selectOSE(tag);
 
-    const passTypeIdentifier = this.config.passTypeIdentifier;
-    const gvd = await tag.sendAPDU(generateGVD(passTypeIdentifier));
+    const passTypeId = await this.config.getPassTypeId();
+    const gvd = await tag.sendAPDU(generateGVD(passTypeId));
 
     dbg('GVD', gvd.SW);
 
@@ -117,7 +117,7 @@ export class Reader {
     const resp = await this.readerSession.handleMessage({
       cmd: CommandKey.decrypt_vas_data,
       args: {
-        passTypeIdentifier,
+        passTypeId,
         response: toBase64(gvd.full)
       }
     });
@@ -131,7 +131,7 @@ export class Reader {
       //TODO: This is whole file is not type safe. Needs to be rewritten.
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       data: resp!.args.data as any,
-      passTypeIdentifier
+      passTypeId
     });
 
     trc('GVD resp', gvd.SW);
@@ -156,8 +156,8 @@ export class Reader {
         // TODO: seems senseless to encode as string when session handler
         // is running locally
         response: selectResp2.full.toString('base64'),
-        passTypeIdentifier: this.config.passTypeIdentifier,
-        collectorId: this.config.collectorId
+        passTypeId: await this.config.getPassTypeId(),
+        collectorId: await this.config.getCollectorId()
       }
     };
 

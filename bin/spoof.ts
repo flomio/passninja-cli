@@ -33,7 +33,7 @@ const appleFlightScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
-  passTypeIdentifier: 'pass.com.ndudfield.nfc',
+  passTypeId: 'pass.com.ndudfield.nfc',
   data: {
     timeStamp: now.toISOString(),
     message: '357291.35101723264'
@@ -44,7 +44,7 @@ const appleEventTicketScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
-  passTypeIdentifier: 'pass.com.ndudfield.nfc',
+  passTypeId: 'pass.com.ndudfield.nfc',
   data: {
     timeStamp: now.toISOString(),
     message: 'e8f33d58-10f5-433a-8836-a04d2549af9f'
@@ -55,7 +55,7 @@ const appleCouponScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
-  passTypeIdentifier: 'pass.com.ndudfield.nfc',
+  passTypeId: 'pass.com.ndudfield.nfc',
   data: {
     timeStamp: now.toISOString(),
     message: '3186bdfc-a013-4860-9d1f-1ca0a98dfb6f'
@@ -66,7 +66,7 @@ const appleGiftScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
-  passTypeIdentifier: 'pass.com.ndudfield.nfc',
+  passTypeId: 'pass.com.ndudfield.nfc',
   data: {
     timeStamp: now.toISOString(),
     message: 'fa5ba873-d87f-4bc9-b301-a68d1c20deb8'
@@ -77,7 +77,7 @@ const appleLoyaltyScan: ApplePayScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
-  passTypeIdentifier: 'pass.com.ndudfield.nfc',
+  passTypeId: 'pass.com.ndudfield.nfc',
   data: {
     timeStamp: now.toISOString(),
     message: '7eea7d2c-df44-40a3-badc-93ae2fd64c91'
