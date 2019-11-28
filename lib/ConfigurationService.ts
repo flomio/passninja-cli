@@ -96,6 +96,7 @@ export class ConfigurationService {
     } catch (err) {
       if (err.message.startsWith('Cannot find module')) {
         console.log(`>>> No config file found at ${configPath}\n>>>`);
+        return undefined;
       }
 
       if (err.message.includes(': Unexpected token')) {
@@ -103,6 +104,7 @@ export class ConfigurationService {
         console.log(
           `>>> Invalid JSON syntax in config.json at position ${location}\n>>>`
         );
+        return undefined;
       }
 
       throw err;
