@@ -44,6 +44,11 @@ FEDERATION='cognito-idp.us-east-1.amazonaws.com/us-east-1_qa9UNxt2o'
 |  `FEDERATION`  | AWS Cognito -> Manage User Pools -> passninja-user-pool -> Pool ARN (after "arn:aws:")      |
 | `USER_POOL_ID` | AWS Cognito -> Manage User Pools -> passninja-user-pool -> Pool Id      |
 | `USER_POOL_CLIENT_ID` | AWS Cognito -> Manage User Pools -> passninja-user-pool -> General Settings -> App clients -> passninja-user-pool-client     |
+| `IDENTITY_POOL_ID` | AWS Cognito -> Manage Identity Pools -> PassNinjaIdentityPool -> URL `id` query parameter (see at diagram 1.1)|
+
+![Identity Pool Id Sourcing](./docs/img/AWSIdentityPoolID.PNG)
+
+<sub>(Diagram 1.1)</sub>
 
 ### Build Error Troubleshooting
 1.  `Error: config.userPoolId not found`
