@@ -25,17 +25,34 @@ separately.
 npm install
 ```
 
-.env file
+### `.env` file
 ```bash
 REGION='us-east-1'
 PASS_COM_NDUDFIELD_NFC_PASSPHRASE='zxccxz'
 AWS_SDK_LOAD_CONFIG=0
 IOT_HOST="a1o5x5ek64x899-ats"
-USER_POOL_ID='us-east-1_s1r1YDAKQ'
-USER_POOL_CLIENT_ID='7s2akp7gpb3o3blthth66qouk5'
-IDENTITY_POOL_ID='us-east-1:2c2d84d3-5850-4161-b5a1-ea6b82f923fd'
-FEDERATION='cognito-idp.us-east-1.amazonaws.com/us-east-1_s1r1YDAKQ'
+USER_POOL_ID='us-east-1_qa9UNxt2o'
+USER_POOL_CLIENT_ID='7hsccetpkumpavofq81ifji292'
+IDENTITY_POOL_ID='us-east-1:8aca505e-e2e8-4583-ac79-ee2fc760c84f'
+FEDERATION='cognito-idp.us-east-1.amazonaws.com/us-east-1_qa9UNxt2o'
 ```
+
+### How to source env values (if stale)
+
+|     Env Var    | Value |
+|:-------------- |:----- |
+|  `FEDERATION`  | AWS Cognito -> Manage User Pools -> passninja-user-pool -> Pool ARN (after "arn:aws:")      |
+| `USER_POOL_ID` | AWS Cognito -> Manage User Pools -> passninja-user-pool -> Pool Id      |
+| `USER_POOL_CLIENT_ID` | AWS Cognito -> Manage User Pools -> passninja-user-pool -> General Settings -> App clients -> passninja-user-pool-client     |
+
+### Build Error Troubleshooting
+1.  `Error: config.userPoolId not found`
+    
+    Make sure both the USER_POOL_ID and USER_POOL_CLIENT_ID are set properly and are not stale above.  
+
+2.  `Error: Invalid login token. Issuer doesn’t match providerName`
+
+    Make sure both the USER_POOL_ID and FEDERATION are set properly and are not stale above.  
 
 ## Install drivers
 
