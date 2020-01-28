@@ -11,6 +11,7 @@ describe('MqttService', () => {
   const auth = new AuthService(config);
   let mqtt: MqttService;
 
+
   beforeAll(function() {
     return new Promise(async resolve => {
       await auth.login('demo@user.com', 'Password123!');
@@ -37,15 +38,19 @@ describe('MqttService', () => {
   });
 
   it('should subscribe to the correct topic', async function() {
-    expect(mqtt.topic).toEqual((awsConfig.credentials as CognitoIdentityCredentials).identityId);
+    let identityId = (awsConfig.credentials as CognitoIdentityCredentials).identityId;
+    let expectedTopic = "passScans/"+identityId;
+    expect(mqtt.topic).toEqual(expectedTopic);
     await mqtt.connect();
     const res = await mqtt.subscribe();
-    expect(res).toEqual([{ 'qos': 1, 'topic': auth.identityId }]);
+    expect(res).toEqual([{ 'qos': 1, 'topic': "passScans/"+auth.identityId }]);
     mqtt.disconnect();
   });
 
   it('should publish to the correct topic', async function(done) {
-    expect(mqtt.topic).toEqual((awsConfig.credentials as CognitoIdentityCredentials).identityId);
+    let identityId = (awsConfig.credentials as CognitoIdentityCredentials).identityId;
+    let expectedTopic = "passScans/"+identityId;
+    expect(mqtt.topic).toEqual(expectedTopic);
     await mqtt.connect();
     await mqtt.subscribe();
 
