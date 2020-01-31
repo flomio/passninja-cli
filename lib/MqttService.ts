@@ -75,9 +75,11 @@ export class MqttService {
   }
 
   get topic() {
-    return !this.config.debug ?  `passScans/${this.auth.identityId}` : `testing/${this.auth.identityId}`;
+    return  `passScans/`+ (process.env.PASSNINJA_API_BRANCH
+    ? process.env.PASSNINJA_API_BRANCH
+    : "master") + `/${this.auth.identityId}`
   }
-
+  
   get packetSend$() {
     return this._packetSend$.asObservable();
   }

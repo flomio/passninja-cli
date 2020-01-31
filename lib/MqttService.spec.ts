@@ -3,6 +3,7 @@ import { CognitoIdentityCredentials, config as awsConfig } from 'aws-sdk';
 import { MqttService } from './MqttService';
 import { ConfigurationService } from './ConfigurationService';
 import { AuthService } from './AuthService';
+require('dotenv').config();
 
 jest.setTimeout(120000);
 
@@ -10,7 +11,6 @@ describe('MqttService', () => {
   const config = new ConfigurationService();
   const auth = new AuthService(config);
   let mqtt: MqttService;
-
 
   beforeAll(function() {
     return new Promise(async resolve => {
@@ -38,18 +38,42 @@ describe('MqttService', () => {
   });
 
   it('should subscribe to the correct topic', async function() {
-    let identityId = (awsConfig.credentials as CognitoIdentityCredentials).identityId;
-    let expectedTopic = "passScans/"+identityId;
+    let identityId = (awsConfig.credentials as CognitoIdentityCredentials)
+      .identityId;
+    let expectedTopic =
+    'passScans/' +
+    (process.env.PASSNINJA_API_BRANCH
+      ? process.env.PASSNINJA_API_BRANCH
+      : 'master') +
+    '/' + identityId;
     expect(mqtt.topic).toEqual(expectedTopic);
     await mqtt.connect();
     const res = await mqtt.subscribe();
-    expect(res).toEqual([{ 'qos': 1, 'topic': "passScans/"+auth.identityId }]);
+    expect(res).toEqual([
+      {
+        qos: 1,
+        topic:
+          'passScans/' +
+          (process.env.PASSNINJA_API_BRANCH
+            ? process.env.PASSNINJA_API_BRANCH
+            : 'master') +
+          '/' +
+          auth.identityId
+      }
+    ]);
     mqtt.disconnect();
   });
 
   it('should publish to the correct topic', async function(done) {
-    let identityId = (awsConfig.credentials as CognitoIdentityCredentials).identityId;
-    let expectedTopic = "passScans/"+identityId;
+    let identityId = (awsConfig.credentials as CognitoIdentityCredentials)
+      .identityId;
+    let expectedTopic =
+      'passScans/' +
+      (process.env.PASSNINJA_API_BRANCH
+        ? process.env.PASSNINJA_API_BRANCH
+        : 'master') +
+      '/' +
+      identityId;
     expect(mqtt.topic).toEqual(expectedTopic);
     await mqtt.connect();
     await mqtt.subscribe();
@@ -66,5 +90,4 @@ describe('MqttService', () => {
 
     expect(await mqtt.publish(testMessage)).toEqual(undefined);
   });
-
 });
