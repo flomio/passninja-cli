@@ -24,23 +24,7 @@ describe('PassNinja Demo App e2e tests.', function() {
   });
 
   it('spoofs a apple boarding pass', async function() {
-    expect(await spoof('appleFlight')).toBe('done');
-  });
-
-  it('spoofs an apple coupon scan', async function() {
-    expect(await spoof('appleCoupon')).toBe('done');
-  });
-
-  it('spoofs an apple loyalty scan', async function() {
-    expect(await spoof('appleLoyalty')).toBe('done');
-  });
-
-  it('spoofs an apple gift scan', async function() {
-    expect(await spoof('appleGift')).toBe('done');
-  });
-
-  it('spoofs an apple event scan', async function() {
-    expect(await spoof('appleEvent')).toBe('done');
+    expect(await spoof('apple')).toBe('done');
   });
 
   it('spoofs a google scan', async function() {
@@ -50,34 +34,6 @@ describe('PassNinja Demo App e2e tests.', function() {
   it('Event Ticket Pass shows up on dash', async function() {
     const test = element(
       By.xpath("//*[contains(., '" + 'Ninji Musical' + "')]")
-    );
-    expect(await test.isPresent()).toBe(true);
-  });
-
-  it('Gift Card Pass shows up on dash', async function() {
-    const test = element(
-      By.xpath("//*[contains(., '" + 'PassNinja Emporium' + "')]")
-    );
-    expect(await test.isPresent()).toBe(true);
-  });
-
-  it('Loyalty Pass shows up on dash', async function() {
-    const test = element(
-      By.xpath("//*[contains(., '" + 'Ninja Fashionista' + "')]")
-    );
-    expect(await test.isPresent()).toBe(true);
-  });
-
-  it('Coupon Pass shows up on dash', async function() {
-    const test = element(
-      By.xpath("//*[contains(., '" + 'Ninji Sports' + "')]")
-    );
-    expect(await test.isPresent()).toBe(true);
-  });
-
-  it('Boarding Pass shows up on dash', async function() {
-    const test = element(
-      By.xpath("//*[contains(., '" + 'Ninja Airlines' + "')]")
     );
     expect(await test.isPresent()).toBe(true);
   });

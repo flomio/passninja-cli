@@ -27,11 +27,11 @@ const googleScan = {
   }
 };
 
-const appleFlightScan = {
+const appleScan = {
   reader,
   uuid: v1(),
   type: 'apple-pay',
-  passTypeIdentifier: 'pass.com.demo.testing',
+  passTypeIdentifier: 'pass.com.passninja.demo.testing',
   data: {
     timeStamp: now.toISOString(),
     message: '357291.35101723264'
@@ -85,11 +85,7 @@ const appleLoyaltyScan = {
 export const spoof = (
   type:
     | 'google'
-    | 'appleFlight'
-    | 'appleLoyalty'
-    | 'appleGift'
-    | 'appleCoupon'
-    | 'appleEvent',
+    | 'apple',
   program?: Program
 ) =>
   new Promise(async resolve => {
@@ -104,16 +100,8 @@ export const spoof = (
     await mqtt.connect();
 
     const message =
-      type === 'appleFlight'
-        ? appleFlightScan
-        : type === 'appleCoupon'
-        ? appleCouponScan
-        : type === 'appleLoyalty'
-        ? appleLoyaltyScan
-        : type === 'appleGift'
-        ? appleGiftScan
-        : type === 'appleEvent'
-        ? appleEventTicketScan
+      type === 'apple'
+        ? appleScan
         : googleScan;
 
     await mqtt.publish(message);

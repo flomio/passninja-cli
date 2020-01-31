@@ -42,8 +42,8 @@ describe('MqttService', () => {
       .identityId;
     let expectedTopic =
     'passScans/' +
-    (process.env.PASSNINJA_API_BRANCH
-      ? process.env.PASSNINJA_API_BRANCH
+    (process.env.API_BRANCH
+      ? process.env.API_BRANCH
       : 'master') +
     '/' + identityId;
     expect(mqtt.topic).toEqual(expectedTopic);
@@ -54,8 +54,8 @@ describe('MqttService', () => {
         qos: 1,
         topic:
           'passScans/' +
-          (process.env.PASSNINJA_API_BRANCH
-            ? process.env.PASSNINJA_API_BRANCH
+          (process.env.API_BRANCH
+            ? process.env.API_BRANCH
             : 'master') +
           '/' +
           auth.identityId

@@ -75,8 +75,8 @@ export class MqttService {
   }
 
   get topic() {
-    return  `passScans/`+ (process.env.PASSNINJA_API_BRANCH
-    ? process.env.PASSNINJA_API_BRANCH
+    return  `passScans/`+ (process.env.API_BRANCH
+    ? process.env.API_BRANCH
     : "master") + `/${this.auth.identityId}`
   }
   
