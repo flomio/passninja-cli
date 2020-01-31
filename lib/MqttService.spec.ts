@@ -69,8 +69,8 @@ describe('MqttService', () => {
       .identityId;
     let expectedTopic =
       'passScans/' +
-      (process.env.PASSNINJA_API_BRANCH
-        ? process.env.PASSNINJA_API_BRANCH
+      (process.env.API_BRANCH
+        ? process.env.API_BRANCH
         : 'master') +
       '/' +
       identityId;
