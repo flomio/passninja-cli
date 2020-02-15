@@ -58,3 +58,33 @@ export const spoof = (type: 'google' | 'apple', program?: Program) =>
     console.log(`topic: ${mqtt.topic}\nmessage: ${JSON.stringify(message)}\n`);
     resolve('done');
   });
+
+  export const mockScan = (type: 'apple-pay' | 'google-pay',  passType: string, serialNumber: string, program?: Program) =>
+  new Promise(async resolve => {
+    const config = new ConfigurationService(program && program.debug);
+    const auth = new AuthService(config);
+
+    program
+      ? await auth.login(program.username, program.password)
+      : await auth.login();
+
+    const mqtt = new MqttService(config, auth);
+    await mqtt.connect();
+
+    const message = {
+      reader,
+      uuid: v1(),
+      type,
+      passTypeIdentifier: `pass.com.passninja.${passType}`,
+      data: {
+        timeStamp: now.toISOString(),
+        message: serialNumber
+      }
+    };
+
+    await mqtt.publish(message);
+    mqtt.cleanUp();
+
+    console.log(`topic: ${mqtt.topic}\nmessage: ${JSON.stringify(message)}\n`);
+    resolve('done');
+  });

@@ -13,7 +13,7 @@ export declare interface Program extends program.CommanderStatic {
   password?: string;
 }
 
-import { spoof } from './spoof';
+import { spoof, mockScan } from './spoof';
 import { scan } from './scan';
 
 if (pkg.version) {
@@ -39,11 +39,7 @@ program
   .action((type: string) => {
     if (
       !(
-        type === 'appleFlight' ||
-        type === 'appleEvent' ||
-        type === 'appleLoyalty' ||
-        type === 'appleGift' ||
-        type === 'appleCoupon' ||
+        type === 'apple' ||
         type === 'google'
       )
     ) {
@@ -52,6 +48,24 @@ program
     spoof(type, program).catch(err => console.error(err));
   });
 
+  program
+  .command('mockScan <options> ')
+  .description('mocks a scan of from type,passType,SerialNumber')
+  .action((options: string) => {
+    let optionsArray = options.split(',');
+    let type = optionsArray[0];
+    let passType = optionsArray[1];
+    let serialNumber = optionsArray[2];
+    if (
+      !(
+        type === 'apple-pay' ||
+        type === 'google-pay'
+      )
+    ) {
+      return console.error('can only spoof apple and google passes for now');
+    }
+    mockScan(type, passType, serialNumber, program).catch(err => console.error(err));
+  });
 if (!process.argv.slice(2).length) {
   program.outputHelp();
 }
