@@ -59,7 +59,12 @@ export const spoof = (type: 'google' | 'apple', program?: Program) =>
     resolve('done');
   });
 
-  export const mockScan = (type: 'apple-pay' | 'google-pay',  passType: string, serialNumber: string, program?: Program) =>
+export const mockScan = (
+  type: 'apple-pay' | 'google-pay',
+  passType: string,
+  serialNumber: string,
+  program?: Program
+) =>
   new Promise(async resolve => {
     const config = new ConfigurationService(program && program.debug);
     const auth = new AuthService(config);
