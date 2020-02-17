@@ -44,7 +44,7 @@ describe('MqttService', () => {
     'passScans/' +
     (process.env.API_BRANCH
       ? process.env.API_BRANCH
-      : 'master') +
+      : 'v1') +
     '/' + identityId;
     expect(mqtt.topic).toEqual(expectedTopic);
     await mqtt.connect();
