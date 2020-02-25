@@ -38,31 +38,10 @@ const appleScan = {
   }
 };
 
-export const spoof = (type: 'google' | 'apple', program?: Program) =>
-  new Promise(async resolve => {
-    const config = new ConfigurationService(program && program.debug);
-    const auth = new AuthService(config);
-
-    program
-      ? await auth.login(program.username, program.password)
-      : await auth.login();
-
-    const mqtt = new MqttService(config, auth);
-    await mqtt.connect();
-
-    const message = type === 'apple' ? appleScan : googleScan;
-
-    await mqtt.publish(message);
-    mqtt.cleanUp();
-
-    console.log(`topic: ${mqtt.topic}\nmessage: ${JSON.stringify(message)}\n`);
-    resolve('done');
-  });
-
-export const mockScan = (
-  type: 'apple-pay' | 'google-pay',
-  passType: string,
-  serialNumber: string,
+export const spoof = (
+  type: string,
+  passType?: string,
+  serialNumber?: string,
   program?: Program
 ) =>
   new Promise(async resolve => {
@@ -76,20 +55,24 @@ export const mockScan = (
     const mqtt = new MqttService(config, auth);
     await mqtt.connect();
 
-    const message = {
-      reader,
-      uuid: v1(),
-      type,
-      passTypeIdentifier: `pass.com.passninja.${passType}`,
-      data: {
-        timeStamp: now.toISOString(),
-        message: serialNumber
-      }
-    };
-
+    let message;
+    if (passType && serialNumber) {
+      message = {
+        reader,
+        uuid: v1(),
+        type: `${type}-pay`,
+        passTypeIdentifier: `pass.com.passninja.${passType}`,
+        data: {
+          timeStamp: now.toISOString(),
+          message: serialNumber
+        }
+      };
+    } else {
+      message = type === 'apple' ? appleScan : googleScan;
+    }
     await mqtt.publish(message);
     mqtt.cleanUp();
 
     console.log(`topic: ${mqtt.topic}\nmessage: ${JSON.stringify(message)}\n`);
-    resolve('done');
+    resolve(`topic: ${mqtt.topic}\nmessage: ${JSON.stringify(message)}\n`);
   });
