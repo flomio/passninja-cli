@@ -38,7 +38,12 @@ const appleScan = {
   }
 };
 
-export const spoof = (type: 'google' | 'apple', program?: Program) =>
+export const spoof = (
+  type: string,
+  passType?: string,
+  serialNumber?: string,
+  program?: Program
+) =>
   new Promise(async resolve => {
     const config = new ConfigurationService(program && program.debug);
     const auth = new AuthService(config);
@@ -50,11 +55,24 @@ export const spoof = (type: 'google' | 'apple', program?: Program) =>
     const mqtt = new MqttService(config, auth);
     await mqtt.connect();
 
-    const message = type === 'apple' ? appleScan : googleScan;
-
+    let message;
+    if (passType && serialNumber) {
+      message = {
+        reader,
+        uuid: v1(),
+        type: `${type}-pay`,
+        passTypeIdentifier: `pass.com.passninja.${passType}`,
+        data: {
+          timeStamp: now.toISOString(),
+          message: serialNumber
+        }
+      };
+    } else {
+      message = type === 'apple' ? appleScan : googleScan;
+    }
     await mqtt.publish(message);
     mqtt.cleanUp();
 
     console.log(`topic: ${mqtt.topic}\nmessage: ${JSON.stringify(message)}\n`);
-    resolve('done');
+    resolve(`topic: ${mqtt.topic}\nmessage: ${JSON.stringify(message)}\n`);
   });

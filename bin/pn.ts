@@ -36,20 +36,17 @@ program
 program
   .command('spoof <type>')
   .description('spoofs a scan of specified type')
-  .action((type: string) => {
-    if (
-      !(
-        type === 'appleFlight' ||
-        type === 'appleEvent' ||
-        type === 'appleLoyalty' ||
-        type === 'appleGift' ||
-        type === 'appleCoupon' ||
-        type === 'google'
-      )
-    ) {
+  .action((options: string) => {
+    const optionsArray = options.split(',');
+    const type = optionsArray[0];
+    const passType = optionsArray[1];
+    const serialNumber = optionsArray[2];
+    if (!(type === 'apple' || type === 'google')) {
       return console.error('can only spoof apple and google passes for now');
     }
-    spoof(type, program).catch(err => console.error(err));
+    spoof(type, passType, serialNumber, program).catch(err =>
+      console.error(err)
+    );
   });
 
 if (!process.argv.slice(2).length) {
