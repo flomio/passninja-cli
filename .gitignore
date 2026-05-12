@@ -1,62 +1,14 @@
-# See http://help.github.com/ignore-files/ for more about ignoring files.
-*.env*
-# *pn-nfc-keys.json
-*.pkpass
-test/passes
-.ipynb_checkpoints
-Untitled.ipynb
-*tempCodeRunnerFile*
-.history
-#
-#
-#
-# Below here are the angular defaults
-#
-#
-# compiled output
-/dist
-/tmp
-/out-tsc
-# Only exists if Bazel was run
-/bazel-out
-
-# dependencies
-/node_modules
-
-# profiling files
-chrome-profiler-events.json
-speed-measure-plugin.json
-
-# IDEs and editors
-.vscode
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# IDE - VSCode
-*tempCodeRunnerFile*
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-.history/*
-
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
-/typings
-
-# System Files
+dist/
+*.test
+*.out
 .DS_Store
-Thumbs.db
-package-lock.json
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+
+# Local creds — `passninja auth` writes to ~/.passninja-auth.json by default
+# but if someone redirects HOME for testing the file may land in-tree.
+.passninja-auth.json
+.passninja.yaml
