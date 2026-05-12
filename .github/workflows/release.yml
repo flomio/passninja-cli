@@ -1,0 +1,113 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.goos }}-${{ matrix.goarch }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: darwin
+            goarch: arm64
+          - goos: darwin
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: linux
+            goarch: amd64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p dist
+          VERSION=${GITHUB_REF#refs/tags/}
+          COMMIT=$(git rev-parse --short HEAD)
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          go build -ldflags "-s -w \
+            -X main.version=${VERSION} \
+            -X main.commit=${COMMIT} \
+            -X main.buildDate=${DATE}" \
+            -o "dist/passninja-${GOOS}-${GOARCH}" .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: passninja-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/passninja-*
+
+  release:
+    name: Publish release
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      sha256:  ${{ steps.meta.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist-collected
+      - name: Flatten + checksum
+        run: |
+          mkdir -p dist
+          find dist-collected -type f -name 'passninja-*' -exec cp {} dist/ \;
+          cd dist && shasum -a 256 passninja-* > SHA256SUMS
+          ls -la
+      - id: meta
+        name: Compute source-tarball sha256 (for the Homebrew formula)
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          TAR_URL="https://github.com/${{ github.repository }}/archive/refs/tags/${VERSION}.tar.gz"
+          curl -sL "$TAR_URL" -o /tmp/src.tar.gz
+          SHA=$(shasum -a 256 /tmp/src.tar.gz | awk '{print $1}')
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "sha256=${SHA}"      >> $GITHUB_OUTPUT
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/passninja-*
+            dist/SHA256SUMS
+
+  bump-tap:
+    name: Bump Homebrew formula
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: flomio/homebrew-passninja
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+      - name: Bump formula and open PR
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          VERSION: ${{ needs.release.outputs.version }}
+          SHA256:  ${{ needs.release.outputs.sha256 }}
+        run: |
+          cd tap
+          VERSION_NUMERIC=${VERSION#v}
+          BRANCH="bump/${VERSION}"
+          git config user.name  "passninja-release-bot"
+          git config user.email "release-bot@flomio.com"
+          git checkout -b "$BRANCH"
+          sed -i.bak -E "s|archive/refs/tags/v[0-9]+\\.[0-9]+\\.[0-9]+\\.tar\\.gz|archive/refs/tags/${VERSION}.tar.gz|" Formula/passninja.rb
+          sed -i.bak -E "s|sha256 \"[0-9a-f]{64}\"|sha256 \"${SHA256}\"|" Formula/passninja.rb
+          rm -f Formula/passninja.rb.bak
+          git add Formula/passninja.rb
+          git commit -m "passninja ${VERSION}"
+          git push -u origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" \
+            --title "passninja ${VERSION}" \
+            --body "Automated bump from flomio/passninja-cli release ${VERSION}."
