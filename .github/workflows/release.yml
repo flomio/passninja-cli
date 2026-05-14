@@ -17,12 +17,25 @@ jobs:
         include:
           - goos: darwin
             goarch: arm64
+            ext: ''
           - goos: darwin
             goarch: amd64
+            ext: ''
           - goos: linux
             goarch: arm64
+            ext: ''
           - goos: linux
             goarch: amd64
+            ext: ''
+          - goos: windows
+            goarch: amd64
+            ext: '.exe'
+          - goos: windows
+            goarch: arm64
+            ext: '.exe'
+          - goos: windows
+            goarch: '386'
+            ext: '.exe'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -32,6 +45,8 @@ jobs:
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
+          EXT: ${{ matrix.ext }}
+          CGO_ENABLED: '0'
         run: |
           mkdir -p dist
           VERSION=${GITHUB_REF#refs/tags/}
@@ -41,7 +56,7 @@ jobs:
             -X main.version=${VERSION} \
             -X main.commit=${COMMIT} \
             -X main.buildDate=${DATE}" \
-            -o "dist/passninja-${GOOS}-${GOARCH}" .
+            -o "dist/passninja-${GOOS}-${GOARCH}${EXT}" .
       - uses: actions/upload-artifact@v4
         with:
           name: passninja-${{ matrix.goos }}-${{ matrix.goarch }}
@@ -65,6 +80,8 @@ jobs:
           find dist-collected -type f -name 'passninja-*' -exec cp {} dist/ \;
           cd dist && shasum -a 256 passninja-* > SHA256SUMS
           ls -la
+      - name: Stage Windows install script
+        run: cp scripts/install.ps1 dist/install.ps1
       - id: meta
         name: Compute source-tarball sha256 (for the Homebrew formula)
         run: |
@@ -79,6 +96,7 @@ jobs:
           files: |
             dist/passninja-*
             dist/SHA256SUMS
+            dist/install.ps1
 
   bump-tap:
     name: Bump Homebrew formula

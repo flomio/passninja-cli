@@ -1,0 +1,33 @@
+{
+  "version": "0.0.0",
+  "description": "Command-line interface for the PassNinja REST API.",
+  "homepage": "https://github.com/flomio/passninja-cli",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/flomio/passninja-cli/releases/download/v0.0.0/passninja-windows-amd64.exe#/passninja.exe",
+      "hash": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "arm64": {
+      "url": "https://github.com/flomio/passninja-cli/releases/download/v0.0.0/passninja-windows-arm64.exe#/passninja.exe",
+      "hash": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "bin": "passninja.exe",
+  "checkver": {
+    "github": "https://github.com/flomio/passninja-cli"
+  },
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/flomio/passninja-cli/releases/download/v$version/passninja-windows-amd64.exe#/passninja.exe"
+      },
+      "arm64": {
+        "url": "https://github.com/flomio/passninja-cli/releases/download/v$version/passninja-windows-arm64.exe#/passninja.exe"
+      }
+    },
+    "hash": {
+      "url": "https://github.com/flomio/passninja-cli/releases/download/v$version/SHA256SUMS"
+    }
+  }
+}

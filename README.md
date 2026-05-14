@@ -6,9 +6,45 @@ manage Apple Wallet and Google Wallet passes from the shell.
 
 ## Install
 
+### macOS / Linux (Homebrew)
+
 ```sh
 brew tap flomio/passninja
 brew install passninja
+```
+
+### Windows (PowerShell)
+
+```powershell
+irm https://github.com/flomio/passninja-cli/releases/latest/download/install.ps1 | iex
+```
+
+From `cmd.exe`:
+
+```cmd
+powershell -ExecutionPolicy Bypass -Command "irm https://github.com/flomio/passninja-cli/releases/latest/download/install.ps1 | iex"
+```
+
+The script detects your CPU (amd64, arm64, or 386), downloads the matching
+binary from the latest GitHub release, verifies its SHA256, drops it in
+`%LOCALAPPDATA%\Programs\passninja\`, and adds that directory to your user
+`PATH`. No admin needed; re-running upgrades in place.
+
+Pin a specific version, or override the install directory:
+
+```powershell
+$env:PASSNINJA_VERSION = 'v1.2.3'
+$env:PASSNINJA_INSTALL_DIR = 'C:\tools\passninja'
+irm https://github.com/flomio/passninja-cli/releases/latest/download/install.ps1 | iex
+```
+
+### Windows (Scoop)
+
+If you already use [Scoop](https://scoop.sh):
+
+```powershell
+scoop bucket add flomio https://github.com/flomio/scoop-passninja
+scoop install passninja
 ```
 
 ## Authenticate
