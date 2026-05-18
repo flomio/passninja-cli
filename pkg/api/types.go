@@ -40,56 +40,56 @@ type Webhook struct {
 	ID               string   `json:"id"`
 	Name             string   `json:"name"`
 	URL              string   `json:"url"`
-	AuthMethod       string   `json:"auth_method"`
-	SubscribedEvents []string `json:"subscribed_events"`
-	PassTemplate     *string  `json:"pass_template"`
+	AuthMethod       string   `json:"authMethod"`
+	SubscribedEvents []string `json:"subscribedEvents"`
+	PassTemplate     *string  `json:"passTemplate"`
 	Active           bool     `json:"active"`
-	BearerToken      string   `json:"bearer_token,omitempty"`
-	CreatedAt        string   `json:"created_at"`
-	UpdatedAt        string   `json:"updated_at"`
+	BearerToken      string   `json:"bearerToken,omitempty"`
+	CreatedAt        string   `json:"createdAt"`
+	UpdatedAt        string   `json:"updatedAt"`
 }
 
 type CreateWebhookInput struct {
 	Name             string   `json:"name"`
 	URL              string   `json:"url"`
-	AuthMethod       string   `json:"auth_method,omitempty"`
-	SubscribedEvents []string `json:"subscribed_events"`
-	PassTemplate     string   `json:"pass_template,omitempty"`
+	AuthMethod       string   `json:"authMethod,omitempty"`
+	SubscribedEvents []string `json:"subscribedEvents"`
+	PassTemplate     string   `json:"passTemplate,omitempty"`
 }
 
 type WebhookListResponse struct {
 	Webhooks []Webhook `json:"webhooks"`
 	Page     int       `json:"page"`
-	PerPage  int       `json:"per_page"`
+	PerPage  int       `json:"perPage"`
 	Total    int       `json:"total"`
 }
 
 type WebhookResult struct {
 	ID             string  `json:"id"`
-	WebhookID      string  `json:"webhook_id"`
+	WebhookID      string  `json:"webhookId"`
 	URL            *string `json:"url"`
-	ResponseStatus *int    `json:"response_status"`
-	ResponseBody   *string `json:"response_body"`
+	ResponseStatus *int    `json:"responseStatus"`
+	ResponseBody   *string `json:"responseBody"`
 	Success        bool    `json:"success"`
 	Attempt        int     `json:"attempt"`
-	CreatedAt      string  `json:"created_at"`
-	UpdatedAt      string  `json:"updated_at"`
+	CreatedAt      string  `json:"createdAt"`
+	UpdatedAt      string  `json:"updatedAt"`
 }
 
 type WebhookResultsResponse struct {
-	WebhookResults []WebhookResult `json:"webhook_results"`
+	WebhookResults []WebhookResult `json:"webhookResults"`
 	Page           int             `json:"page"`
-	PerPage        int             `json:"per_page"`
+	PerPage        int             `json:"perPage"`
 	Total          int             `json:"total"`
 }
 
-// PageOpts is a generic paginated-list filter — page and per_page.
+// PageOpts is a generic paginated-list filter.
 type PageOpts struct {
 	Page    int
 	PerPage int
 }
 
-// ListWebhookOpts adds an optional pass_template filter on top of PageOpts.
+// ListWebhookOpts adds an optional passTemplate filter on top of PageOpts.
 type ListWebhookOpts struct {
 	PageOpts
 	PassTemplate string

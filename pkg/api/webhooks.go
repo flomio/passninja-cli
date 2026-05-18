@@ -19,9 +19,9 @@ func (c *Client) CreateWebhook(ctx context.Context, in CreateWebhookInput) (*Web
 // optionally scoped to a pass template.
 func (c *Client) ListWebhooks(ctx context.Context, opts ListWebhookOpts) (*WebhookListResponse, error) {
 	params := map[string]string{
-		"page":          intOrEmpty(opts.Page),
-		"per_page":      intOrEmpty(opts.PerPage),
-		"pass_template": opts.PassTemplate,
+		"page":         intOrEmpty(opts.Page),
+		"perPage":      intOrEmpty(opts.PerPage),
+		"passTemplate": opts.PassTemplate,
 	}
 	var out WebhookListResponse
 	if err := c.do(ctx, "GET", "/webhooks"+queryString(params), nil, &out); err != nil {
@@ -47,8 +47,8 @@ func (c *Client) DeleteWebhook(ctx context.Context, id string) error {
 // ListWebhookResults paginates the delivery history for one webhook.
 func (c *Client) ListWebhookResults(ctx context.Context, id string, opts PageOpts) (*WebhookResultsResponse, error) {
 	params := map[string]string{
-		"page":     intOrEmpty(opts.Page),
-		"per_page": intOrEmpty(opts.PerPage),
+		"page":    intOrEmpty(opts.Page),
+		"perPage": intOrEmpty(opts.PerPage),
 	}
 	var out WebhookResultsResponse
 	if err := c.do(ctx, "GET", "/webhooks/"+id+"/results"+queryString(params), nil, &out); err != nil {
