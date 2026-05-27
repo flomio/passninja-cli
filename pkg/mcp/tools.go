@@ -32,7 +32,11 @@ func registerWhoami(s *server.MCPServer, client *api.Client) {
 		mcplib.WithIdempotentHintAnnotation(true),
 		mcplib.WithOpenWorldHintAnnotation(true),
 	)
-	s.AddTool(tool, func(_ context.Context, _ mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+	s.AddTool(tool, func(ctx context.Context, _ mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+		client := clientFromCtx(ctx, client)
+		if client == nil {
+			return needAuthResult(), nil
+		}
 		return jsonResult(map[string]string{
 			"account_id": client.AccountID,
 			"base_url":   client.BaseURL,
@@ -54,6 +58,10 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, _ mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			tmpls, err := client.ListPassTemplates(ctx)
 			if err != nil {
 				return apiErrorResult(err), nil
@@ -76,6 +84,10 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			id, err := req.RequireString("id")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
@@ -106,6 +118,10 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			id, err := req.RequireString("id")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
@@ -143,6 +159,10 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			name, err := req.RequireString("name")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
@@ -177,6 +197,10 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			id, err := req.RequireString("id")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
@@ -210,6 +234,10 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			id, err := requireTemplateID(req, "pass_template")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
@@ -240,6 +268,10 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			id, err := requireTemplateID(req, "pass_template")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
@@ -272,6 +304,10 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			id, err := requireTemplateID(req, "pass_template")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
@@ -312,6 +348,10 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			id, err := requireTemplateID(req, "pass_template")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
@@ -355,6 +395,10 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			id, err := requireTemplateID(req, "pass_template")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
@@ -391,6 +435,10 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			id, err := requireTemplateID(req, "pass_template")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
@@ -423,6 +471,10 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			id, err := requireTemplateID(req, "pass_template")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
@@ -465,6 +517,10 @@ func registerWebhookTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			opts := api.ListWebhookOpts{
 				PageOpts: api.PageOpts{
 					Page:    req.GetInt("page", 0),
@@ -494,6 +550,10 @@ func registerWebhookTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			id, err := req.RequireString("id")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
@@ -533,6 +593,10 @@ func registerWebhookTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			name, err := req.RequireString("name")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
@@ -572,6 +636,10 @@ func registerWebhookTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			id, err := req.RequireString("id")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
@@ -606,6 +674,10 @@ func registerWebhookTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
 		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
 			id, err := req.RequireString("id")
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil

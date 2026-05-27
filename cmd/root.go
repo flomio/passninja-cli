@@ -57,9 +57,12 @@ var rootCmd = &cobra.Command{
 		output.SetMode(output.Resolve(flagJSON, flagPlaintext, viper.GetString("default_output")))
 
 		// `auth`, `version`, and the implicit `help` / `completion` commands
-		// don't need a client — skip credential resolution.
+		// don't need a client — skip credential resolution. `mcp` also
+		// skips here because the HTTP transport mode resolves credentials
+		// per request from headers; cmd/mcp.go calls buildClient itself
+		// when running in stdio mode where local creds ARE required.
 		switch cmd.Name() {
-		case "auth", "version", "help", "completion":
+		case "auth", "version", "help", "completion", "mcp":
 			return nil
 		}
 

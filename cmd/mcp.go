@@ -8,31 +8,56 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	mcpHTTPAddr     string
+	mcpHTTPEndpoint string
+)
+
 var mcpCmd = &cobra.Command{
 	Use:   "mcp",
-	Short: "Start the PassNinja MCP server (stdio)",
-	Long: "Starts a Model Context Protocol server over stdio, exposing the\n" +
-		"full PassNinja API surface as tools that LLM clients (Claude Desktop,\n" +
-		"Cursor, etc.) can call. Credentials are resolved exactly like the\n" +
-		"rest of the CLI: flag > PASSNINJA_API_KEY/ACCOUNT_ID env > ~/.passninja-auth.json.",
+	Short: "Start the PassNinja MCP server (stdio by default; --http for remote use)",
+	Long: "Starts a Model Context Protocol server exposing the full PassNinja API\n" +
+		"surface as 18 tools.\n\n" +
+		"Default mode is stdio for local clients (Claude Desktop, Cursor, Cline).\n" +
+		"Credentials are resolved once from flag > PASSNINJA_API_KEY/ACCOUNT_ID env\n" +
+		"> ~/.passninja-auth.json.\n\n" +
+		"With --http <addr> the server speaks streamable HTTP at /mcp for remote\n" +
+		"multi-tenant clients (ChatGPT Apps SDK, hosted Claude.ai deployments,\n" +
+		"shared team instances). In HTTP mode each request supplies its own\n" +
+		"credentials via X-Api-Key + X-Account-Id headers; the server holds no\n" +
+		"global credentials.",
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, _ []string) error {
-		// Stdout is the JSON-RPC transport in stdio mode. Redirect every
-		// other writer to stderr so no accidental print ever corrupts the
-		// protocol stream.
+		info := mcp.ServerInfo{Name: "passninja", Version: buildVersion}
+
+		if mcpHTTPAddr != "" {
+			// HTTP mode: no startup credentials, per-request auth via headers.
+			return mcp.ServeHTTP(cmd.Context(), info, mcp.HTTPOptions{
+				Addr:         mcpHTTPAddr,
+				EndpointPath: mcpHTTPEndpoint,
+				UserAgent:    "passninja-mcp/" + buildVersion,
+			})
+		}
+
+		// Stdio mode: build the credential-resolved client now and stream over
+		// stdin/stdout. Stdout is the JSON-RPC transport so every other writer
+		// is redirected to stderr to keep the protocol stream clean.
 		cmd.SetOut(os.Stderr)
 		output.SetStdout(os.Stderr)
 
-		client, err := clientFromContext(cmd.Context())
+		client, err := buildClient()
 		if err != nil {
 			return err
 		}
-		return mcp.Serve(cmd.Context(), client, mcp.ServerInfo{
-			Name:    "passninja",
-			Version: buildVersion,
-		})
+		return mcp.Serve(cmd.Context(), client, info)
 	},
 }
 
-func init() { rootCmd.AddCommand(mcpCmd) }
+func init() {
+	mcpCmd.Flags().StringVar(&mcpHTTPAddr, "http", "",
+		"listen address for streamable-HTTP transport (e.g. ':8080'); when empty, serves over stdio")
+	mcpCmd.Flags().StringVar(&mcpHTTPEndpoint, "http-endpoint", "/mcp",
+		"URL path the HTTP transport serves at (--http only)")
+	rootCmd.AddCommand(mcpCmd)
+}
