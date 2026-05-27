@@ -1,4 +1,5 @@
 dist/
+bin/
 *.test
 *.out
 .DS_Store
@@ -6,9 +7,15 @@ dist/
 # Editor / IDE
 .idea/
 .vscode/
+.claude/
 *.swp
 
 # Local creds — `passninja auth` writes to ~/.passninja-auth.json by default
 # but if someone redirects HOME for testing the file may land in-tree.
 .passninja-auth.json
 .passninja.yaml
+
+# Apple signing material — must never leave the dev machine.
+mcpb/AuthKey_*.p8
+mcpb/*.p12
+mcpb/*.cer

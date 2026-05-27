@@ -1,0 +1,105 @@
+{
+  "manifest_version": "0.3",
+  "name": "passninja",
+  "display_name": "PassNinja",
+  "version": "0.2.0",
+  "description": "Issue and manage Apple Wallet & Google Wallet passes from any MCP-aware AI client.",
+  "long_description": "Lets you create, update, list, and revoke Apple Wallet and Google Wallet passes by asking your AI assistant in natural language. Wraps the full PassNinja REST API surface — pass templates, issued passes, webhooks — as MCP tools.\n\nTypical prompts:\n- \"Issue a new Run Tulum membership pass for jane@example.com.\"\n- \"List my pass templates and tell me how many passes are installed on each.\"\n- \"Show me the raw pass.json for serial fee4a257185906b92a on ptk_0x216.\"\n- \"Create a webhook that POSTs to https://example.com/hook on pass.installed events.\"\n\nRequires a PassNinja account. Get an API key + account id at https://www.passninja.com/settings.",
+  "author": {
+    "name": "PassNinja",
+    "email": "info@passninja.com",
+    "url": "https://www.passninja.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flomio/passninja-cli.git"
+  },
+  "homepage": "https://www.passninja.com",
+  "documentation": "https://www.passninja.com/documentation/sdks#cli",
+  "support": "https://www.passninja.com/contact",
+  "icon": "icon.png",
+  "license": "MIT",
+  "keywords": [
+    "passninja",
+    "apple-wallet",
+    "google-wallet",
+    "pkpass",
+    "nfc",
+    "loyalty",
+    "membership",
+    "tickets"
+  ],
+  "privacy_policies": [
+    "https://www.passninja.com/privacy"
+  ],
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": ["darwin", "win32", "linux"]
+  },
+  "server": {
+    "type": "binary",
+    "entry_point": "server/passninja-linux",
+    "mcp_config": {
+      "command": "${__dirname}/server/passninja-linux",
+      "args": ["mcp"],
+      "env": {
+        "PASSNINJA_API_KEY": "${user_config.api_key}",
+        "PASSNINJA_ACCOUNT_ID": "${user_config.account_id}",
+        "PASSNINJA_BASE_URL": "${user_config.base_url}"
+      },
+      "platform_overrides": {
+        "darwin": {
+          "command": "${__dirname}/server/passninja-darwin"
+        },
+        "linux": {
+          "command": "${__dirname}/server/passninja-linux"
+        },
+        "win32": {
+          "command": "${__dirname}/server/passninja-windows"
+        }
+      }
+    }
+  },
+  "user_config": {
+    "api_key": {
+      "type": "string",
+      "title": "API key",
+      "description": "Your PassNinja API key. Find it https://www.passninja.com/settings → API key. Treated as a secret — stored in your OS keychain.",
+      "sensitive": true,
+      "required": true
+    },
+    "account_id": {
+      "type": "string",
+      "title": "Account ID",
+      "description": "Your PassNinja account ID, e.g. aid_0x002. Find it on the same page as your API key.",
+      "required": true
+    },
+    "base_url": {
+      "type": "string",
+      "title": "API base URL",
+      "description": "Override only if you're pointing at staging/dev. Default is production.",
+      "default": "https://api.passninja.com/v1",
+      "required": false
+    }
+  },
+  "tools": [
+    {"name": "whoami", "description": "Show which PassNinja account this MCP is configured for."},
+    {"name": "pass_template_list", "description": "List every pass template on the account."},
+    {"name": "pass_template_get", "description": "Fetch one pass template by ptk_0x... id."},
+    {"name": "pass_template_required_fields", "description": "Show the field names a pass_create call must populate for a template."},
+    {"name": "pass_template_create", "description": "Create a new pass template (enterprise only)."},
+    {"name": "pass_template_delete", "description": "Hard-delete a pass template and every pass on it (enterprise only, destructive)."},
+    {"name": "pass_list", "description": "List every pass issued on a template."},
+    {"name": "pass_get", "description": "Fetch one issued pass by serial."},
+    {"name": "pass_create", "description": "Issue a new pass on a template."},
+    {"name": "pass_update", "description": "Update an issued pass (PATCH by default, PUT with replace=true)."},
+    {"name": "pass_delete", "description": "Revoke an issued pass (destructive — the wallet card is invalidated)."},
+    {"name": "pass_raw", "description": "Dump the raw pass.json payload for an issued pass."},
+    {"name": "pass_decrypt", "description": "Decrypt a reader-encrypted NFC payload with the template's private key."},
+    {"name": "webhook_list", "description": "List webhook subscriptions on the account."},
+    {"name": "webhook_get", "description": "Fetch one webhook subscription by id."},
+    {"name": "webhook_create", "description": "Create a webhook subscription. Bearer token is surfaced only on this call."},
+    {"name": "webhook_delete", "description": "Delete a webhook subscription (destructive — also cascades its result history)."},
+    {"name": "webhook_results", "description": "Paginate the delivery history of a webhook."}
+  ]
+}

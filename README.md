@@ -47,6 +47,27 @@ scoop bucket add flomio https://github.com/flomio/scoop-passninja
 scoop install passninja
 ```
 
+### Claude Desktop (one-click `.mcpb` install)
+
+For chat-driven pass workflows, install the PassNinja MCP server into
+Claude Desktop:
+
+1. Download [`passninja.mcpb`](https://github.com/flomio/passninja-cli/releases/latest/download/passninja.mcpb)
+   from the latest release.
+2. Double-click the file. Claude Desktop opens an install dialog showing the
+   18 tools the server exposes (pass templates, issued passes, webhooks).
+3. The dialog prompts for your **API key** and **account ID** —
+   get them at https://www.passninja.com/settings → API key.
+4. Hit Install, restart Claude Desktop, then ask Claude things like:
+
+   > List my passninja pass templates and tell me how many passes are installed on each.
+   >
+   > Issue a new pass on ptk_0x002 for jane@example.com.
+
+The bundled binary is code-signed with Apple Developer ID and notarized, so
+macOS Gatekeeper accepts it without prompts. Same `.mcpb` works on macOS
+(universal), Linux (amd64), and Windows (amd64).
+
 ## Authenticate
 
 ```sh
@@ -63,6 +84,33 @@ passninja --api-key=... --account-id=... pass-template list
 ```
 
 Flag > env > `~/.passninja-auth.json` > `~/.passninja.yaml` > defaults.
+
+The same precedence applies to the MCP server: `passninja mcp` (started by
+Claude Desktop and other MCP clients) reads `PASSNINJA_API_KEY` /
+`PASSNINJA_ACCOUNT_ID` from its environment, falling back to the auth file.
+
+## Stdio MCP server
+
+The CLI also doubles as a [Model Context Protocol](https://modelcontextprotocol.io)
+server. The `.mcpb` install above wires this into Claude Desktop, but you can
+hook it into any MCP client (Cursor, Cline, Zed, etc.) by configuring the
+client to launch:
+
+```
+passninja mcp
+```
+
+Tool surface (snake_case names mirror the CLI subcommands):
+
+```
+whoami
+pass_template_{list, get, required_fields, create, delete}
+pass_{list, get, create, update, delete, raw, decrypt}
+webhook_{list, get, create, delete, results}
+```
+
+Each tool's input schema, destructive-hint annotations, and rich descriptions
+let the LLM self-discover correct usage without external documentation.
 
 ## Commands
 
@@ -139,5 +187,12 @@ make install               # installs to $GOPATH/bin
 
 Tag-driven. Push a `vX.Y.Z` tag on master; the GitHub Actions workflow at
 `.github/workflows/release.yml` matrix-builds darwin/linux × arm64/amd64,
-publishes the binaries on the GitHub Release, and opens a PR against
-`flomio/homebrew-passninja` bumping the formula `url` and `sha256`.
+packages a code-signed + Apple-notarized `passninja.mcpb` on a macOS runner,
+publishes both the binaries and the `.mcpb` on the GitHub Release, and opens
+a PR against `flomio/homebrew-passninja` bumping the formula `url` and
+`sha256`.
+
+Apple credentials live in repo secrets (`APPLE_TEAM_ID`,
+`APPLE_API_KEY_ID`, `APPLE_API_ISSUER_ID`, `APPLE_SIGN_IDENTITY`,
+`APPLE_CERTIFICATE_PASSWORD`, plus the base64-encoded `APPLE_API_KEY_P8`
+and `APPLE_CERTIFICATE_P12`).

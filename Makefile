@@ -13,7 +13,7 @@ LDFLAGS := -s -w \
 
 DIST := dist
 
-.PHONY: build build-all install clean fmt vet release
+.PHONY: build build-all install clean fmt vet release mcpb
 
 build:
 	@mkdir -p $(DIST)
@@ -41,5 +41,8 @@ fmt:
 vet:
 	go vet ./...
 
-release: build-all
-	cd $(DIST) && shasum -a 256 $(BINARY)-* > SHA256SUMS
+release: build-all mcpb
+	cd $(DIST) && shasum -a 256 $(BINARY)-* $(BINARY).mcpb > SHA256SUMS
+
+mcpb: build-all
+	./mcpb/build.sh
