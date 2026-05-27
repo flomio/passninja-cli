@@ -1,1 +1,1 @@
-web: passninja mcp --http :$PORT
+web: passninja-cli mcp --http :$PORT
