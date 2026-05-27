@@ -68,6 +68,10 @@ The bundled binary is code-signed with Apple Developer ID and notarized, so
 macOS Gatekeeper accepts it without prompts. Same `.mcpb` works on macOS
 (universal), Linux (amd64), and Windows (amd64).
 
+The server is also listed in the official [MCP Registry](https://registry.modelcontextprotocol.io)
+as `io.github.flomio/passninja-cli`, so any MCP client that consumes the
+registry can discover and install it automatically.
+
 ## Authenticate
 
 ```sh
@@ -196,3 +200,12 @@ Apple credentials live in repo secrets (`APPLE_TEAM_ID`,
 `APPLE_API_KEY_ID`, `APPLE_API_ISSUER_ID`, `APPLE_SIGN_IDENTITY`,
 `APPLE_CERTIFICATE_PASSWORD`, plus the base64-encoded `APPLE_API_KEY_P8`
 and `APPLE_CERTIFICATE_P12`).
+
+After each tagged release, the MCP Registry entry needs a refresh. Bump
+`packages[0].identifier`, `packages[0].version`, `packages[0].fileSha256`,
+and the top-level `version` in `server.json` to match the new release, then:
+
+```sh
+mcp-publisher login github      # one-time per machine
+mcp-publisher publish
+```
