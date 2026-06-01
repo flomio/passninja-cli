@@ -7,6 +7,7 @@ package mcp
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/flomio/passninja-cli/pkg/api"
@@ -75,6 +76,13 @@ type HTTPOptions struct {
 	DefaultBaseURL string
 	// UserAgent stamped on outgoing PassNinja API calls.
 	UserAgent string
+	// AuthServerURL is the OAuth authorization server advertised in the
+	// protected-resource metadata. Defaults to DefaultAuthServerURL.
+	AuthServerURL string
+	// PublicURL overrides the externally-visible origin used to build
+	// metadata URLs. When empty it is derived per-request from the Host
+	// and X-Forwarded-Proto headers (correct behind Heroku's TLS router).
+	PublicURL string
 }
 
 // ServeHTTP boots the MCP server in streamable-HTTP mode for remote
@@ -97,6 +105,9 @@ func ServeHTTP(ctx context.Context, info ServerInfo, opts HTTPOptions) error {
 	if opts.UserAgent == "" {
 		opts.UserAgent = "passninja-mcp/dev"
 	}
+	if opts.AuthServerURL == "" {
+		opts.AuthServerURL = DefaultAuthServerURL
+	}
 
 	s := build(info, nil)
 
@@ -106,14 +117,23 @@ func ServeHTTP(ctx context.Context, info ServerInfo, opts HTTPOptions) error {
 		server.WithHTTPContextFunc(httpContextFunc(opts.DefaultBaseURL, opts.UserAgent)),
 	)
 
-	fmt.Fprintf(os.Stderr, "[passninja mcp] http ready, listening on %s%s (default base=%s)\n",
-		opts.Addr, opts.EndpointPath, opts.DefaultBaseURL)
+	// Compose the MCP endpoint behind an OAuth challenge gate, and serve the
+	// RFC 9728 protected-resource metadata that OAuth-capable MCP clients use
+	// to discover the authorization server (auth.passninja.com).
+	mux := http.NewServeMux()
+	mux.HandleFunc(ProtectedResourcePath, protectedResourceMetadata(opts.AuthServerURL, opts.PublicURL))
+	mux.Handle(opts.EndpointPath, oauthChallengeGate(httpSrv, opts.PublicURL))
+
+	srv := &http.Server{Addr: opts.Addr, Handler: mux}
+
+	fmt.Fprintf(os.Stderr, "[passninja mcp] http ready, listening on %s%s (default base=%s, auth=%s)\n",
+		opts.Addr, opts.EndpointPath, opts.DefaultBaseURL, opts.AuthServerURL)
 
 	errCh := make(chan error, 1)
-	go func() { errCh <- httpSrv.Start(opts.Addr) }()
+	go func() { errCh <- srv.ListenAndServe() }()
 	select {
 	case <-ctx.Done():
-		_ = httpSrv.Shutdown(context.Background())
+		_ = srv.Shutdown(context.Background())
 		return ctx.Err()
 	case err := <-errCh:
 		return err

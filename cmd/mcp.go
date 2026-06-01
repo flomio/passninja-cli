@@ -9,8 +9,10 @@ import (
 )
 
 var (
-	mcpHTTPAddr     string
-	mcpHTTPEndpoint string
+	mcpHTTPAddr      string
+	mcpHTTPEndpoint  string
+	mcpAuthServerURL string
+	mcpPublicURL     string
 )
 
 var mcpCmd = &cobra.Command{
@@ -34,9 +36,11 @@ var mcpCmd = &cobra.Command{
 		if mcpHTTPAddr != "" {
 			// HTTP mode: no startup credentials, per-request auth via headers.
 			return mcp.ServeHTTP(cmd.Context(), info, mcp.HTTPOptions{
-				Addr:         mcpHTTPAddr,
-				EndpointPath: mcpHTTPEndpoint,
-				UserAgent:    "passninja-mcp/" + buildVersion,
+				Addr:          mcpHTTPAddr,
+				EndpointPath:  mcpHTTPEndpoint,
+				UserAgent:     "passninja-mcp/" + buildVersion,
+				AuthServerURL: mcpAuthServerURL,
+				PublicURL:     mcpPublicURL,
 			})
 		}
 
@@ -59,5 +63,9 @@ func init() {
 		"listen address for streamable-HTTP transport (e.g. ':8080'); when empty, serves over stdio")
 	mcpCmd.Flags().StringVar(&mcpHTTPEndpoint, "http-endpoint", "/mcp",
 		"URL path the HTTP transport serves at (--http only)")
+	mcpCmd.Flags().StringVar(&mcpAuthServerURL, "auth-server-url", "",
+		"OAuth authorization server advertised in protected-resource metadata (--http only; defaults to https://auth.passninja.com)")
+	mcpCmd.Flags().StringVar(&mcpPublicURL, "public-url", "",
+		"externally-visible origin for metadata URLs (--http only; defaults to the request Host)")
 	rootCmd.AddCommand(mcpCmd)
 }
