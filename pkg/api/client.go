@@ -19,18 +19,34 @@ const (
 	DefaultTimeout = 30 * time.Second
 )
 
-// Client wraps the PassNinja REST API. All routes that use this Client
-// require both X-API-KEY and X-ACCOUNT-ID. Construct via NewClient.
+// Client wraps the PassNinja REST API. Authentication is one of two modes:
+//
+//   - Header-pair (default): sends X-API-KEY + X-ACCOUNT-ID. Set via
+//     NewClient(apiKey, accountID).
+//   - Bearer: sends Authorization: Bearer <token>, leaving the account to
+//     be resolved server-side from the OAuth access token. Set via
+//     WithBearerToken; when present it takes precedence over the pair.
+//
+// The bearer mode exists so the MCP HTTP transport can forward an OAuth
+// access token straight through to /v1, whose oauthBearerAuth middleware
+// already validates it — no token validation is duplicated client-side.
 type Client struct {
-	BaseURL    string
-	APIKey     string
-	AccountID  string
-	HTTPClient *http.Client
-	UserAgent  string
-	Debug      bool
+	BaseURL     string
+	APIKey      string
+	AccountID   string
+	BearerToken string
+	HTTPClient  *http.Client
+	UserAgent   string
+	Debug       bool
 }
 
 type Option func(*Client)
+
+// WithBearerToken puts the client in OAuth bearer mode: requests carry
+// Authorization: Bearer <token> instead of the X-API-KEY/X-ACCOUNT-ID pair.
+func WithBearerToken(token string) Option {
+	return func(c *Client) { c.BearerToken = token }
+}
 
 func WithHTTPClient(h *http.Client) Option {
 	return func(c *Client) { c.HTTPClient = h }
@@ -111,8 +127,12 @@ func (c *Client) do(ctx context.Context, method, path string, body, out any) err
 		if err != nil {
 			return fmt.Errorf("build request: %w", err)
 		}
-		req.Header.Set("X-API-KEY", c.APIKey)
-		req.Header.Set("X-ACCOUNT-ID", c.AccountID)
+		if c.BearerToken != "" {
+			req.Header.Set("Authorization", "Bearer "+c.BearerToken)
+		} else {
+			req.Header.Set("X-API-KEY", c.APIKey)
+			req.Header.Set("X-ACCOUNT-ID", c.AccountID)
+		}
 		req.Header.Set("User-Agent", c.UserAgent)
 		req.Header.Set("Accept", "application/json")
 		if bodyBytes != nil {

@@ -3,6 +3,7 @@ package mcp
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/flomio/passninja-cli/pkg/api"
 	mcplib "github.com/mark3labs/mcp-go/mcp"
@@ -43,26 +44,51 @@ func clientFromCtx(ctx context.Context, fallback *api.Client) *api.Client {
 // constructed *api.Client to ctx. Each request is single-tenant; the
 // server itself holds no global credentials when running in HTTP mode.
 //
-// Recognized headers (case-insensitive, Go's http.Header normalizes):
+// Two authentication modes are recognized, in priority order:
 //
-//	X-Api-Key        — the PassNinja API token
-//	X-Account-Id     — the aid_0x... account identifier
-//	X-Passninja-Base — optional override of the API base URL (for staging)
+//  1. OAuth bearer — `Authorization: Bearer <token>`. The token is NOT
+//     validated here; the client forwards it straight to /v1, whose
+//     oauthBearerAuth middleware validates it and resolves the account.
+//     This is the path ChatGPT Apps SDK (and any OAuth client) uses.
+//  2. Header-pair — `X-Api-Key` + `X-Account-Id`. The direct path for
+//     scripts and trusted callers holding raw account credentials.
 //
-// Requests missing either of the first two are passed through with no
-// client attached. Tool handlers detect this and return a clear MCP error
-// rather than the HTTP layer rejecting with a bare 401, which keeps the
-// protocol-level error semantics consistent across both transports.
+// Header (case-insensitive; Go's http.Header normalizes):
+//
+//	Authorization     — "Bearer <oauth_access_token>"  (mode 1)
+//	X-Api-Key         — the PassNinja API token         (mode 2)
+//	X-Account-Id      — the aid_0x... account id        (mode 2)
+//	X-Passninja-Base  — optional API base URL override (for staging)
+//
+// Requests with neither mode are passed through with no client attached;
+// tool handlers detect that and return a clear MCP error rather than the
+// HTTP layer rejecting with a bare 401, keeping protocol-level error
+// semantics consistent across transports.
 func httpContextFunc(defaultBaseURL, userAgent string) server.HTTPContextFunc {
 	return func(ctx context.Context, r *http.Request) context.Context {
+		baseURL := r.Header.Get("X-Passninja-Base")
+		if baseURL == "" {
+			baseURL = defaultBaseURL
+		}
+
+		// Mode 1: OAuth bearer passthrough.
+		if authz := r.Header.Get("Authorization"); strings.HasPrefix(authz, "Bearer ") {
+			token := strings.TrimSpace(strings.TrimPrefix(authz, "Bearer "))
+			if token != "" {
+				c := api.NewClient("", "",
+					api.WithBearerToken(token),
+					api.WithBaseURL(baseURL),
+					api.WithUserAgent(userAgent),
+				)
+				return context.WithValue(ctx, ctxClientKey{}, c)
+			}
+		}
+
+		// Mode 2: header-pair.
 		apiKey := r.Header.Get("X-Api-Key")
 		accountID := r.Header.Get("X-Account-Id")
 		if apiKey == "" || accountID == "" {
 			return ctx
-		}
-		baseURL := r.Header.Get("X-Passninja-Base")
-		if baseURL == "" {
-			baseURL = defaultBaseURL
 		}
 		c := api.NewClient(
 			apiKey,
