@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/flomio/passninja-cli/pkg/api"
 	"github.com/mark3labs/mcp-go/server"
@@ -123,6 +124,17 @@ func ServeHTTP(ctx context.Context, info ServerInfo, opts HTTPOptions) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc(ProtectedResourcePath, protectedResourceMetadata(opts.AuthServerURL, opts.PublicURL))
 	mux.Handle(opts.EndpointPath, oauthChallengeGate(httpSrv, opts.PublicURL))
+
+	// OpenAI Apps SDK domain-ownership verification: serve the challenge
+	// token (set via OPENAI_APPS_CHALLENGE_TOKEN) as plain text at the
+	// origin-root well-known URL. Public, unauthenticated, env-driven so the
+	// token can rotate without a code change. Absent token → no route (404).
+	if tok := strings.TrimSpace(os.Getenv("OPENAI_APPS_CHALLENGE_TOKEN")); tok != "" {
+		mux.HandleFunc("/.well-known/openai-apps-challenge", func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			_, _ = w.Write([]byte(tok))
+		})
+	}
 
 	srv := &http.Server{Addr: opts.Addr, Handler: mux}
 
