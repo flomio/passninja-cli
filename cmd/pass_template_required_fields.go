@@ -8,7 +8,7 @@ import (
 
 var passTemplateRequiredFieldsCmd = &cobra.Command{
 	Use:   "required-fields <ptk_0x...>",
-	Short: "Show the fields a CREATE or UPDATE call must set",
+	Short: "Show a template's field schema (api_field_name, visible, required)",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := clientFromContext(cmd.Context())

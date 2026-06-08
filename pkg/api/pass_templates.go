@@ -20,12 +20,14 @@ func (c *Client) GetPassTemplate(ctx context.Context, id string) (*PassTemplate,
 	return &out, nil
 }
 
-// GetRequiredFields hits /passtypes/keys/:id, which the server uses to return
-// the list of fields a CREATE / UPDATE call must set for a given template.
-// Response shape is template-specific so we keep it loose.
+// GetRequiredFields hits /pass_templates/fields/:id — the documented template
+// field-schema endpoint. It returns { id, platform, fields: [{ api_field_name,
+// visible, required }] } for every field on the template; required entries are
+// the ones a CREATE / UPDATE call must set. (Replaces the legacy
+// /passtypes/keys/:id Apple-Wallet field-key route.) Shape is kept loose.
 func (c *Client) GetRequiredFields(ctx context.Context, id string) (RequiredFields, error) {
 	var out RequiredFields
-	if err := c.do(ctx, "GET", "/passtypes/keys/"+id, nil, &out); err != nil {
+	if err := c.do(ctx, "GET", "/pass_templates/fields/"+id, nil, &out); err != nil {
 		return nil, err
 	}
 	return out, nil

@@ -22,8 +22,9 @@ type CreatePassTemplateInput struct {
 	Style    string `json:"style"`
 }
 
-// RequiredFields is whatever /v1/passtypes/keys/:id returns — schema is
-// template-specific so we keep it opaque.
+// RequiredFields is whatever /v1/pass_templates/fields/:id returns —
+// { id, platform, fields: [{ api_field_name, visible, required }] } — kept
+// opaque since the field list is template-specific.
 type RequiredFields map[string]any
 
 // Pass is intentionally loose; the server returns fields keyed by their

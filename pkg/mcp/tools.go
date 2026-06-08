@@ -107,7 +107,7 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"pass_template_required_fields",
-			mcplib.WithDescription("Return the field names a pass_create/pass_update call must supply for this template. ALWAYS call this before pass_create on an unfamiliar template — field names are template-specific."),
+			mcplib.WithDescription("Return this template's full field schema — every field's api_field_name with its visible and required flags. ALWAYS call this before pass_create on an unfamiliar template; you must supply every field where required is true. Field names are template-specific."),
 			mcplib.WithString("id",
 				mcplib.Required(),
 				mcplib.Description("Pass template id (ptk_0x... or decimal)."),
