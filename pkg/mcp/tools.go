@@ -26,6 +26,7 @@ func registerTools(s *server.MCPServer, client *api.Client) {
 func registerWhoami(s *server.MCPServer, client *api.Client) {
 	tool := mcplib.NewTool(
 		"whoami",
+		mcplib.WithToolTitle("Account Info"),
 		mcplib.WithDescription("Return the account id and base URL the MCP server is configured for. Useful to confirm which PassNinja account a tool call will hit before issuing or deleting passes."),
 		mcplib.WithReadOnlyHintAnnotation(true),
 		mcplib.WithDestructiveHintAnnotation(false),
@@ -51,6 +52,7 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"pass_template_list",
+			mcplib.WithToolTitle("List Pass Templates"),
 			mcplib.WithDescription("List every pass template owned by this account. Returns id (ptk_0x...), name, platform (apple|google), style, issuedPassCount, installedPassCount."),
 			mcplib.WithReadOnlyHintAnnotation(true),
 			mcplib.WithDestructiveHintAnnotation(false),
@@ -73,6 +75,7 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"pass_template_get",
+			mcplib.WithToolTitle("Get Pass Template"),
 			mcplib.WithDescription("Fetch one pass template by id. The id is the ptk_0x<hex> form, e.g. ptk_0x1E0; a bare decimal id is also accepted and normalized."),
 			mcplib.WithString("id",
 				mcplib.Required(),
@@ -107,6 +110,7 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"pass_template_required_fields",
+			mcplib.WithToolTitle("Get Template Field Schema"),
 			mcplib.WithDescription("Return this template's full field schema — every field's api_field_name with its visible and required flags. ALWAYS call this before pass_create on an unfamiliar template; you must supply every field where required is true. Field names are template-specific."),
 			mcplib.WithString("id",
 				mcplib.Required(),
@@ -141,6 +145,7 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"pass_template_create",
+			mcplib.WithToolTitle("Create Pass Template"),
 			mcplib.WithDescription("Provision a new pass template. ENTERPRISE ACCOUNTS ONLY — non-enterprise calls return ENTERPRISE_REQUIRED. Returns the new template including its ptk_0x id."),
 			mcplib.WithString("name",
 				mcplib.Required(),
@@ -188,6 +193,7 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"pass_template_delete",
+			mcplib.WithToolTitle("Delete Pass Template"),
 			mcplib.WithDescription("Hard-delete a pass template. ENTERPRISE ACCOUNTS ONLY. DESTRUCTIVE — also cascades to every issued pass on this template. Cannot be undone."),
 			mcplib.WithString("id",
 				mcplib.Required(),
@@ -223,6 +229,7 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"pass_list",
+			mcplib.WithToolTitle("List Issued Passes"),
 			mcplib.WithDescription("List every pass issued on a pass template. Each pass includes its serial (ex_id) plus the template-defined fields."),
 			mcplib.WithString("pass_template",
 				mcplib.Required(),
@@ -253,6 +260,7 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"pass_get",
+			mcplib.WithToolTitle("Get Issued Pass"),
 			mcplib.WithDescription("Fetch one issued pass by serial. Returns the rendered field values plus device installation metadata."),
 			mcplib.WithString("pass_template",
 				mcplib.Required(),
@@ -291,6 +299,7 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"pass_create",
+			mcplib.WithToolTitle("Create Pass"),
 			mcplib.WithDescription("Issue a new pass on a template. If unsure which fields to send, call pass_template_required_fields first — the keys in `fields` must match the template's field names exactly. Field value formats: colors as 'rgb(255,255,255)', dates as ISO 8601 'YYYY-MM-DDTHH:MM:SSZ', phones as E.164 '+19545536227', images as URLs."),
 			mcplib.WithString("pass_template",
 				mcplib.Required(),
@@ -327,6 +336,7 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"pass_update",
+			mcplib.WithToolTitle("Update Pass"),
 			mcplib.WithDescription("Update an issued pass. Default is PATCH (merge only the supplied fields). Set `replace=true` for PUT (every template field omitted from `fields` is cleared) — only use replace mode when you intend to overwrite everything."),
 			mcplib.WithString("pass_template",
 				mcplib.Required(),
@@ -382,6 +392,7 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"pass_delete",
+			mcplib.WithToolTitle("Revoke Pass"),
 			mcplib.WithDescription("Revoke an issued pass. DESTRUCTIVE — the pass on the user's wallet is invalidated and cannot be recovered. Surface the affected serial to the operator before calling."),
 			mcplib.WithString("pass_template",
 				mcplib.Required(),
@@ -420,6 +431,7 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"pass_raw",
+			mcplib.WithToolTitle("Get Raw Pass JSON"),
 			mcplib.WithDescription("Dump the full raw pass.json payload as the server has it on disk. Useful for debugging field rendering or wallet-side validation errors."),
 			mcplib.WithString("pass_template",
 				mcplib.Required(),
@@ -458,6 +470,7 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"pass_decrypt",
+			mcplib.WithToolTitle("Decrypt Reader Payload"),
 			mcplib.WithDescription("Decrypt a reader-encrypted payload using the template's private key. Used by NFC readers (e.g. Reyax RYRR30D) handing back challenge-response output for verification."),
 			mcplib.WithString("pass_template",
 				mcplib.Required(),
@@ -498,6 +511,7 @@ func registerWebhookTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"webhook_list",
+			mcplib.WithToolTitle("List Webhooks"),
 			mcplib.WithDescription("List webhook subscriptions, optionally scoped to one pass template. Results are paginated; default page size is server-defined (~25)."),
 			mcplib.WithString("pass_template",
 				mcplib.Description("Optional pass template filter (ptk_0x...)."),
@@ -539,6 +553,7 @@ func registerWebhookTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"webhook_get",
+			mcplib.WithToolTitle("Get Webhook"),
 			mcplib.WithDescription("Fetch one webhook subscription by id. The bearer_token is NOT returned here — it's surfaced only once on webhook_create."),
 			mcplib.WithString("id",
 				mcplib.Required(),
@@ -569,6 +584,7 @@ func registerWebhookTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"webhook_create",
+			mcplib.WithToolTitle("Create Webhook"),
 			mcplib.WithDescription("Create a webhook subscription. The response includes a bearerToken — it's only returned on this call, so it MUST be surfaced to the operator immediately for saving."),
 			mcplib.WithString("name",
 				mcplib.Required(),
@@ -627,6 +643,7 @@ func registerWebhookTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"webhook_delete",
+			mcplib.WithToolTitle("Delete Webhook"),
 			mcplib.WithDescription("Delete a webhook subscription. DESTRUCTIVE — also cascades its delivery result history."),
 			mcplib.WithString("id",
 				mcplib.Required(),
@@ -654,6 +671,7 @@ func registerWebhookTools(s *server.MCPServer, client *api.Client) {
 	s.AddTool(
 		mcplib.NewTool(
 			"webhook_results",
+			mcplib.WithToolTitle("Get Webhook Delivery History"),
 			mcplib.WithDescription("Paginate the delivery history for one webhook. Each entry includes responseStatus + responseBody so you can see why a delivery failed."),
 			mcplib.WithString("id",
 				mcplib.Required(),
