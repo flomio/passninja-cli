@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/flomio/passninja-cli/pkg/api"
+	mcplib "github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
 
@@ -39,6 +40,16 @@ func build(info ServerInfo, defaultClient *api.Client) *server.MCPServer {
 		version,
 		server.WithToolCapabilities(true),
 		server.WithLogging(),
+		// Server identity surfaced by clients on connector cards
+		// (initialize → serverInfo per the 2025-11-25 MCP spec).
+		server.WithTitle("PassNinja"),
+		server.WithDescription("Create, issue, update, and manage NFC-enabled Apple Wallet and Google Wallet passes — pass templates, issued passes, and webhooks — backed by the PassNinja API."),
+		server.WithWebsiteURL("https://passninja.com"),
+		server.WithIcons(mcplib.Icon{
+			Src:      "https://api.passninja.com/images/website/passninja-mark-square.svg",
+			MIMEType: "image/svg+xml",
+			Sizes:    []string{"any"},
+		}),
 	)
 	registerTools(s, defaultClient)
 	return s
