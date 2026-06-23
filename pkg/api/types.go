@@ -27,6 +27,33 @@ type CreatePassTemplateInput struct {
 // opaque since the field list is template-specific.
 type RequiredFields map[string]any
 
+// ReaderConfig mirrors /v1/pass_templates/:id/reader_config — the
+// reader-agnostic identity values and EC decryption keys a physical NFC pass
+// reader needs to read this template's passes. A side is nil unless the
+// platform covers it and a decryption key exists. No reader-specific concepts
+// (key slots, file names, device config) are present by design.
+type ReaderConfig struct {
+	ID       string              `json:"id"`
+	Platform string              `json:"platform"`
+	Apple    *AppleReaderConfig  `json:"apple"`
+	Google   *GoogleReaderConfig `json:"google"`
+}
+
+// AppleReaderConfig carries the Apple VAS merchant id and the EC decryption
+// key (SEC1 PEM, P-256).
+type AppleReaderConfig struct {
+	VASMerchantID    string `json:"vas_merchant_id"`
+	VASPrivateKeyPEM string `json:"vas_private_key_pem"`
+}
+
+// GoogleReaderConfig carries the Google Smart Tap collector id, key version,
+// and the EC decryption key (SEC1 PEM, P-256).
+type GoogleReaderConfig struct {
+	SmartTapCollectorID   string `json:"smart_tap_collector_id"`
+	SmartTapKeyVersion    string `json:"smart_tap_key_version"`
+	SmartTapPrivateKeyPEM string `json:"smart_tap_private_key_pem"`
+}
+
 // Pass is intentionally loose; the server returns fields keyed by their
 // template-defined names.
 type Pass map[string]any

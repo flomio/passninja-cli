@@ -33,6 +33,18 @@ func (c *Client) GetRequiredFields(ctx context.Context, id string) (RequiredFiel
 	return out, nil
 }
 
+// GetReaderConfig hits /pass_templates/:id/reader_config — the reader-agnostic
+// identity values and EC decryption keys a physical NFC pass reader needs to
+// read the template's Apple (VAS) and/or Google (Smart Tap) passes. Only
+// decryption keys are returned; signing material is never exposed.
+func (c *Client) GetReaderConfig(ctx context.Context, id string) (*ReaderConfig, error) {
+	var out ReaderConfig
+	if err := c.do(ctx, "GET", "/pass_templates/"+id+"/reader_config", nil, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // CreatePassTemplate provisions a new pass template (enterprise-only on the
 // server). The response shape mirrors GetPassTemplate.
 func (c *Client) CreatePassTemplate(ctx context.Context, in CreatePassTemplateInput) (*PassTemplate, error) {
