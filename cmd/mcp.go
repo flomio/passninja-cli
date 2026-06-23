@@ -19,7 +19,7 @@ var mcpCmd = &cobra.Command{
 	Use:   "mcp",
 	Short: "Start the PassNinja MCP server (stdio by default; --http for remote use)",
 	Long: "Starts a Model Context Protocol server exposing the full PassNinja API\n" +
-		"surface as 18 tools.\n\n" +
+		"surface as 19 tools.\n\n" +
 		"Default mode is stdio for local clients (Claude Desktop, Cursor, Cline).\n" +
 		"Credentials are resolved once from flag > PASSNINJA_API_KEY/ACCOUNT_ID env\n" +
 		"> ~/.passninja-auth.json.\n\n" +

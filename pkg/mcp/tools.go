@@ -144,6 +144,41 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 
 	s.AddTool(
 		mcplib.NewTool(
+			"pass_template_reader_config",
+			mcplib.WithToolTitle("Get NFC Reader Config"),
+			mcplib.WithDescription("Return the reader-agnostic config a physical NFC pass reader needs to read this template's Apple (VAS) and/or Google (Smart Tap) passes: { id, platform, apple: { vas_merchant_id, vas_private_key_pem }, google: { smart_tap_collector_id, smart_tap_key_version, smart_tap_private_key_pem } }. Keys are EC SEC1 PEM. A side is null unless the platform covers it and a key exists. Use this when configuring a hardware pass reader (e.g. a Dot Origin VTAP). It carries no reader-specific details (key slots, file names) — the device tooling decides those. Only decryption keys are returned; signing material is never exposed."),
+			mcplib.WithString("id",
+				mcplib.Required(),
+				mcplib.Description("Pass template id (ptk_0x... or decimal)."),
+			),
+			mcplib.WithReadOnlyHintAnnotation(true),
+			mcplib.WithDestructiveHintAnnotation(false),
+			mcplib.WithIdempotentHintAnnotation(true),
+			mcplib.WithOpenWorldHintAnnotation(true),
+		),
+		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
+			id, err := req.RequireString("id")
+			if err != nil {
+				return mcplib.NewToolResultError(err.Error()), nil
+			}
+			id, err = utils.NormalizePassTemplateID(id)
+			if err != nil {
+				return mcplib.NewToolResultError(err.Error()), nil
+			}
+			cfg, err := client.GetReaderConfig(ctx, id)
+			if err != nil {
+				return apiErrorResult(err), nil
+			}
+			return jsonResult(cfg)
+		},
+	)
+
+	s.AddTool(
+		mcplib.NewTool(
 			"pass_template_create",
 			mcplib.WithToolTitle("Create Pass Template"),
 			mcplib.WithDescription("Provision a new pass template. ENTERPRISE ACCOUNTS ONLY — non-enterprise calls return ENTERPRISE_REQUIRED. Returns the new template including its ptk_0x id."),

@@ -55,7 +55,7 @@ Claude Desktop:
 1. Download [`passninja.mcpb`](https://github.com/flomio/passninja-cli/releases/latest/download/passninja.mcpb)
    from the latest release.
 2. Double-click the file. Claude Desktop opens an install dialog showing the
-   18 tools the server exposes (pass templates, issued passes, webhooks).
+   19 tools the server exposes (pass templates, issued passes, webhooks).
 3. The dialog prompts for your **API key** and **account ID** —
    get them at https://www.passninja.com/settings → API key.
 4. Hit Install, restart Claude Desktop, then ask Claude things like:
@@ -108,7 +108,7 @@ Tool surface (snake_case names mirror the CLI subcommands):
 
 ```
 whoami
-pass_template_{list, get, required_fields, create, delete}
+pass_template_{list, get, required_fields, reader_config, create, delete}
 pass_{list, get, create, update, delete, raw, decrypt}
 webhook_{list, get, create, delete, results}
 ```
@@ -126,6 +126,7 @@ passninja version
 passninja pass-template list
 passninja pass-template get <ptk_0x...>
 passninja pass-template required-fields <ptk_0x...>
+passninja pass-template reader-config <ptk_0x...>          # NFC reader config (merchant id, collector, EC keys)
 passninja pass-template create --name --platform --style    # enterprise only
 passninja pass-template delete <ptk_0x...> [--yes]          # enterprise only
 
