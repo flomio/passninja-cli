@@ -127,8 +127,11 @@ passninja pass-template list
 passninja pass-template get <ptk_0x...>
 passninja pass-template required-fields <ptk_0x...>
 passninja pass-template reader-config <ptk_0x...>          # NFC reader config (merchant id, collector, EC keys)
-passninja pass-template create --name --platform --style    # enterprise only
+passninja pass-template create --name --platform --style [config flags]   # enterprise only
+passninja pass-template update <ptk_0x...> [--name --set --remap --show/--hide --require/--optional] [config flags] [--replace]   # enterprise only
 passninja pass-template delete <ptk_0x...> [--yes]          # enterprise only
+#   config flags (create + update): --constrain-device/-browser/-ip,
+#   --disable-apple-sharing/-google-sharing, --auto-recharge --balance-trigger --top-up-target
 
 passninja pass create <ptk_0x...> [--field k=v | --data @file.json | --data '<json>']
 passninja pass list <ptk_0x...>

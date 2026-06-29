@@ -46,10 +46,29 @@ func (c *Client) GetReaderConfig(ctx context.Context, id string) (*ReaderConfig,
 }
 
 // CreatePassTemplate provisions a new pass template (enterprise-only on the
-// server). The response shape mirrors GetPassTemplate.
-func (c *Client) CreatePassTemplate(ctx context.Context, in CreatePassTemplateInput) (*PassTemplate, error) {
+// server). `body` is sent as-is — pass a CreatePassTemplateInput, or any value
+// that marshals to the {name, platform, style, install_constraints?,
+// disable_sharing?, top_up?} shape. The response mirrors GetPassTemplate.
+func (c *Client) CreatePassTemplate(ctx context.Context, body any) (*PassTemplate, error) {
 	var out PassTemplate
-	if err := c.do(ctx, "POST", "/pass_templates", in, &out); err != nil {
+	if err := c.do(ctx, "POST", "/pass_templates", body, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// UpdatePassTemplate edits an existing template (enterprise-only on the
+// server). PATCH is a partial update; replace=true uses PUT. `body` is sent
+// as-is — pass an UpdatePassTemplateInput, or any value that marshals to the
+// {name?, fields?, install_constraints?, disable_sharing?, top_up?} shape. The
+// response mirrors GetPassTemplate plus the resulting config groups + fields.
+func (c *Client) UpdatePassTemplate(ctx context.Context, id string, body any, replace bool) (*PassTemplate, error) {
+	method := "PATCH"
+	if replace {
+		method = "PUT"
+	}
+	var out PassTemplate
+	if err := c.do(ctx, method, "/pass_templates/"+id, body, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil

@@ -25,10 +25,14 @@ var passTemplateCreateCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		ic, ds, tu, _ := configGroupsFromFlags(cmd)
 		pt, err := client.CreatePassTemplate(cmd.Context(), api.CreatePassTemplateInput{
-			Name:     ptCreateName,
-			Platform: ptCreatePlatform,
-			Style:    ptCreateStyle,
+			Name:               ptCreateName,
+			Platform:           ptCreatePlatform,
+			Style:              ptCreateStyle,
+			InstallConstraints: ic,
+			DisableSharing:     ds,
+			TopUp:              tu,
 		})
 		if err != nil {
 			return err
@@ -44,7 +48,8 @@ var passTemplateCreateCmd = &cobra.Command{
 
 func init() {
 	passTemplateCreateCmd.Flags().StringVar(&ptCreateName, "name", "", "Pass template name (required)")
-	passTemplateCreateCmd.Flags().StringVar(&ptCreatePlatform, "platform", "", "apple | google | both (required)")
+	passTemplateCreateCmd.Flags().StringVar(&ptCreatePlatform, "platform", "", "apple | google (required)")
 	passTemplateCreateCmd.Flags().StringVar(&ptCreateStyle, "style", "", "ticket | coupon | loyalty | access_control (required)")
+	addConfigGroupFlags(passTemplateCreateCmd.Flags())
 	passTemplateCmd.AddCommand(passTemplateCreateCmd)
 }

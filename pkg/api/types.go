@@ -1,25 +1,88 @@
 package api
 
-// PassTemplate mirrors the shape of /v1/pass_templates/:id responses.
+// PassTemplate mirrors the shape of /v1/pass_templates/:id responses. The
+// config groups + fields are only present on single-template responses
+// (get / create / update), not on the list endpoint — hence omitempty.
 type PassTemplate struct {
-	ID                 string `json:"id"`
-	Name               string `json:"name"`
-	Platform           string `json:"platform"`
-	Style              string `json:"style"`
-	IssuedPassCount    int    `json:"issuedPassCount"`
-	InstalledPassCount int    `json:"installedPassCount"`
-	CreatedAt          string `json:"createdAt"`
-	UpdatedAt          string `json:"updatedAt"`
+	ID                 string                    `json:"id"`
+	Name               string                    `json:"name"`
+	Platform           string                    `json:"platform"`
+	Style              string                    `json:"style"`
+	IssuedPassCount    int                       `json:"issuedPassCount"`
+	InstalledPassCount int                       `json:"installedPassCount"`
+	CreatedAt          string                    `json:"createdAt"`
+	UpdatedAt          string                    `json:"updatedAt"`
+	InstallConstraints *InstallConstraints       `json:"install_constraints,omitempty"`
+	DisableSharing     *DisableSharing           `json:"disable_sharing,omitempty"`
+	TopUp              *TopUp                    `json:"top_up,omitempty"`
+	Fields             []PassTemplateFieldResult `json:"fields,omitempty"`
 }
 
 type PassTemplateListResponse struct {
 	PassTemplates []PassTemplate `json:"pass_templates"`
 }
 
+// InstallConstraints limits where an issued pass may install. Used in both
+// request (set the keys you want to change) and response (all three present).
+// Pointers + omitempty so an unset key is not sent on update.
+type InstallConstraints struct {
+	Device  *bool `json:"device,omitempty"`
+	Browser *bool `json:"browser,omitempty"`
+	IP      *bool `json:"ip,omitempty"`
+}
+
+// DisableSharing toggles per-platform pass sharing (true = sharing disabled).
+type DisableSharing struct {
+	Apple  *bool `json:"apple,omitempty"`
+	Google *bool `json:"google,omitempty"`
+}
+
+// TopUp is the auto-recharge configuration. Amounts are decimal strings (or
+// null). Available to per-template subscribers only.
+type TopUp struct {
+	AutoRecharge   *bool   `json:"auto_recharge,omitempty"`
+	BalanceTrigger *string `json:"balance_trigger,omitempty"`
+	TopUpTarget    *string `json:"top_up_target,omitempty"`
+}
+
+// FieldUpdate is one entry in an update's `fields` map, keyed by api field
+// name. Set only the attributes you want to change; APIFieldName remaps the
+// field's external key.
+type FieldUpdate struct {
+	DefaultValue *string `json:"default_value,omitempty"`
+	Visible      *bool   `json:"visible,omitempty"`
+	Required     *bool   `json:"required,omitempty"`
+	APIFieldName *string `json:"api_field_name,omitempty"`
+}
+
+// PassTemplateFieldResult is one entry in the `fields` array an update returns.
+type PassTemplateFieldResult struct {
+	APIFieldName string  `json:"api_field_name"`
+	DefaultValue *string `json:"default_value"`
+	Visible      bool    `json:"visible"`
+	Required     bool    `json:"required"`
+}
+
+// CreatePassTemplateInput is the POST /v1/pass_templates body. The config
+// groups are optional and require their respective entitlements.
 type CreatePassTemplateInput struct {
-	Name     string `json:"name"`
-	Platform string `json:"platform"`
-	Style    string `json:"style"`
+	Name               string              `json:"name"`
+	Platform           string              `json:"platform"`
+	Style              string              `json:"style"`
+	InstallConstraints *InstallConstraints `json:"install_constraints,omitempty"`
+	DisableSharing     *DisableSharing     `json:"disable_sharing,omitempty"`
+	TopUp              *TopUp              `json:"top_up,omitempty"`
+}
+
+// UpdatePassTemplateInput is the PATCH/PUT /v1/pass_templates/:id body. Every
+// field is optional; provide at least one. Unknown `fields` keys are rejected
+// 400 by the server before any write.
+type UpdatePassTemplateInput struct {
+	Name               *string                `json:"name,omitempty"`
+	Fields             map[string]FieldUpdate `json:"fields,omitempty"`
+	InstallConstraints *InstallConstraints    `json:"install_constraints,omitempty"`
+	DisableSharing     *DisableSharing        `json:"disable_sharing,omitempty"`
+	TopUp              *TopUp                 `json:"top_up,omitempty"`
 }
 
 // RequiredFields is whatever /v1/pass_templates/fields/:id returns —
