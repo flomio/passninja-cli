@@ -195,6 +195,15 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 				mcplib.Required(),
 				mcplib.Description("Pass style. Apple: boardingPass, coupon, eventTicket, generic, storeCard. Google: eventTicket, flightClass, genericClass, giftCardClass, loyaltyClass, offerClass, transitClass."),
 			),
+			mcplib.WithObject("install_constraints",
+				mcplib.Description("Optional. { device?, browser?, ip? } booleans limiting where each pass installs. Requires the install-constraints feature."),
+			),
+			mcplib.WithObject("disable_sharing",
+				mcplib.Description("Optional. { apple?, google? } booleans; true disables pass sharing. Requires the disable-sharing feature."),
+			),
+			mcplib.WithObject("top_up",
+				mcplib.Description("Optional auto top-up. { auto_recharge: bool, balance_trigger?: \"10\"-\"2000\", top_up_target?: \"20\"-\"4000\" }. Per-template subscribers only."),
+			),
 			mcplib.WithDestructiveHintAnnotation(false),
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
@@ -215,9 +224,13 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
 			}
-			tmpl, err := client.CreatePassTemplate(ctx, api.CreatePassTemplateInput{
-				Name: name, Platform: platform, Style: style,
-			})
+			body := map[string]any{"name": name, "platform": platform, "style": style}
+			for _, k := range []string{"install_constraints", "disable_sharing", "top_up"} {
+				if m := optionalObject(req, k); m != nil {
+					body[k] = m
+				}
+			}
+			tmpl, err := client.CreatePassTemplate(ctx, body)
 			if err != nil {
 				return apiErrorResult(err), nil
 			}
@@ -254,6 +267,65 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 				return apiErrorResult(err), nil
 			}
 			return jsonResult(map[string]string{"deleted": id})
+		},
+	)
+
+	s.AddTool(
+		mcplib.NewTool(
+			"pass_template_update",
+			mcplib.WithToolTitle("Update Pass Template"),
+			mcplib.WithDescription("Update a pass template. ENTERPRISE ACCOUNTS ONLY. PATCH (partial) by default; set replace=true for PUT. Edit the name, scalar field settings, and the install-constraint / disable-sharing / auto top-up config. Field keys come from pass_template_required_fields; unknown field keys are rejected. Provide at least one of name/fields/install_constraints/disable_sharing/top_up."),
+			mcplib.WithString("id",
+				mcplib.Required(),
+				mcplib.Description("Pass template id (ptk_0x... or decimal)."),
+			),
+			mcplib.WithString("name",
+				mcplib.Description("New template name."),
+			),
+			mcplib.WithObject("fields",
+				mcplib.Description("Map of api_field_name → { default_value?, visible?, required?, api_field_name? }. Set api_field_name to remap a field's external key, e.g. {\"primary.value\": {\"api_field_name\": \"guest.name\"}}."),
+			),
+			mcplib.WithObject("install_constraints",
+				mcplib.Description("{ device?, browser?, ip? } booleans. Requires the install-constraints feature."),
+			),
+			mcplib.WithObject("disable_sharing",
+				mcplib.Description("{ apple?, google? } booleans; true disables pass sharing. Requires the disable-sharing feature."),
+			),
+			mcplib.WithObject("top_up",
+				mcplib.Description("{ auto_recharge: bool, balance_trigger?: \"10\"-\"2000\", top_up_target?: \"20\"-\"4000\" }. Per-template subscribers only."),
+			),
+			mcplib.WithBoolean("replace",
+				mcplib.Description("Use PUT (full replace) instead of PATCH. Default false."),
+			),
+			mcplib.WithDestructiveHintAnnotation(false),
+			mcplib.WithOpenWorldHintAnnotation(true),
+		),
+		func(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+			client := clientFromCtx(ctx, client)
+			if client == nil {
+				return needAuthResult(), nil
+			}
+			id, err := requireTemplateID(req, "id")
+			if err != nil {
+				return mcplib.NewToolResultError(err.Error()), nil
+			}
+			body := map[string]any{}
+			if name := req.GetString("name", ""); name != "" {
+				body["name"] = name
+			}
+			for _, k := range []string{"fields", "install_constraints", "disable_sharing", "top_up"} {
+				if m := optionalObject(req, k); m != nil {
+					body[k] = m
+				}
+			}
+			if len(body) == 0 {
+				return mcplib.NewToolResultError("provide at least one of name, fields, install_constraints, disable_sharing, or top_up"), nil
+			}
+			tmpl, err := client.UpdatePassTemplate(ctx, id, body, req.GetBool("replace", false))
+			if err != nil {
+				return apiErrorResult(err), nil
+			}
+			return jsonResult(tmpl)
 		},
 	)
 }
@@ -798,6 +870,17 @@ func requireObject(req mcplib.CallToolRequest, key string) (map[string]any, erro
 		return nil, fmt.Errorf("argument %q must be a JSON object (got %T)", key, v)
 	}
 	return m, nil
+}
+
+// optionalObject returns the object-typed argument at key, or nil if it was
+// not provided (or isn't an object). Used for optional nested config groups.
+func optionalObject(req mcplib.CallToolRequest, key string) map[string]any {
+	if v, ok := req.GetArguments()[key]; ok && v != nil {
+		if m, ok := v.(map[string]any); ok {
+			return m
+		}
+	}
+	return nil
 }
 
 func maskKey(s string) string {

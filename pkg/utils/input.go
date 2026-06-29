@@ -42,6 +42,13 @@ func ParseFieldFlags(fields []string, dataFlag string) (map[string]any, error) {
 	return out, nil
 }
 
+// ReadRawData resolves a --data flag value (literal JSON, @file.json, or - for
+// stdin) to its raw bytes. Use it when the request body is a nested object
+// rather than a flat field map (e.g. pass-template update).
+func ReadRawData(v string) ([]byte, error) {
+	return readDataFlag(v)
+}
+
 func readDataFlag(v string) ([]byte, error) {
 	switch {
 	case strings.HasPrefix(v, "@"):
