@@ -95,12 +95,12 @@ func (c *Client) DeletePass(ctx context.Context, passTemplate, passID string) er
 	return c.do(ctx, "DELETE", "/passes/"+passTemplate+"/"+passID, nil, nil)
 }
 
-// DecryptPass forwards a reader-encrypted payload to the server for
-// template-keyed decryption.
+// DecryptPass forwards a reader-captured payload (hex-encoded APDUs, no
+// spaces) to the server for template-keyed decryption.
 func (c *Client) DecryptPass(ctx context.Context, passTemplate, payload string) (map[string]any, error) {
 	body := map[string]any{"payload": payload}
 	var out map[string]any
-	if err := c.do(ctx, "POST", "/passtypes/decrypt/"+passTemplate, body, &out); err != nil {
+	if err := c.do(ctx, "POST", "/passes/"+passTemplate+"/decrypt", body, &out); err != nil {
 		return nil, err
 	}
 	return out, nil

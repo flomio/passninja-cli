@@ -42,7 +42,7 @@ var passDecryptCmd = &cobra.Command{
 }
 
 func init() {
-	passDecryptCmd.Flags().StringVar(&decryptPayload, "payload", "", "base64-encoded payload (or - to read stdin)")
+	passDecryptCmd.Flags().StringVar(&decryptPayload, "payload", "", "hex-encoded reader payload (or - to read stdin)")
 	passDecryptCmd.Flags().StringVar(&decryptPayloadFile, "payload-file", "", "path to a file containing the payload")
 	passCmd.AddCommand(passDecryptCmd)
 }

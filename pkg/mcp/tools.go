@@ -585,7 +585,7 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 			),
 			mcplib.WithString("payload",
 				mcplib.Required(),
-				mcplib.Description("The encrypted payload string from the reader."),
+				mcplib.Description("The encrypted payload from the reader: hex-encoded APDUs with no spaces."),
 			),
 			mcplib.WithDestructiveHintAnnotation(false),
 			mcplib.WithOpenWorldHintAnnotation(true),
