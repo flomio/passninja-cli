@@ -4,7 +4,7 @@
   "display_name": "PassNinja",
   "version": "0.2.0",
   "description": "Issue and manage Apple Wallet & Google Wallet passes from any MCP-aware AI client.",
-  "long_description": "Lets you create, update, list, and revoke Apple Wallet and Google Wallet passes by asking your AI assistant in natural language. Wraps the full PassNinja REST API surface — pass templates, issued passes, webhooks — as MCP tools.\n\nTypical prompts:\n- \"Issue a new Run Tulum membership pass for jane@example.com.\"\n- \"List my pass templates and tell me how many passes are installed on each.\"\n- \"Show me the raw pass.json for serial fee4a257185906b92a on ptk_0x216.\"\n- \"Create a webhook that POSTs to https://example.com/hook on pass.installed events.\"\n\nRequires a PassNinja account. Get an API key + account id at https://www.passninja.com/settings.",
+  "long_description": "Lets you create, update, list, and revoke Apple Wallet and Google Wallet passes by asking your AI assistant in natural language. Wraps the full PassNinja REST API surface \u2014 pass templates, issued passes, webhooks \u2014 as MCP tools.\n\nTypical prompts:\n- \"Issue a new Run Tulum membership pass for jane@example.com.\"\n- \"List my pass templates and tell me how many passes are installed on each.\"\n- \"Show me the raw pass.json for serial fee4a257185906b92a on ptk_0x216.\"\n- \"Create a webhook that POSTs to https://example.com/hook on pass.installed events.\"\n\nRequires a PassNinja account. Get an API key + account id at https://www.passninja.com/settings.",
   "author": {
     "name": "PassNinja",
     "email": "info@passninja.com",
@@ -34,14 +34,20 @@
   ],
   "compatibility": {
     "claude_desktop": ">=0.10.0",
-    "platforms": ["darwin", "win32", "linux"]
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ]
   },
   "server": {
     "type": "binary",
     "entry_point": "server/passninja-linux",
     "mcp_config": {
       "command": "${__dirname}/server/passninja-linux",
-      "args": ["mcp"],
+      "args": [
+        "mcp"
+      ],
       "env": {
         "PASSNINJA_API_KEY": "${user_config.api_key}",
         "PASSNINJA_ACCOUNT_ID": "${user_config.account_id}",
@@ -64,7 +70,7 @@
     "api_key": {
       "type": "string",
       "title": "API key",
-      "description": "Your PassNinja API key. Find it https://www.passninja.com/settings → API key. Treated as a secret — stored in your OS keychain.",
+      "description": "Your PassNinja API key. Find it https://www.passninja.com/settings \u2192 API key. Treated as a secret \u2014 stored in your OS keychain.",
       "sensitive": true,
       "required": true
     },
@@ -83,23 +89,129 @@
     }
   },
   "tools": [
-    {"name": "whoami", "description": "Show which PassNinja account this MCP is configured for."},
-    {"name": "pass_template_list", "description": "List every pass template on the account."},
-    {"name": "pass_template_get", "description": "Fetch one pass template by ptk_0x... id."},
-    {"name": "pass_template_required_fields", "description": "Show the field names a pass_create call must populate for a template."},
-    {"name": "pass_template_create", "description": "Create a new pass template (enterprise only)."},
-    {"name": "pass_template_delete", "description": "Hard-delete a pass template and every pass on it (enterprise only, destructive)."},
-    {"name": "pass_list", "description": "List every pass issued on a template."},
-    {"name": "pass_get", "description": "Fetch one issued pass by serial."},
-    {"name": "pass_create", "description": "Issue a new pass on a template."},
-    {"name": "pass_update", "description": "Update an issued pass (PATCH by default, PUT with replace=true)."},
-    {"name": "pass_delete", "description": "Revoke an issued pass (destructive — the wallet card is invalidated)."},
-    {"name": "pass_raw", "description": "Dump the raw pass.json payload for an issued pass."},
-    {"name": "pass_decrypt", "description": "Decrypt a reader-encrypted NFC payload with the template's private key."},
-    {"name": "webhook_list", "description": "List webhook subscriptions on the account."},
-    {"name": "webhook_get", "description": "Fetch one webhook subscription by id."},
-    {"name": "webhook_create", "description": "Create a webhook subscription. Bearer token is surfaced only on this call."},
-    {"name": "webhook_delete", "description": "Delete a webhook subscription (destructive — also cascades its result history)."},
-    {"name": "webhook_results", "description": "Paginate the delivery history of a webhook."}
+    {
+      "name": "whoami",
+      "description": "Show which PassNinja account this MCP is configured for."
+    },
+    {
+      "name": "pass_template_list",
+      "description": "List every pass template on the account."
+    },
+    {
+      "name": "pass_template_get",
+      "description": "Fetch one pass template by ptk_0x... id."
+    },
+    {
+      "name": "pass_template_required_fields",
+      "description": "Show the field names a pass_create call must populate for a template."
+    },
+    {
+      "name": "pass_template_create",
+      "description": "Create a new pass template (enterprise only)."
+    },
+    {
+      "name": "pass_template_delete",
+      "description": "Hard-delete a pass template and every pass on it (enterprise only, destructive)."
+    },
+    {
+      "name": "pass_list",
+      "description": "List every pass issued on a template."
+    },
+    {
+      "name": "pass_get",
+      "description": "Fetch one issued pass by serial."
+    },
+    {
+      "name": "pass_create",
+      "description": "Issue a new pass on a template."
+    },
+    {
+      "name": "pass_update",
+      "description": "Update an issued pass (PATCH by default, PUT with replace=true)."
+    },
+    {
+      "name": "pass_delete",
+      "description": "Revoke an issued pass (destructive \u2014 the wallet card is invalidated)."
+    },
+    {
+      "name": "pass_raw",
+      "description": "Dump the raw pass.json payload for an issued pass."
+    },
+    {
+      "name": "pass_decrypt",
+      "description": "Decrypt a reader-encrypted NFC payload with the template's private key."
+    },
+    {
+      "name": "webhook_list",
+      "description": "List webhook subscriptions on the account."
+    },
+    {
+      "name": "webhook_get",
+      "description": "Fetch one webhook subscription by id."
+    },
+    {
+      "name": "webhook_create",
+      "description": "Create a webhook subscription. Bearer token is surfaced only on this call."
+    },
+    {
+      "name": "webhook_delete",
+      "description": "Delete a webhook subscription (destructive \u2014 also cascades its result history)."
+    },
+    {
+      "name": "webhook_results",
+      "description": "Paginate the delivery history of a webhook."
+    },
+    {
+      "name": "pass_template_reader_config",
+      "description": "Return the NFC reader config (Apple merchant id, Google collector id + key version, EC decryption keys) for a pass template."
+    },
+    {
+      "name": "pass_template_update",
+      "description": "Update a pass template's name, fields, and install-constraint / disable-sharing / top-up configuration."
+    },
+    {
+      "name": "application_list",
+      "description": "List scan-event applications on the account."
+    },
+    {
+      "name": "application_get",
+      "description": "Fetch one scan-event application by app_0x... id."
+    },
+    {
+      "name": "application_create",
+      "description": "Create a scan-event application bound to one pass template (kind: log | validate | forward)."
+    },
+    {
+      "name": "application_update",
+      "description": "Update a scan-event application's name, kind, config, or active state."
+    },
+    {
+      "name": "application_delete",
+      "description": "Delete a scan-event application (refused while bound to a reader)."
+    },
+    {
+      "name": "reader_list",
+      "description": "List registered NFC readers with bindings, hardware identity, and last-seen time."
+    },
+    {
+      "name": "reader_get",
+      "description": "Fetch one registered NFC reader with health, hardware, and bindings."
+    },
+    {
+      "name": "reader_create",
+      "description": "Register an NFC reader and mint its one-time bearer token."
+    },
+    {
+      "name": "reader_update",
+      "description": "Update a reader's name, location, status, or application bindings."
+    },
+    {
+      "name": "reader_delete",
+      "description": "Delete a registered NFC reader."
+    },
+    {
+      "name": "reader_config",
+      "description": "Return the merged reader config across every template a reader is bound to."
+    }
   ]
 }

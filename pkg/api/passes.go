@@ -97,8 +97,19 @@ func (c *Client) DeletePass(ctx context.Context, passTemplate, passID string) er
 
 // DecryptPass forwards a reader-captured payload (hex-encoded APDUs, no
 // spaces) to the server for template-keyed decryption.
-func (c *Client) DecryptPass(ctx context.Context, passTemplate, payload string) (map[string]any, error) {
+//
+// Apple VAS decrypts from the payload alone. Google Smart Tap is
+// session-bound: pass platform "google" together with the session context
+// from PreSignSmartTap plus the mobile nonce and mobile ephemeral public key
+// captured during the tap. A nil session means Apple VAS.
+func (c *Client) DecryptPass(ctx context.Context, passTemplate, payload, platform string, session *SmartTapSession) (map[string]any, error) {
 	body := map[string]any{"payload": payload}
+	if platform != "" {
+		body["platform"] = platform
+	}
+	if session != nil {
+		body["session"] = session
+	}
 	var out map[string]any
 	if err := c.do(ctx, "POST", "/passes/"+passTemplate+"/decrypt", body, &out); err != nil {
 		return nil, err

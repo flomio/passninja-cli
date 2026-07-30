@@ -22,7 +22,7 @@ type ServerInfo struct {
 	Version string
 }
 
-// build wires a fresh MCPServer with all 19 tools registered. defaultClient
+// build wires a fresh MCPServer with all 31 tools registered. defaultClient
 // is the credential-resolved client used in stdio mode (single-tenant); in
 // HTTP mode it can be nil and each request supplies its own credentials via
 // headers (see pkg/mcp/auth.go).

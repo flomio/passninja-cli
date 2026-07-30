@@ -152,3 +152,135 @@ func toString(v any) string {
 		return ""
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Scan event system
+// ---------------------------------------------------------------------------
+
+// ApplicationTable renders a list of scan-event applications.
+func ApplicationTable(items []api.Application) {
+	headers := []string{"ID", "Name", "Kind", "Pass Template", "Readers", "Active", "Created"}
+	rows := make([][]string, 0, len(items))
+	for _, a := range items {
+		readers := "—"
+		if a.ReaderCount != nil {
+			readers = strconv.Itoa(*a.ReaderCount)
+		}
+		rows = append(rows, []string{
+			a.ID,
+			a.Name,
+			a.Kind,
+			a.PassTemplate,
+			readers,
+			boolStr(a.Active),
+			shortTime(a.CreatedAt),
+		})
+	}
+	PrintTable(headers, rows)
+}
+
+// ApplicationDetailTable renders one application as key/value rows.
+func ApplicationDetailTable(a *api.Application) {
+	rows := [][]string{
+		{"ID", a.ID},
+		{"Name", a.Name},
+		{"Description", derefStr(a.Description)},
+		{"Kind", a.Kind},
+		{"Pass template", a.PassTemplate},
+		{"Active", boolStr(a.Active)},
+	}
+	if v, ok := a.Config["rescanWindowSeconds"]; ok {
+		rows = append(rows, []string{"Rescan window (s)", toString(v)})
+	}
+	if v, ok := a.Config["endpointUrl"]; ok {
+		rows = append(rows, []string{"Endpoint URL", toString(v)})
+	}
+	if a.ReaderCount != nil {
+		rows = append(rows, []string{"Bound readers", strconv.Itoa(*a.ReaderCount)})
+	}
+	rows = append(rows,
+		[]string{"Created", a.CreatedAt},
+		[]string{"Updated", a.UpdatedAt},
+	)
+	PrintTable([]string{"Field", "Value"}, rows)
+}
+
+// ReaderTable renders a list of readers.
+func ReaderTable(items []api.Reader) {
+	headers := []string{"ID", "Name", "Location", "Model", "Serial", "Applications", "Status", "Last seen"}
+	rows := make([][]string, 0, len(items))
+	for _, r := range items {
+		names := make([]string, 0, len(r.Applications))
+		for _, a := range r.Applications {
+			names = append(names, a.Name)
+		}
+		apps := strings.Join(names, ", ")
+		if apps == "" {
+			apps = "—"
+		}
+		rows = append(rows, []string{
+			r.ID,
+			r.Name,
+			r.Location,
+			orDash(r.Model),
+			orDash(r.Serial),
+			truncate(apps, 40),
+			r.Status,
+			lastSeen(r.LastSeenAt),
+		})
+	}
+	PrintTable(headers, rows)
+}
+
+// ReaderDetailTable renders one reader as key/value rows, including its
+// heartbeat-reported hardware identity and application bindings.
+func ReaderDetailTable(r *api.Reader) {
+	apps := make([]string, 0, len(r.Applications))
+	for _, a := range r.Applications {
+		apps = append(apps, a.ID+" ("+a.Name+" → "+a.PassTemplate+")")
+	}
+	appStr := strings.Join(apps, "\n")
+	if appStr == "" {
+		appStr = "—"
+	}
+	rows := [][]string{
+		{"ID", r.ID},
+		{"Name", r.Name},
+		{"Location", r.Location},
+		{"Status", r.Status},
+		{"Applications", appStr},
+		{"Manufacturer", orDash(r.Manufacturer)},
+		{"Model", orDash(r.Model)},
+		{"Serial", orDash(r.Serial)},
+		{"Firmware", orDash(r.Firmware)},
+		{"Source", orDash(r.Source)},
+		{"Last seen", lastSeen(r.LastSeenAt)},
+		{"Last IP", orDash(r.LastIP)},
+		{"Created", r.CreatedAt},
+	}
+	if r.Token != "" {
+		rows = append(rows, []string{"Token", r.Token})
+	}
+	PrintTable([]string{"Field", "Value"}, rows)
+}
+
+func derefStr(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+func orDash(s *string) string {
+	if s == nil || *s == "" {
+		return "—"
+	}
+	return *s
+}
+
+func lastSeen(s *string) string {
+	if s == nil || *s == "" {
+		return "never"
+	}
+	return *s
+}
