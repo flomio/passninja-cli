@@ -19,6 +19,8 @@ func registerTools(s *server.MCPServer, client *api.Client) {
 	registerPassTemplateTools(s, client)
 	registerPassTools(s, client)
 	registerWebhookTools(s, client)
+	registerApplicationTools(s, client)
+	registerReaderTools(s, client)
 }
 
 // ---------- whoami ----------
@@ -587,6 +589,9 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 				mcplib.Required(),
 				mcplib.Description("The encrypted payload from the reader: hex-encoded APDUs with no spaces."),
 			),
+			mcplib.WithString("platform",
+				mcplib.Description("apple (default) or google. Google Smart Tap is session-bound and additionally requires the reader's session context, which only the reader itself holds — use the CLI's `passninja reader serve` for Google taps."),
+			),
 			mcplib.WithDestructiveHintAnnotation(false),
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
@@ -603,7 +608,12 @@ func registerPassTools(s *server.MCPServer, client *api.Client) {
 			if err != nil {
 				return mcplib.NewToolResultError(err.Error()), nil
 			}
-			out, err := client.DecryptPass(ctx, id, payload)
+			platform := req.GetString("platform", "")
+			if platform == "google" {
+				return mcplib.NewToolResultError(
+					"Google Smart Tap decryption is session-bound: it needs the ephemeral keys and nonces from the tap itself, which this tool has no access to. Run `passninja reader serve` on the reader host instead."), nil
+			}
+			out, err := client.DecryptPass(ctx, id, payload, platform, nil)
 			if err != nil {
 				return apiErrorResult(err), nil
 			}

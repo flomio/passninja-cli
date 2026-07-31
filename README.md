@@ -55,7 +55,8 @@ Claude Desktop:
 1. Download [`passninja.mcpb`](https://github.com/flomio/passninja-cli/releases/latest/download/passninja.mcpb)
    from the latest release.
 2. Double-click the file. Claude Desktop opens an install dialog showing the
-   19 tools the server exposes (pass templates, issued passes, webhooks).
+   31 tools the server exposes (pass templates, issued passes, webhooks,
+   scan-event applications and readers).
 3. The dialog prompts for your **API key** and **account ID** —
    get them at https://www.passninja.com/settings → API key.
 4. Hit Install, restart Claude Desktop, then ask Claude things like:
@@ -139,7 +140,8 @@ passninja pass get <ptk_0x...> <pass_id>
 passninja pass raw <ptk_0x...> <pass_id>
 passninja pass update <ptk_0x...> <pass_id> [--field k=v | --data ... | --replace]
 passninja pass delete <ptk_0x...> <pass_id> [--yes]
-passninja pass decrypt <ptk_0x...> [--payload <b64> | --payload-file <path> | <stdin>]
+passninja pass decrypt <ptk_0x...> [--payload <hex> | --payload-file <path> | <stdin>] [--platform apple]
+#   Google Smart Tap is session-bound — use `reader serve` on the reader host
 
 # Enterprise only:
 passninja webhook create --name --url --event <type> [--event <type> ...] [--pass-template ptk_0x...]
@@ -147,6 +149,25 @@ passninja webhook list [--page --per-page --pass-template]
 passninja webhook get <webhook_id>
 passninja webhook delete <webhook_id> [--yes]
 passninja webhook results <webhook_id> [--page --per-page]
+
+# Scan event system (premium):
+passninja application list
+passninja application get <app_0x...>
+passninja application create --name --pass-template ptk_0x... [--kind log|validate|forward]
+                             [--rescan-window <seconds>] [--endpoint-url <https>] [--description]
+passninja application update <app_0x...> [--name --description --kind --rescan-window --endpoint-url --active/--inactive]
+passninja application delete <app_0x...> [--yes]
+
+passninja reader list
+passninja reader get <reader_id>
+passninja reader create --name --location --application app_0x... [--application ...]   # prints the token once
+passninja reader update <reader_id> [--name --location --status active|revoked --application ...]
+passninja reader rotate-token <reader_id> [--yes]
+passninja reader delete <reader_id> [--yes]
+passninja reader config <reader_id>                        # merged reader config across bound templates
+passninja reader serve --token rdr_... [--listen host:port] [--platform apple|google]
+                       [--heartbeat 5m | --no-heartbeat] [--serial --manufacturer --model --firmware --source]
+                       [--on-accept '<cmd>'] [--on-reject '<cmd>']
 ```
 
 ## Output formats
@@ -173,10 +194,62 @@ The CloudEvents 1.0 `type` taxonomy emitted by passninja-site:
 | `pn.pass.installed` | First device installs an issued pass |
 | `pn.pass.updated`   | Pass fields change via PATCH/PUT |
 | `pn.pass.uninstalled` | Last device removes the pass |
+| `pn.pass.scanned` | A reader records a scan event (carries scanId, readerSerial, result) |
 
 Reserved for future use: `pn.pass.issued`, `pn.pass.deleted`,
 `pn.pass_template.created`, `pn.pass_template.updated`,
 `pn.pass_template.deleted`.
+
+## Running a reader host
+
+Cloud-connected readers (VTAP Cloud, Famoco Tap&Go) post scans to PassNinja
+themselves. A simple reader — Reyax RYRR30D, ACS WalletMate, Elatec TWN4 —
+has no cloud connection of its own, so `reader serve` supplies one: it takes
+the values the reader captures, submits them as scan events, and applies the
+LED/beep instruction the server returns.
+
+Setup is three steps, and only the last one runs on the reader host:
+
+```sh
+# 1. an application decides what a scan means for one pass template
+passninja application create --name "Front gate" --kind validate \
+  --pass-template ptk_0x216 --rescan-window 14400
+
+# 2. a reader binds to it; the token is printed once — save it
+passninja reader create --name "Front gate" --location "Gate 2" \
+  --application app_0x1
+
+# 3. on the reader host (a Raspberry Pi, a kiosk PC, …)
+my-reader-daemon | passninja reader serve --token rdr_...
+```
+
+`serve` authenticates as that one reader with its bearer token — a reader
+host never needs, and should never hold, your account API key.
+
+Tap values arrive on **stdin** (one per line) or over a **loopback HTTP
+endpoint** with `--listen 127.0.0.1:8080`, which a driver POSTs to. A value
+that looks like raw captured APDUs is forwarded for server-side decryption;
+anything else is treated as an already-decrypted pass serial.
+
+Each result is one JSON object on stdout:
+
+```json
+{"scanId":"9f8e7d6c-…","result":"accepted","pass":{"passTemplate":"ptk_0x216","passId":"fee4a257185906b92a"},
+ "readerInstructions":{"success":true,"led":"green","beep":true,"message":"Accepted"}}
+```
+
+To drive a physical LED, use the outcome hooks — they receive `$PN_RESULT`,
+`$PN_LED`, `$PN_MESSAGE`, `$PN_PASS`, and `$PN_SCAN_ID`:
+
+```sh
+passninja reader serve --token rdr_... \
+  --on-accept 'gpioset 0 17=1' --on-reject 'gpioset 0 27=1'
+```
+
+Heartbeats (default every 5m) report liveness plus the hardware identity you
+pass with `--serial` / `--manufacturer` / `--model` / `--firmware`, which is
+what fills in the reader's Hardware panel in the dashboard. Readers whose
+vendor MDM already tracks them should use `--no-heartbeat`.
 
 `passninja webhook create` returns the bearer token **once** on creation.
 Save it — it will not be shown again.

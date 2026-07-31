@@ -61,9 +61,16 @@ var rootCmd = &cobra.Command{
 		// skips here because the HTTP transport mode resolves credentials
 		// per request from headers; cmd/mcp.go calls buildClient itself
 		// when running in stdio mode where local creds ARE required.
+		// `reader serve` skips because it authenticates as one reader with
+		// its own bearer token — a reader host must never need, or hold,
+		// the account API key.
 		switch cmd.Name() {
 		case "auth", "version", "help", "completion", "mcp":
 			return nil
+		case "serve":
+			if cmd.Parent() != nil && cmd.Parent().Name() == "reader" {
+				return nil
+			}
 		}
 
 		client, err := buildClient()
