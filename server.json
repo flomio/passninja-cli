@@ -3,7 +3,7 @@
   "name": "io.github.flomio/passninja-cli",
   "title": "PassNinja",
   "description": "Issue and manage Apple Wallet & Google Wallet passes from any MCP-aware AI client.",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "websiteUrl": "https://www.passninja.com",
   "repository": {
     "url": "https://github.com/flomio/passninja-cli",
@@ -12,9 +12,9 @@
   "packages": [
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/flomio/passninja-cli/releases/download/v0.7.0/passninja.mcpb",
-      "fileSha256": "1172706aceabe61bbcefc5e8225ddd0b66b6b0a8e0128488e4d5cd1a932ec355",
-      "version": "0.7.0",
+      "identifier": "https://github.com/flomio/passninja-cli/releases/download/v0.7.1/passninja.mcpb",
+      "fileSha256": "64e8e0e062b90e2484f09c873b05384f85f72444256d3ef0444a35f025dbe53f",
+      "version": "0.7.1",
       "transport": {
         "type": "stdio"
       }
