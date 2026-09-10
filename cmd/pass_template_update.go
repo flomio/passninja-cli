@@ -29,8 +29,9 @@ var passTemplateUpdateCmd = &cobra.Command{
 	Long: `Update an existing pass template's name, scalar field settings, and its
 install-constraint / disable-sharing / auto top-up configuration.
 
-Field edits are addressed by api field name (see "pass-template required-fields"
-or the Platform Parameters docs):
+Field edits are addressed by api field name or by the field's stored path
+(both are listed by "pass-template required-fields"; template-only rows such
+as featuredActions.0.type have no api name and are addressed by path):
   --set    background.color="rgb(0, 0, 255)"   set a field's default value
   --remap  primary.value=guest.name           rename a field's api field name
   --show / --hide        <api_field_name>      toggle visibility

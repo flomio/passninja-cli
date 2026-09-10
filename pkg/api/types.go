@@ -57,7 +57,10 @@ type FieldUpdate struct {
 
 // PassTemplateFieldResult is one entry in the `fields` array an update returns.
 type PassTemplateFieldResult struct {
-	APIFieldName string  `json:"api_field_name"`
+	APIFieldName string `json:"api_field_name"`
+	// Stored path; always present. Template-only rows (api_field_name null)
+	// are addressed by this path in update calls.
+	Path         string  `json:"path,omitempty"`
 	DefaultValue *string `json:"default_value"`
 	Visible      bool    `json:"visible"`
 	Required     bool    `json:"required"`
@@ -312,6 +315,34 @@ type SmartTapSession struct {
 	TerminalEphemeralPrivateKey string `json:"terminalEphemeralPrivateKey"`
 	MobileEphemeralPublicKey    string `json:"mobileEphemeralPublicKey"`
 	Signature                   string `json:"signature"`
+}
+
+// ReaderSelfAppleParams are the non-secret Apple polling parameters for one
+// bound template.
+type ReaderSelfAppleParams struct {
+	VASMerchantID string `json:"vas_merchant_id"`
+}
+
+// ReaderSelfGoogleParams are the non-secret Google polling parameters for one
+// bound template.
+type ReaderSelfGoogleParams struct {
+	SmartTapCollectorID string `json:"smart_tap_collector_id"`
+	SmartTapKeyVersion  string `json:"smart_tap_key_version"`
+}
+
+// ReaderSelfTemplate is one bound template's polling parameters.
+type ReaderSelfTemplate struct {
+	ID       string                  `json:"id"`
+	Platform string                  `json:"platform"`
+	Apple    *ReaderSelfAppleParams  `json:"apple"`
+	Google   *ReaderSelfGoogleParams `json:"google"`
+}
+
+// ReaderSelfConfig is GET /readers/self/config — what a reader host needs to
+// know to poll for its bound templates, with no key material.
+type ReaderSelfConfig struct {
+	ID        string               `json:"id"`
+	Templates []ReaderSelfTemplate `json:"templates"`
 }
 
 // SmartTapPreSign is the server-signed session a reader uses to run a Smart

@@ -276,7 +276,7 @@ func registerPassTemplateTools(s *server.MCPServer, client *api.Client) {
 		mcplib.NewTool(
 			"pass_template_update",
 			mcplib.WithToolTitle("Update Pass Template"),
-			mcplib.WithDescription("Update a pass template. ENTERPRISE ACCOUNTS ONLY. PATCH (partial) by default; set replace=true for PUT. Edit the name, scalar field settings, and the install-constraint / disable-sharing / auto top-up config. Field keys come from pass_template_required_fields; unknown field keys are rejected. Provide at least one of name/fields/install_constraints/disable_sharing/top_up."),
+			mcplib.WithDescription("Update a pass template. ENTERPRISE ACCOUNTS ONLY. PATCH (partial) by default; set replace=true for PUT. Edit the name, scalar field settings, and the install-constraint / disable-sharing / auto top-up config. Field keys come from pass_template_required_fields — use a field's api_field_name, or its path for template-only rows that have no api name (e.g. featuredActions.0.type); unknown field keys are rejected. Provide at least one of name/fields/install_constraints/disable_sharing/top_up."),
 			mcplib.WithString("id",
 				mcplib.Required(),
 				mcplib.Description("Pass template id (ptk_0x... or decimal)."),
