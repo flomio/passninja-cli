@@ -167,8 +167,9 @@ passninja reader update <reader_id> [--name --location --status active|revoked -
 passninja reader rotate-token <reader_id> [--yes]
 passninja reader delete <reader_id> [--yes]
 passninja reader config <reader_id>                        # merged reader config across bound templates
-passninja reader serve --token rdr_... [--listen host:port] [--platform apple|google]
-                       [--heartbeat 5m | --no-heartbeat] [--serial --manufacturer --model --firmware --source]
+passninja reader serve --token rdr_... [--pcsc [--pcsc-reader <name>] | --listen host:port]
+                       [--platform apple|google] [--heartbeat 5m | --no-heartbeat]
+                       [--serial --manufacturer --model --firmware --source]
                        [--on-accept '<cmd>'] [--on-reject '<cmd>']
 ```
 
@@ -222,16 +223,31 @@ passninja reader create --name "Front gate" --location "Gate 2" \
   --application app_0x1
 
 # 3. on the reader host (a Raspberry Pi, a kiosk PC, …)
-my-reader-daemon | passninja reader serve --token rdr_...
+passninja reader serve --token rdr_... --pcsc         # attached PC/SC reader
+my-reader-daemon | passninja reader serve --token rdr_...   # or any daemon
 ```
 
 `serve` authenticates as that one reader with its bearer token — a reader
 host never needs, and should never hold, your account API key.
 
-Tap values arrive on **stdin** (one per line) or over a **loopback HTTP
-endpoint** with `--listen 127.0.0.1:8080`, which a driver POSTs to. A value
-that looks like raw captured APDUs is forwarded for server-side decryption;
-anything else is treated as an already-decrypted pass serial.
+Tap values arrive from one of three sources:
+
+- **`--pcsc`** drives an attached PC/SC contactless reader (ACS WalletMate /
+  WalletMate II, incl. the Mini module) directly — no separate daemon. The
+  host runs the wallet flows itself: on an Apple tap it captures the VAS
+  cryptogram; on an Android tap it has the server pre-sign the Smart Tap
+  session mid-tap (the collector key never leaves PassNinja), negotiates the
+  secure channel, and captures the encrypted bundle. Both are submitted for
+  server-side decryption — the host holds no key material. First-generation
+  WalletMates ship with RF polling disabled; `serve` enables it automatically
+  when the vendor CCID driver is installed. Needs a native (cgo) build on
+  macOS/Linux — `go install` and Homebrew builds qualify.
+- **stdin** (one value per line) — pipe any reader daemon's output in.
+- **`--listen 127.0.0.1:8080`** — a loopback HTTP endpoint a driver POSTs to.
+
+For stdin/HTTP, a value that looks like raw captured APDUs is forwarded for
+server-side decryption; anything else is treated as an already-decrypted
+pass serial.
 
 Each result is one JSON object on stdout:
 

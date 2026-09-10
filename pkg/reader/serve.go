@@ -33,9 +33,11 @@ import (
 
 // Options configures a reader host run.
 type Options struct {
-	// Source of tap values. Exactly one is used: Listen wins when set.
-	Listen string // loopback address for the local ingest endpoint, e.g. 127.0.0.1:8080
-	Input  io.Reader
+	// Source of tap values. Exactly one is used: PCSC wins, then Listen.
+	PCSC       bool   // drive an attached PC/SC contactless reader directly
+	PCSCReader string // PC/SC reader name (substring) override; empty auto-detects
+	Listen     string // loopback address for the local ingest endpoint, e.g. 127.0.0.1:8080
+	Input      io.Reader
 
 	// HeartbeatInterval reports liveness + hardware identity on a timer. Zero
 	// disables heartbeats (correct for vtap-cloud / famoco sources, whose
@@ -97,9 +99,12 @@ func Serve(ctx context.Context, client *api.Client, opts Options) error {
 	}
 
 	var err error
-	if opts.Listen != "" {
+	switch {
+	case opts.PCSC:
+		err = servePCSC(ctx, client, opts)
+	case opts.Listen != "":
 		err = serveHTTP(ctx, client, opts)
-	} else {
+	default:
 		err = serveStdin(ctx, client, opts)
 	}
 
@@ -232,7 +237,13 @@ func handleTap(ctx context.Context, client *api.Client, opts Options, value stri
 	} else {
 		in.Message = value
 	}
+	return handleScan(ctx, client, opts, in)
+}
 
+// handleScan submits one scan and applies the returned instruction. Sources
+// that build the full ScanInput themselves (the PC/SC transport, which also
+// attaches the Smart Tap session) call this directly.
+func handleScan(ctx context.Context, client *api.Client, opts Options, in api.ScanInput) *api.ScanResponse {
 	res, err := client.Scan(ctx, in)
 	if err != nil {
 		fmt.Fprintf(opts.Status, "[passninja reader] scan failed: %v\n", err)

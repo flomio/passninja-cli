@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/ebfe/scard v0.0.0-20241214075232-7af069cabc25 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/google/jsonschema-go v0.4.2 // indirect
