@@ -16,6 +16,9 @@ var (
 	appCreateDescription  string
 	appCreateRescanWindow int
 	appCreateEndpointURL  string
+	appCreateBearerToken  string
+	appCreateTimeoutMs    int
+	appCreateOnEndpErr    string
 )
 
 var applicationCreateCmd = &cobra.Command{
@@ -57,9 +60,16 @@ var applicationCreateCmd = &cobra.Command{
 		if appCreateEndpointURL != "" {
 			cfg["endpointUrl"] = appCreateEndpointURL
 		}
+		if appCreateTimeoutMs > 0 {
+			cfg["timeoutMs"] = appCreateTimeoutMs
+		}
+		if appCreateOnEndpErr != "" {
+			cfg["onEndpointError"] = appCreateOnEndpErr
+		}
 		if len(cfg) > 0 {
 			in.Config = cfg
 		}
+		in.BearerToken = appCreateBearerToken
 
 		app, err := client.CreateApplication(cmd.Context(), in)
 		if err != nil {
@@ -80,5 +90,8 @@ func init() {
 	applicationCreateCmd.Flags().StringVar(&appCreateDescription, "description", "", "Optional description")
 	applicationCreateCmd.Flags().IntVar(&appCreateRescanWindow, "rescan-window", 0, "Seconds before the same pass may scan again (0 = no dedup)")
 	applicationCreateCmd.Flags().StringVar(&appCreateEndpointURL, "endpoint-url", "", "https endpoint for --kind forward")
+	applicationCreateCmd.Flags().StringVar(&appCreateBearerToken, "bearer-token", "", "Forward-endpoint credential, sent as Authorization: Bearer (write-only, stored encrypted)")
+	applicationCreateCmd.Flags().IntVar(&appCreateTimeoutMs, "timeout-ms", 0, "Forward-endpoint call timeout in ms (100-8000, server default 3000)")
+	applicationCreateCmd.Flags().StringVar(&appCreateOnEndpErr, "on-endpoint-error", "", "accept | reject — scan outcome when the forward endpoint is unreachable (default reject)")
 	applicationCmd.AddCommand(applicationCreateCmd)
 }

@@ -208,9 +208,12 @@ type Application struct {
 	PassTemplate string         `json:"passTemplate"`
 	Config       map[string]any `json:"config"`
 	Active       bool           `json:"active"`
-	ReaderCount  *int           `json:"readerCount,omitempty"`
-	CreatedAt    string         `json:"createdAt"`
-	UpdatedAt    string         `json:"updatedAt"`
+	// True when a forward-endpoint bearer credential is stored (the
+	// credential itself is write-only and never returned).
+	HasBearerToken bool   `json:"hasBearerToken"`
+	ReaderCount    *int   `json:"readerCount,omitempty"`
+	CreatedAt      string `json:"createdAt"`
+	UpdatedAt      string `json:"updatedAt"`
 }
 
 type ApplicationListResponse struct {
@@ -223,6 +226,9 @@ type CreateApplicationInput struct {
 	PassTemplate string         `json:"passTemplate"`
 	Description  string         `json:"description,omitempty"`
 	Config       map[string]any `json:"config,omitempty"`
+	// Write-only forward-endpoint credential; sent to the endpoint as
+	// "Authorization: Bearer …" on every forwarded scan. Never echoed back.
+	BearerToken string `json:"bearerToken,omitempty"`
 }
 
 // UpdateApplicationInput uses pointers so an omitted field is left unchanged
@@ -233,6 +239,9 @@ type UpdateApplicationInput struct {
 	Kind        *string        `json:"kind,omitempty"`
 	Config      map[string]any `json:"config,omitempty"`
 	Active      *bool          `json:"active,omitempty"`
+	// Write-only: a string stores a new forward-endpoint bearer, an
+	// explicit null clears it, omitted leaves it unchanged.
+	BearerToken *string `json:"bearerToken,omitempty"`
 }
 
 // ReaderApplicationRef is the application summary embedded in a Reader.
@@ -382,13 +391,23 @@ type ScanPassRef struct {
 	PassID       string `json:"passId"`
 }
 
+// ForwardResponse echoes the reply a forward application's endpoint gave
+// for this scan: the HTTP status and the (JSON or truncated-text) body.
+type ForwardResponse struct {
+	Status int `json:"status"`
+	Body   any `json:"body"`
+}
+
 // ScanResponse is the answer to POST /scans. Result is one of accepted,
 // rejected_inactive, rejected_replay, rejected_by_app, or unresolved.
+// ForwardResponse is present only when a forward application called its
+// endpoint synchronously.
 type ScanResponse struct {
 	ScanID             string             `json:"scanId"`
 	Result             string             `json:"result"`
 	Pass               *ScanPassRef       `json:"pass"`
 	ReaderInstructions ReaderInstructions `json:"readerInstructions"`
+	ForwardResponse    *ForwardResponse   `json:"forwardResponse,omitempty"`
 }
 
 // HeartbeatInput reports hardware identity and liveness for readers with no

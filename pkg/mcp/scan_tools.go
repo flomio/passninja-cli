@@ -96,6 +96,16 @@ func registerApplicationTools(s *server.MCPServer, client *api.Client) {
 			mcplib.WithString("endpoint_url",
 				mcplib.Description("https endpoint that receives forwarded scans. Required for kind 'forward'."),
 			),
+			mcplib.WithString("bearer_token",
+				mcplib.Description("Write-only credential sent to the forward endpoint as 'Authorization: Bearer …'. Stored encrypted, never returned."),
+			),
+			mcplib.WithNumber("timeout_ms",
+				mcplib.Description("Forward-endpoint call timeout in ms (100-8000, server default 3000)."),
+				mcplib.Min(0),
+			),
+			mcplib.WithString("on_endpoint_error",
+				mcplib.Description("accept | reject — scan outcome when the forward endpoint is unreachable (default reject)."),
+			),
 			mcplib.WithDestructiveHintAnnotation(false),
 			mcplib.WithOpenWorldHintAnnotation(true),
 		),
@@ -125,9 +135,16 @@ func registerApplicationTools(s *server.MCPServer, client *api.Client) {
 			if u := req.GetString("endpoint_url", ""); u != "" {
 				cfg["endpointUrl"] = u
 			}
+			if t := req.GetInt("timeout_ms", 0); t > 0 {
+				cfg["timeoutMs"] = t
+			}
+			if e := req.GetString("on_endpoint_error", ""); e != "" {
+				cfg["onEndpointError"] = e
+			}
 			if len(cfg) > 0 {
 				in.Config = cfg
 			}
+			in.BearerToken = req.GetString("bearer_token", "")
 			out, err := client.CreateApplication(ctx, in)
 			if err != nil {
 				return apiErrorResult(err), nil
@@ -153,6 +170,9 @@ func registerApplicationTools(s *server.MCPServer, client *api.Client) {
 				mcplib.Min(0),
 			),
 			mcplib.WithString("endpoint_url", mcplib.Description("New https endpoint for kind 'forward'.")),
+			mcplib.WithString("bearer_token", mcplib.Description("New write-only forward-endpoint credential (stored encrypted, never returned).")),
+			mcplib.WithNumber("timeout_ms", mcplib.Description("Forward-endpoint call timeout in ms (100-8000)."), mcplib.Min(0)),
+			mcplib.WithString("on_endpoint_error", mcplib.Description("accept | reject — scan outcome when the forward endpoint is unreachable.")),
 			mcplib.WithBoolean("active", mcplib.Description("Enable or disable the application.")),
 			mcplib.WithDestructiveHintAnnotation(false),
 			mcplib.WithIdempotentHintAnnotation(true),
@@ -188,8 +208,18 @@ func registerApplicationTools(s *server.MCPServer, client *api.Client) {
 			if _, ok := args["endpoint_url"]; ok {
 				cfg["endpointUrl"] = req.GetString("endpoint_url", "")
 			}
+			if _, ok := args["timeout_ms"]; ok {
+				cfg["timeoutMs"] = req.GetInt("timeout_ms", 0)
+			}
+			if _, ok := args["on_endpoint_error"]; ok {
+				cfg["onEndpointError"] = req.GetString("on_endpoint_error", "")
+			}
 			if len(cfg) > 0 {
 				in.Config = cfg
+			}
+			if v, ok := args["bearer_token"]; ok {
+				s := toStringArg(v)
+				in.BearerToken = &s
 			}
 			if _, ok := args["active"]; ok {
 				b := req.GetBool("active", true)

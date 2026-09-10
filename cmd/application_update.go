@@ -12,6 +12,9 @@ var (
 	appUpdateDescription  string
 	appUpdateRescanWindow int
 	appUpdateEndpointURL  string
+	appUpdateBearerToken  string
+	appUpdateTimeoutMs    int
+	appUpdateOnEndpErr    string
 	appUpdateActive       bool
 	appUpdateInactive     bool
 )
@@ -46,8 +49,17 @@ var applicationUpdateCmd = &cobra.Command{
 		if cmd.Flags().Changed("endpoint-url") {
 			cfg["endpointUrl"] = appUpdateEndpointURL
 		}
+		if cmd.Flags().Changed("timeout-ms") {
+			cfg["timeoutMs"] = appUpdateTimeoutMs
+		}
+		if cmd.Flags().Changed("on-endpoint-error") {
+			cfg["onEndpointError"] = appUpdateOnEndpErr
+		}
 		if len(cfg) > 0 {
 			in.Config = cfg
+		}
+		if cmd.Flags().Changed("bearer-token") {
+			in.BearerToken = &appUpdateBearerToken
 		}
 		// --active / --inactive are the two halves of one tri-state: unset
 		// leaves the flag alone server-side.
@@ -78,6 +90,9 @@ func init() {
 	applicationUpdateCmd.Flags().StringVar(&appUpdateKind, "kind", "", "log | validate | forward")
 	applicationUpdateCmd.Flags().IntVar(&appUpdateRescanWindow, "rescan-window", 0, "Seconds before the same pass may scan again (0 clears)")
 	applicationUpdateCmd.Flags().StringVar(&appUpdateEndpointURL, "endpoint-url", "", "https endpoint for kind forward")
+	applicationUpdateCmd.Flags().StringVar(&appUpdateBearerToken, "bearer-token", "", "New forward-endpoint credential (write-only, stored encrypted; cleared automatically when the kind leaves forward)")
+	applicationUpdateCmd.Flags().IntVar(&appUpdateTimeoutMs, "timeout-ms", 0, "Forward-endpoint call timeout in ms (100-8000)")
+	applicationUpdateCmd.Flags().StringVar(&appUpdateOnEndpErr, "on-endpoint-error", "", "accept | reject — scan outcome when the forward endpoint is unreachable")
 	applicationUpdateCmd.Flags().BoolVar(&appUpdateActive, "active", true, "Mark the application active")
 	applicationUpdateCmd.Flags().BoolVar(&appUpdateInactive, "inactive", true, "Mark the application inactive")
 	applicationCmd.AddCommand(applicationUpdateCmd)

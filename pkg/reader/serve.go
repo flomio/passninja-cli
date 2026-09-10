@@ -275,6 +275,14 @@ func runHook(ctx context.Context, opts Options, res *api.ScanResponse) {
 	if res.Pass != nil {
 		pass = res.Pass.PassID
 	}
+	// A forward application's endpoint reply, JSON-encoded, so hooks can
+	// consume the structured body without re-querying anything.
+	forwardBody := ""
+	if res.ForwardResponse != nil && res.ForwardResponse.Body != nil {
+		if b, err := json.Marshal(res.ForwardResponse.Body); err == nil {
+			forwardBody = string(b)
+		}
+	}
 	cmd := exec.CommandContext(ctx, "sh", "-c", hook)
 	cmd.Env = append(os.Environ(),
 		"PN_RESULT="+res.Result,
@@ -282,6 +290,7 @@ func runHook(ctx context.Context, opts Options, res *api.ScanResponse) {
 		"PN_MESSAGE="+res.ReaderInstructions.Message,
 		"PN_PASS="+pass,
 		"PN_SCAN_ID="+res.ScanID,
+		"PN_FORWARD_BODY="+forwardBody,
 	)
 	cmd.Stdout = opts.Status
 	cmd.Stderr = opts.Status

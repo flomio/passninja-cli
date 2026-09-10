@@ -154,8 +154,10 @@ passninja webhook results <webhook_id> [--page --per-page]
 passninja application list
 passninja application get <app_0x...>
 passninja application create --name --pass-template ptk_0x... [--kind log|validate|forward]
-                             [--rescan-window <seconds>] [--endpoint-url <https>] [--description]
-passninja application update <app_0x...> [--name --description --kind --rescan-window --endpoint-url --active/--inactive]
+                             [--rescan-window <seconds>] [--endpoint-url <https>] [--bearer-token <secret>]
+                             [--timeout-ms <100-8000>] [--on-endpoint-error accept|reject] [--description]
+passninja application update <app_0x...> [--name --description --kind --rescan-window --endpoint-url
+                             --bearer-token --timeout-ms --on-endpoint-error --active/--inactive]
 passninja application delete <app_0x...> [--yes]
 
 passninja reader list
@@ -239,7 +241,10 @@ Each result is one JSON object on stdout:
 ```
 
 To drive a physical LED, use the outcome hooks — they receive `$PN_RESULT`,
-`$PN_LED`, `$PN_MESSAGE`, `$PN_PASS`, and `$PN_SCAN_ID`:
+`$PN_LED`, `$PN_MESSAGE`, `$PN_PASS`, `$PN_SCAN_ID`, and — when a forward
+application answered — `$PN_FORWARD_BODY` (the endpoint's JSON reply). On a
+forward application, `$PN_MESSAGE` is the endpoint's `message` verbatim and
+the printed scan JSON carries the reply under `forwardResponse`:
 
 ```sh
 passninja reader serve --token rdr_... \

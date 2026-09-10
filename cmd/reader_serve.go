@@ -53,7 +53,8 @@ pass serial.
 Each scan result is printed to stdout as one JSON object. Use --on-accept /
 --on-reject to run a command per outcome — that is how a Raspberry Pi drives
 a GPIO LED. The hook receives $PN_RESULT, $PN_LED, $PN_MESSAGE, $PN_PASS,
-and $PN_SCAN_ID.
+$PN_SCAN_ID, and — when a forward application answered — $PN_FORWARD_BODY
+(the endpoint's JSON reply).
 
 Examples:
   # a daemon that prints one tap value per line

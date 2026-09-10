@@ -195,6 +195,15 @@ func ApplicationDetailTable(a *api.Application) {
 	if v, ok := a.Config["endpointUrl"]; ok {
 		rows = append(rows, []string{"Endpoint URL", toString(v)})
 	}
+	if v, ok := a.Config["timeoutMs"]; ok {
+		rows = append(rows, []string{"Endpoint timeout (ms)", toString(v)})
+	}
+	if v, ok := a.Config["onEndpointError"]; ok {
+		rows = append(rows, []string{"On endpoint error", toString(v)})
+	}
+	if a.Kind == "forward" {
+		rows = append(rows, []string{"Bearer token", boolStr(a.HasBearerToken)})
+	}
 	if a.ReaderCount != nil {
 		rows = append(rows, []string{"Bound readers", strconv.Itoa(*a.ReaderCount)})
 	}
