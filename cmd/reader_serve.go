@@ -16,6 +16,8 @@ import (
 
 var (
 	serveToken        string
+	servePCSC         bool
+	servePCSCReader   string
 	serveListen       string
 	servePlatform     string
 	serveHeartbeat    time.Duration
@@ -44,11 +46,14 @@ Tap&Go) post scans directly and do not need this.
 Authentication is the per-reader bearer token minted by ` + "`reader create`" + `,
 never your account API key. Pass it with --token, or set PASSNINJA_READER_TOKEN.
 
-Tap values arrive either on stdin (one per line — pipe your reader daemon's
-output in) or over a loopback HTTP endpoint with --listen, which a driver
-POSTs to. A value that looks like raw captured APDUs is forwarded for
-server-side decryption; anything else is treated as an already-decrypted
-pass serial.
+Tap values arrive from one of three sources: --pcsc drives an attached PC/SC
+contactless reader (ACS WalletMate / WalletMate II) directly — the host runs
+the Apple VAS and Google Smart Tap flows itself and submits the encrypted
+payloads for server-side decryption, holding no keys; otherwise values arrive
+on stdin (one per line — pipe your reader daemon's output in) or over a
+loopback HTTP endpoint with --listen, which a driver POSTs to. A stdin/HTTP
+value that looks like raw captured APDUs is forwarded for server-side
+decryption; anything else is treated as an already-decrypted pass serial.
 
 Each scan result is printed to stdout as one JSON object. Use --on-accept /
 --on-reject to run a command per outcome — that is how a Raspberry Pi drives
@@ -57,6 +62,9 @@ $PN_SCAN_ID, and — when a forward application answered — $PN_FORWARD_BODY
 (the endpoint's JSON reply).
 
 Examples:
+  # attached ACS WalletMate / WalletMate II, no other daemon needed
+  passninja reader serve --token rdr_... --pcsc
+
   # a daemon that prints one tap value per line
   my-reader-daemon | passninja reader serve --token rdr_...
 
@@ -103,6 +111,8 @@ Examples:
 		defer stop()
 
 		return reader.Serve(ctx, client, reader.Options{
+			PCSC:              servePCSC,
+			PCSCReader:        servePCSCReader,
 			Listen:            serveListen,
 			Platform:          servePlatform,
 			HeartbeatInterval: interval,
@@ -122,6 +132,8 @@ Examples:
 func init() {
 	f := readerServeCmd.Flags()
 	f.StringVar(&serveToken, "token", "", "reader bearer token (rdr_...); falls back to PASSNINJA_READER_TOKEN")
+	f.BoolVar(&servePCSC, "pcsc", false, "drive an attached PC/SC contactless reader (ACS WalletMate / WalletMate II) directly")
+	f.StringVar(&servePCSCReader, "pcsc-reader", "", "PC/SC reader name substring override (default: auto-detect the contactless interface)")
 	f.StringVar(&serveListen, "listen", "", "loopback address for a local ingest endpoint, e.g. 127.0.0.1:8080 (default: read stdin)")
 	f.StringVar(&servePlatform, "platform", "", "apple | google; omit to let the server try each bound template")
 	f.DurationVar(&serveHeartbeat, "heartbeat", 5*time.Minute, "how often to report liveness and hardware identity")
