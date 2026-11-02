@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/flomio/passninja-cli/pkg/oauth"
 	"github.com/flomio/passninja-cli/pkg/output"
 	"github.com/spf13/cobra"
 )
@@ -18,17 +20,28 @@ var whoamiCmd = &cobra.Command{
 		info := map[string]string{
 			"account_id": client.AccountID,
 			"base_url":   client.BaseURL,
-			"api_key":    maskAPIKey(client.APIKey),
+		}
+		credential := "API key " + maskAPIKey(client.APIKey)
+		if ts, ok := client.Tokens.(*oauth.TokenSource); ok {
+			info["auth"] = "login session"
+			credential = "login session"
+			if end := ts.Session().SessionExpiresAt; !end.IsZero() {
+				info["session_expires_at"] = end.UTC().Format(time.RFC3339)
+				credential = "login session (ends " + end.Local().Format("Jan 2, 2006 15:04") + ")"
+			}
+		} else {
+			info["auth"] = "api key"
+			info["api_key"] = maskAPIKey(client.APIKey)
 		}
 		switch output.CurrentMode() {
 		case output.ModeJSON:
 			return output.PrintJSON(info)
 		case output.ModePlaintext:
-			fmt.Printf("%s\t%s\t%s\n", info["account_id"], info["base_url"], info["api_key"])
+			fmt.Printf("%s\t%s\t%s\n", info["account_id"], info["base_url"], credential)
 		default:
 			output.PrintTable(
-				[]string{"Account", "Base URL", "API key"},
-				[][]string{{info["account_id"], info["base_url"], info["api_key"]}},
+				[]string{"Account", "Base URL", "Credential"},
+				[][]string{{info["account_id"], info["base_url"], credential}},
 			)
 		}
 		return nil

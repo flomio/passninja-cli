@@ -30,14 +30,26 @@ const (
 // The bearer mode exists so the MCP HTTP transport can forward an OAuth
 // access token straight through to /v1, whose oauthBearerAuth middleware
 // already validates it — no token validation is duplicated client-side.
+//
+//   - Session: like Bearer, but the token comes from a TokenSource that
+//     refreshes it (the `passninja login` session). Set via WithTokenSource.
 type Client struct {
 	BaseURL     string
 	APIKey      string
 	AccountID   string
 	BearerToken string
+	Tokens      TokenSource
 	HTTPClient  *http.Client
 	UserAgent   string
 	Debug       bool
+}
+
+// TokenSource supplies OAuth access tokens for a login session.
+type TokenSource interface {
+	// Token returns a currently valid access token.
+	Token(ctx context.Context) (string, error)
+	// Refresh replaces a token the API rejected and returns its successor.
+	Refresh(ctx context.Context, rejected string) (string, error)
 }
 
 type Option func(*Client)
@@ -46,6 +58,12 @@ type Option func(*Client)
 // Authorization: Bearer <token> instead of the X-API-KEY/X-ACCOUNT-ID pair.
 func WithBearerToken(token string) Option {
 	return func(c *Client) { c.BearerToken = token }
+}
+
+// WithTokenSource puts the client in session mode: each request carries a
+// bearer token from ts, and a 401 triggers one refresh-and-retry.
+func WithTokenSource(ts TokenSource) Option {
+	return func(c *Client) { c.Tokens = ts }
 }
 
 func WithHTTPClient(h *http.Client) Option {
@@ -107,6 +125,18 @@ func (c *Client) do(ctx context.Context, method, path string, body, out any) err
 		}
 	}
 
+	var token string
+	if c.Tokens != nil {
+		var err error
+		if token, err = c.Tokens.Token(ctx); err != nil {
+			return err
+		}
+	}
+	// A session token can be revoked between Token() and the request (another
+	// process rotated it). One refresh-and-retry recovers without spending
+	// a backoff attempt.
+	refreshed := false
+
 	var lastErr error
 	for attempt := 0; attempt <= len(retryDelays); attempt++ {
 		if attempt > 0 {
@@ -127,7 +157,9 @@ func (c *Client) do(ctx context.Context, method, path string, body, out any) err
 		if err != nil {
 			return fmt.Errorf("build request: %w", err)
 		}
-		if c.BearerToken != "" {
+		if c.Tokens != nil {
+			req.Header.Set("Authorization", "Bearer "+token)
+		} else if c.BearerToken != "" {
 			req.Header.Set("Authorization", "Bearer "+c.BearerToken)
 		} else {
 			req.Header.Set("X-API-KEY", c.APIKey)
@@ -162,6 +194,17 @@ func (c *Client) do(ctx context.Context, method, path string, body, out any) err
 				}
 			}
 			return nil
+		}
+
+		if resp.StatusCode == http.StatusUnauthorized && c.Tokens != nil && !refreshed {
+			refreshed = true
+			next, err := c.Tokens.Refresh(ctx, token)
+			if err != nil {
+				return err
+			}
+			token = next
+			attempt--
+			continue
 		}
 
 		// non-2xx — attach Retry-After if present so the next loop honors it

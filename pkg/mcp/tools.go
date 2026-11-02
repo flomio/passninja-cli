@@ -40,11 +40,16 @@ func registerWhoami(s *server.MCPServer, client *api.Client) {
 		if client == nil {
 			return needAuthResult(), nil
 		}
-		return jsonResult(map[string]string{
+		info := map[string]string{
 			"account_id": client.AccountID,
 			"base_url":   client.BaseURL,
-			"api_key":    maskKey(client.APIKey),
-		})
+		}
+		if client.Tokens != nil {
+			info["auth"] = "login session"
+		} else {
+			info["api_key"] = maskKey(client.APIKey)
+		}
+		return jsonResult(info)
 	})
 }
 
@@ -847,7 +852,7 @@ func jsonResult(v any) (*mcplib.CallToolResult, error) {
 func apiErrorResult(err error) *mcplib.CallToolResult {
 	switch {
 	case api.IsAuth(err):
-		return mcplib.NewToolResultError(fmt.Sprintf("%s — API key rejected; re-run `passninja auth` or update PASSNINJA_API_KEY", err))
+		return mcplib.NewToolResultError(fmt.Sprintf("%s — credentials rejected; re-run `passninja login` or update PASSNINJA_API_KEY", err))
 	case api.IsEnterpriseRequired(err):
 		return mcplib.NewToolResultError(fmt.Sprintf("%s — this tool requires an enterprise PassNinja account", err))
 	case api.IsNotFound(err):

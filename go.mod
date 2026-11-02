@@ -3,18 +3,24 @@ module github.com/flomio/passninja-cli
 go 1.25.5
 
 require (
+	github.com/ebfe/scard v0.0.0-20241214075232-7af069cabc25
 	github.com/fatih/color v1.18.0
+	github.com/gofrs/flock v0.12.1
 	github.com/mark3labs/mcp-go v0.54.1
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.9.1
+	github.com/spf13/pflag v1.0.6
 	github.com/spf13/viper v1.20.0
+	github.com/zalando/go-keyring v0.2.6
 	golang.org/x/term v0.27.0
 )
 
 require (
-	github.com/ebfe/scard v0.0.0-20241214075232-7af069cabc25 // indirect
+	al.essio.dev/pkg/shellescape v1.5.1 // indirect
+	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
+	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/google/jsonschema-go v0.4.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -27,7 +33,6 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.12.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
-	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	go.uber.org/atomic v1.9.0 // indirect

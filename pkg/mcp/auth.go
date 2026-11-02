@@ -18,7 +18,7 @@ func needAuthResult() *mcplib.CallToolResult {
 	return mcplib.NewToolResultError(
 		"missing PassNinja credentials: HTTP requests must include both X-Api-Key " +
 			"and X-Account-Id headers; stdio sessions must set PASSNINJA_API_KEY and " +
-			"PASSNINJA_ACCOUNT_ID env vars or have run `passninja auth`")
+			"PASSNINJA_ACCOUNT_ID env vars or have run `passninja login`")
 }
 
 // ctxClientKey is the unexported context key used to thread a per-request
