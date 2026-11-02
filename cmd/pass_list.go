@@ -32,10 +32,18 @@ var passListCmd = &cobra.Command{
 		headers := []string{"Pass ID", "Created", "URL"}
 		rows := make([][]string, 0, len(passes))
 		for _, p := range passes {
+			id := p["serialNumber"]
+			if id == nil {
+				id = p["id"]
+			}
+			var url any
+			if urls, ok := p["urls"].(map[string]any); ok {
+				url = urls["landing"]
+			}
 			rows = append(rows, []string{
-				toStr(p["passId"]),
+				toStr(id),
 				toStr(p["createdAt"]),
-				toStr(p["url"]),
+				toStr(url),
 			})
 		}
 		output.PrintTable(headers, rows)
