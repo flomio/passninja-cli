@@ -76,23 +76,40 @@ registry can discover and install it automatically.
 ## Authenticate
 
 ```sh
-passninja auth
-# Pastes your API key and account ID; verifies by hitting /v1/pass_templates
-# and saves credentials to ~/.passninja-auth.json (0600).
+passninja login
+# Opens www.passninja.com in your browser. If you're already signed in there,
+# no password is asked. The CLI keeps a login session in your OS keychain —
+# never your account API key.
 ```
 
-Or pass credentials via env / flags:
+The session's access token refreshes automatically; the session itself ends
+30 days after login, and `passninja logout` ends it immediately (locally and
+on the server). If you run any command while logged out at a terminal, the
+browser login starts on its own.
+
+On a machine without a browser (SSH, containers), log in with a code entered
+from any other device:
+
+```sh
+passninja login --device
+```
+
+For CI and scripts, use an API key via env / flags instead:
 
 ```sh
 export PASSNINJA_API_KEY=...        PASSNINJA_ACCOUNT_ID=aid_0x002
 passninja --api-key=... --account-id=... pass-template list
 ```
 
-Flag > env > `~/.passninja-auth.json` > `~/.passninja.yaml` > defaults.
+Precedence: API key (flags > env > `~/.passninja.yaml`) > login session >
+legacy `~/.passninja-auth.json` (written by `passninja auth`). An API key you
+set explicitly always wins, so automation is never redirected to a personal
+session.
 
 The same precedence applies to the MCP server: `passninja mcp` (started by
-Claude Desktop and other MCP clients) reads `PASSNINJA_API_KEY` /
-`PASSNINJA_ACCOUNT_ID` from its environment, falling back to the auth file.
+Claude Desktop and other MCP clients) uses `PASSNINJA_API_KEY` /
+`PASSNINJA_ACCOUNT_ID` from its environment, else your login session. It
+never opens a browser itself — run `passninja login` once first.
 
 ## Stdio MCP server
 
@@ -120,7 +137,9 @@ let the LLM self-discover correct usage without external documentation.
 ## Commands
 
 ```text
-passninja auth                                       Save API credentials
+passninja login [--device] [--no-browser]           Log in through your browser (session in OS keychain)
+passninja logout                                     End the login session here and on the server
+passninja auth                                       Save an API key to ~/.passninja-auth.json (legacy)
 passninja whoami                                     Show the active credential / account
 passninja version
 

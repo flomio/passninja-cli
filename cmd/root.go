@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,7 +15,9 @@ import (
 	"github.com/flomio/passninja-cli/pkg/api"
 	"github.com/flomio/passninja-cli/pkg/auth"
 	"github.com/flomio/passninja-cli/pkg/config"
+	"github.com/flomio/passninja-cli/pkg/oauth"
 	"github.com/flomio/passninja-cli/pkg/output"
+	"github.com/flomio/passninja-cli/pkg/session"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -65,7 +68,7 @@ var rootCmd = &cobra.Command{
 		// its own bearer token — a reader host must never need, or hold,
 		// the account API key.
 		switch cmd.Name() {
-		case "auth", "version", "help", "completion", "mcp":
+		case "auth", "login", "logout", "version", "help", "completion", "mcp":
 			return nil
 		case "serve":
 			if cmd.Parent() != nil && cmd.Parent().Name() == "reader" {
@@ -99,16 +102,22 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&flagJSON, "json", false, "output as pretty-printed JSON")
 	rootCmd.PersistentFlags().BoolVar(&flagPlaintext, "plaintext", false, "output as tab-separated text (no decoration)")
 	rootCmd.PersistentFlags().StringVar(&flagConfig, "config", "", "config file (default ~/.passninja.yaml)")
-	rootCmd.PersistentFlags().StringVar(&flagAPIKey, "api-key", "", "PassNinja API key (overrides env / auth file)")
-	rootCmd.PersistentFlags().StringVar(&flagAccountID, "account-id", "", "Account ID, e.g. aid_0x002 (overrides env / auth file)")
+	rootCmd.PersistentFlags().StringVar(&flagAPIKey, "api-key", "", "PassNinja API key (overrides the login session; for CI / scripts)")
+	rootCmd.PersistentFlags().StringVar(&flagAccountID, "account-id", "", "Account ID, e.g. aid_0x002 (with --api-key)")
 	rootCmd.PersistentFlags().StringVar(&flagBaseURL, "base-url", "", "API base URL (default https://api.passninja.com/v1)")
 	rootCmd.PersistentFlags().BoolVar(&flagDebug, "debug", false, "print HTTP request/response details to stderr")
 
 	_ = viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 }
 
-// buildClient resolves the credential trio (flag > env > auth file > yaml)
-// and returns a configured *api.Client.
+// buildClient resolves credentials in this order and returns a configured
+// *api.Client:
+//
+//  1. an explicit API key pair — flags, PASSNINJA_* env, or ~/.passninja.yaml
+//     (for CI and scripts);
+//  2. the `passninja login` session in the OS keychain;
+//  3. the legacy ~/.passninja-auth.json API key file;
+//  4. at an interactive terminal, a browser login started on the spot.
 func buildClient() (*api.Client, error) {
 	apiKey := flagAPIKey
 	accountID := flagAccountID
@@ -123,45 +132,81 @@ func buildClient() (*api.Client, error) {
 	if baseURL == "" {
 		baseURL = viper.GetString("base_url")
 	}
-
-	if apiKey == "" || accountID == "" {
-		// Fall back to the on-disk auth file.
-		creds, err := auth.Load()
-		if err != nil {
-			return nil, err
-		}
-		if creds != nil {
-			if apiKey == "" {
-				apiKey = creds.APIKey
-			}
-			if accountID == "" {
-				accountID = creds.AccountID
-			}
-			if baseURL == "" {
-				baseURL = creds.BaseURL
-			}
-		}
+	if apiKey != "" && accountID != "" {
+		return apiKeyClient(apiKey, accountID, baseURL), nil
 	}
 
-	if apiKey == "" || accountID == "" {
-		return nil, fmt.Errorf("missing credentials. Run `passninja auth` or set PASSNINJA_API_KEY and PASSNINJA_ACCOUNT_ID")
+	s, err := session.Load()
+	if err != nil {
+		return nil, fmt.Errorf("%w. Run `passninja logout` to clear it, then `passninja login`", err)
+	}
+	if s != nil {
+		return sessionClient(s, baseURL), nil
 	}
 
-	httpClient := &http.Client{Timeout: 30 * time.Second}
+	creds, err := auth.Load()
+	if err != nil {
+		return nil, err
+	}
+	if creds != nil && creds.APIKey != "" && creds.AccountID != "" {
+		if baseURL == "" {
+			baseURL = creds.BaseURL
+		}
+		return apiKeyClient(creds.APIKey, creds.AccountID, baseURL), nil
+	}
+
+	if !interactive() {
+		return nil, fmt.Errorf("not logged in. Run `passninja login`, or set PASSNINJA_API_KEY and PASSNINJA_ACCOUNT_ID for non-interactive use")
+	}
+	fmt.Fprintln(os.Stderr, "You're not logged in to PassNinja.")
+	s, err = runLogin(context.Background(), loginOptions{openBrowser: true, quietSuccess: true})
+	if err != nil {
+		return nil, err
+	}
+	return sessionClient(s, baseURL), nil
+}
+
+func apiKeyClient(apiKey, accountID, baseURL string) *api.Client {
 	return api.NewClient(
 		apiKey,
 		accountID,
+		api.WithHTTPClient(&http.Client{Timeout: 30 * time.Second}),
+		api.WithBaseURL(baseURL),
+		api.WithUserAgent("passninja-cli/"+buildVersion),
+		api.WithDebug(flagDebug || viper.GetBool("debug")),
+	)
+}
+
+// sessionClient builds a client on the login session. The session's API
+// base URL wins unless one was given explicitly, so a session made against
+// QA keeps talking to QA.
+func sessionClient(s *session.Session, baseURL string) *api.Client {
+	if baseURL == "" {
+		baseURL = s.BaseURL
+	}
+	httpClient := &http.Client{Timeout: 30 * time.Second}
+	ts := oauth.NewTokenSource(s, oauth.Config{HTTPClient: httpClient})
+	if interactive() {
+		ts.Relogin = func(ctx context.Context) (*session.Session, error) {
+			fmt.Fprintln(os.Stderr, "Your PassNinja login session has ended.")
+			return runLogin(ctx, loginOptions{openBrowser: true, quietSuccess: true})
+		}
+	}
+	return api.NewClient(
+		"",
+		s.AccountID,
+		api.WithTokenSource(ts),
 		api.WithHTTPClient(httpClient),
 		api.WithBaseURL(baseURL),
 		api.WithUserAgent("passninja-cli/"+buildVersion),
 		api.WithDebug(flagDebug || viper.GetBool("debug")),
-	), nil
+	)
 }
 
 func clientFromContext(ctx context.Context) (*api.Client, error) {
 	c, ok := ctx.Value(clientKey).(*api.Client)
 	if !ok || c == nil {
-		return nil, fmt.Errorf("internal: API client missing from context (run `passninja auth` first?)")
+		return nil, fmt.Errorf("internal: API client missing from context (run `passninja login` first?)")
 	}
 	return c, nil
 }
@@ -170,9 +215,11 @@ func clientFromContext(ctx context.Context) (*api.Client, error) {
 // the well-known classes (401, 403/ENTERPRISE_REQUIRED, 404).
 func printError(err error) {
 	switch {
+	case errors.Is(err, oauth.ErrSessionExpired):
+		output.Error("Your PassNinja login session has ended. Run `passninja login` to start a new one.")
 	case api.IsAuth(err):
 		output.Error("%v", err)
-		output.Error("API key rejected. Run `passninja auth` to update credentials.")
+		output.Error("Credentials rejected. Run `passninja login` (or `passninja auth` for an API key).")
 	case api.IsEnterpriseRequired(err):
 		output.Error("%v", err)
 		output.Error("This command requires an enterprise account. Contact sales to upgrade.")

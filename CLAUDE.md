@@ -18,7 +18,11 @@ cmd/    — one file per Cobra command. cmd/root.go wires the API client
 pkg/
   api/      — HTTP client + per-resource methods (pass templates, passes,
               webhooks). do() handles retry on 429/5xx.
-  auth/     — ~/.passninja-auth.json read/write + interactive prompt.
+  auth/     — ~/.passninja-auth.json read/write + interactive prompt (legacy
+              API-key credential).
+  oauth/    — browser login (loopback + PKCE), device login, refresh with a
+              cross-process file lock, revoke. Client id `passninja-cli`.
+  session/  — the login session in the OS keychain (0600 file fallback).
   config/   — Viper bootstrap; env var binding (PASSNINJA_*).
   output/   — Mode (table | json | plaintext); PrintJSON / PrintTable;
               Error/Success/Info/Warn split between stderr/stdout.
